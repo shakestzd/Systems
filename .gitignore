@@ -172,3 +172,16 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# Project-specific: raw and processed data
+data/raw/
+data/processed/
+data/external/
+!data/.gitkeep
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/external/.gitkeep
+
+# API keys
+.env.local
+secrets.json
