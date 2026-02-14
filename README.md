@@ -1,61 +1,67 @@
-# Beyond the Hype Cycle: Modeling the Durable Commodity and Infrastructure Impacts of AI Capital Flows
+# Where AI Capital Lands
 
-## Core Research Question
+## Core Question
 
-Which commodity markets and infrastructure systems being catalyzed by AI investment will sustain demand growth independent of AI's commercial success?
+AI companies are deploying over $200 billion per year in capital expenditure. That
+capital converts into physical infrastructure — power plants, transmission lines,
+transformer factories, data centers, semiconductor fabs. Unlike the capital itself,
+which can be written down in a quarterly earnings report, the infrastructure is
+durable. It reshapes supply chains, labor markets, trade patterns, and grid topology
+for decades.
 
-## Motivation
+**Where does AI capex land in the physical economy, what does it lock in, and how
+do current regulatory decisions amplify or distort those outcomes?**
 
-AI capital expenditure is driving massive investment into energy, water, minerals, and physical infrastructure. But much of the analysis conflates AI hype with durable structural shifts. This project aims to separate signal from noise by modeling the feedback loops between AI spending and commodity demand, then testing which demand effects persist across different AI adoption scenarios (boom, plateau, bust).
+## Approach
 
-## Methodology
+This project traces AI capital flows through the physical supply chain and analyzes
+the infrastructure path dependencies they create. The analytical framework combines:
 
-A hybrid quantitative approach combining three techniques:
+1. **Capital flow mapping** — Trace where AI capex converts from financial
+   commitment to physical asset
+2. **Durability taxonomy** — Classify investments as structural (persists regardless
+   of AI outcome), policy-dependent (tied to a regulatory regime), or
+   demand-thesis-dependent (requires continued AI growth)
+3. **Regulatory interaction analysis** — How trade policy, energy policy, FERC
+   regulation, and industrial policy shape where capital lands and what it locks in
+4. **Systems dynamics modeling** — Map feedback architecture and identify leverage
+   points in each supply chain node
 
-1. **Systems dynamics modeling** -- Map causal feedback loops between AI CapEx, energy demand, water usage, semiconductor supply chains, and grid infrastructure
-2. **Bayesian inference** -- Estimate uncertain model parameters (e.g., what fraction of data center growth is AI-specific vs. general cloud)
-3. **Markov regime switching** -- Model scenario transitions (AI boom / plateau / bust) and their effects on commodity demand
+## Case Studies
 
-## Key Sectors
-
-- Electricity generation and grid capacity
-- Water consumption and cooling infrastructure
-- Critical minerals (copper, lithium, rare earths, silicon)
-- Fiber optic and network backbone
-- Real estate and construction (data center specific)
+| ID | Focus | Status |
+| :--- | :--- | :--- |
+| **CS-1** | Transformer manufacturing and grid equipment | Draft complete |
+| **CS-2** | Power generation mix and asset lock-in | Not started |
+| **CS-3** | Grid interconnection and transmission | Not started |
+| **CS-4** | Material supply chains (GOES, copper, critical minerals) | Not started |
+| **CS-5** | Labor and workforce | Not started |
 
 ## Project Status
 
-**Phase:** Initial framework and research design
+**Phase 1:** Tightening CS-1 (transformer case study) and establishing the
+analytical framework for publication.
 
 ## Repository Contents
 
-- `research-framework.md` -- Detailed methodology, sector analysis approach, and phased learning plan
-- `data-sources.md` -- Catalog of data sources with descriptions and access information
-- `src/` -- Python source code for models and data pipelines
-- `notebooks/` -- Jupyter notebooks for exploration and analysis
-- `data/` -- Raw and processed datasets (not committed to git)
-- `tests/` -- Unit and integration tests
-
-## Tools and Skills Being Developed
-
-- Systems dynamics modeling (Vensim/Stella or Python with PySD)
-- Bayesian statistics and parameter estimation
-- Markov regime switching models
-- Financial/commodity data analysis
+- `research-framework.md` — Analytical framework, case study plans, reference list
+- `data-sources.md` — Catalog of data sources with access information
+- `src/` — Python source code for models and data pipelines
+- `notebooks/` — Marimo notebooks for analysis (.py files, not Jupyter)
+- `data/` — Raw and processed datasets (not committed to git)
+- `tests/` — Unit and integration tests
 
 ## Getting Started
 
 ```bash
-# Create virtual environment
-python -m venv .venv
-source .venv/bin/activate
+# Install dependencies (uses uv)
+uv sync
 
-# Install dependencies
-pip install -r requirements.txt
+# Open a notebook
+uv run marimo edit notebooks/dd001_learning_curves/01_investigation.py
 
-# Install development dependencies
-pip install -r requirements-dev.txt
+# Run tests
+uv run pytest
 ```
 
 ## License

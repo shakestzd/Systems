@@ -1,0 +1,285 @@
+{UTF-8}
+Cumulative Production= INTEG (
+	production rate,
+	10000)
+	~	Units
+	~	Total cumulative distribution transformers produced.
+	|
+
+Order Backlog= INTEG (
+	new orders-production rate,
+	2000)
+	~	Units
+	~	Unfilled transformer orders in pipeline.
+	|
+
+Manufacturing Capacity= INTEG (
+	capacity expansion rate-capacity depreciation rate,
+	5000)
+	~	Units/Year
+	~	Annual transformer production capacity.
+	|
+
+Standardization Fraction= INTEG (
+	standardization change rate,
+	0.15)
+	~	Dimensionless
+	~	Fraction of production using standardized designs.
+	|
+
+Regulatory Stringency= INTEG (
+	regulatory tightening rate,
+	0.3)
+	~	Dimensionless
+	~	Index of DOE efficiency standard tightness.
+	|
+
+production rate=
+	MIN(Manufacturing Capacity, Order Backlog/target lead time)
+	~	Units/Year
+	~	Actual production constrained by capacity and backlog.
+	|
+
+new orders=
+	base demand*(1+AI demand growth rate)*price elasticity effect
+	~	Units/Year
+	~	Annual transformer orders driven by AI and grid demand.
+	|
+
+capacity expansion rate=
+	DELAY3(desired capacity expansion, capacity expansion delay)
+	~	Units/Year/Year
+	~	New capacity coming online after construction delay.
+	|
+
+capacity depreciation rate=
+	Manufacturing Capacity*depreciation fraction
+	~	Units/Year/Year
+	~	Annual capacity retirement.
+	|
+
+standardization change rate=
+	(target standardization-Standardization Fraction)/standardization adjustment time
+	~	1/Year
+	~	Rate of convergence toward target standardization level.
+	|
+
+regulatory tightening rate=
+	IF THEN ELSE(Time>=2029, regulatory step size/regulatory adjustment time, 0)
+	~	1/Year
+	~	DOE 2024 final rule takes effect April 2029.
+	|
+
+base demand=
+	3000
+	~	Units/Year
+	~	Baseline annual distribution transformer demand.
+	|
+
+AI demand growth rate=
+	0.12
+	~	1/Year
+	~	Annual growth rate of data center and grid modernization demand.
+	|
+
+price elasticity effect=
+	1-price elasticity*(unit cost/initial unit cost-1)
+	~	Dimensionless
+	~	Demand response to price changes.
+	|
+
+price elasticity=
+	0.3
+	~	Dimensionless
+	~	Price elasticity of transformer demand.
+	|
+
+unit cost=
+	manufacturing cost+material cost+regulatory cost premium
+	~	Dollars/Unit
+	~	Total unit cost composite.
+	|
+
+manufacturing cost=
+	initial manufacturing cost*(Cumulative Production/reference production)^(0-effective learning exponent)
+	~	Dollars/Unit
+	~	Wright Law cost curve conditional on standardization.
+	|
+
+initial manufacturing cost=
+	40
+	~	Dollars/Unit
+	~	Normalized initial manufacturing cost (40 percent of total).
+	|
+
+reference production=
+	10000
+	~	Units
+	~	Reference cumulative production for normalization.
+	|
+
+effective learning exponent=
+	learning exponent*standardization effect
+	~	Dimensionless
+	~	Learning activates proportionally to standardization level.
+	|
+
+learning exponent=
+	0.18
+	~	Dimensionless
+	~	Wright Law exponent. 0.18 corresponds to 12 percent learning rate.
+	|
+
+standardization effect=
+	IF THEN ELSE(Standardization Fraction>standardization threshold, Standardization Fraction, 0.05)
+	~	Dimensionless
+	~	Multiplier on learning exponent.
+	|
+
+standardization threshold=
+	0.4
+	~	Dimensionless
+	~	Minimum standardization for meaningful learning curve effects.
+	|
+
+material cost=
+	copper cost component+steel cost component
+	~	Dollars/Unit
+	~	Raw material cost 30 percent copper plus 30 percent GOES steel.
+	|
+
+copper cost component=
+	30*copper price index
+	~	Dollars/Unit
+	~	Copper winding cost.
+	|
+
+steel cost component=
+	30*steel price index
+	~	Dollars/Unit
+	~	GOES core cost.
+	|
+
+copper price index=
+	1+0.02*(Time-2020)
+	~	Dimensionless
+	~	Simplified copper price trend.
+	|
+
+steel price index=
+	1+0.015*(Time-2020)
+	~	Dimensionless
+	~	Simplified GOES steel price trend.
+	|
+
+regulatory cost premium=
+	Regulatory Stringency*regulatory cost multiplier*initial unit cost
+	~	Dollars/Unit
+	~	Additional cost from DOE efficiency standards.
+	|
+
+regulatory cost multiplier=
+	0.15
+	~	Dimensionless
+	~	Maximum regulatory cost as fraction of base unit cost.
+	|
+
+initial unit cost=
+	100
+	~	Dollars/Unit
+	~	Normalized starting unit cost.
+	|
+
+target lead time=
+	1.5
+	~	Years
+	~	Target production lead time.
+	|
+
+desired capacity expansion=
+	MAX(0, (Order Backlog/target lead time-Manufacturing Capacity)*expansion aggressiveness)
+	~	Units/Year/Year
+	~	Desired new capacity based on gap between needed and existing.
+	|
+
+expansion aggressiveness=
+	0.2
+	~	1/Year
+	~	Fraction of capacity gap addressed per year.
+	|
+
+capacity expansion delay=
+	3
+	~	Years
+	~	Time from investment decision to production ready capacity.
+	|
+
+depreciation fraction=
+	0.03
+	~	1/Year
+	~	Annual capacity depreciation rate.
+	|
+
+target standardization=
+	MIN(1, base standardization+hyperscaler standardization pull)
+	~	Dimensionless
+	~	Long run standardization target driven by hyperscaler procurement.
+	|
+
+base standardization=
+	0.15
+	~	Dimensionless
+	~	Baseline standardization in absence of hyperscaler demand.
+	|
+
+hyperscaler standardization pull=
+	hyperscaler demand fraction*hyperscaler convergence factor
+	~	Dimensionless
+	~	Hyperscaler procurement drives standardization.
+	|
+
+hyperscaler demand fraction=
+	MIN(1, 0.1+0.03*(Time-2020))
+	~	Dimensionless
+	~	Fraction of total demand from hyperscalers.
+	|
+
+hyperscaler convergence factor=
+	0.8
+	~	Dimensionless
+	~	How much hyperscaler procurement drives design convergence.
+	|
+
+standardization adjustment time=
+	5
+	~	Years
+	~	Time for standardization fraction to converge toward target.
+	|
+
+regulatory step size=
+	0.25
+	~	Dimensionless
+	~	Size of DOE 2029 efficiency standard increase.
+	|
+
+regulatory adjustment time=
+	2
+	~	Years
+	~	Time for industry to absorb new regulatory requirements.
+	|
+
+INITIAL TIME = 2020
+	~	Year
+	~	|
+
+FINAL TIME = 2040
+	~	Year
+	~	|
+
+TIME STEP = 0.25
+	~	Year
+	~	|
+
+SAVEPER = TIME STEP
+	~	Year
+	~	|

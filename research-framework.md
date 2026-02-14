@@ -1,187 +1,420 @@
 # Research Framework
 
-## 1. Systems Dynamics Model
+## Core Question
 
-### Purpose
-Map the causal feedback loops between AI capital expenditure and downstream commodity/infrastructure demand. Systems dynamics captures the non-linear, delayed, and reinforcing/balancing feedback effects that simple linear models miss.
+AI companies are deploying over $200 billion per year in capital expenditure. That
+capital converts into physical infrastructure — power plants, transmission lines,
+transformer factories, data centers, semiconductor fabs. Unlike the capital itself,
+which can be written down in a quarterly earnings report, the infrastructure is
+durable. It reshapes supply chains, labor markets, trade patterns, and grid topology
+for decades.
 
-### Core Causal Loop Structure
+**Where does AI capex land in the physical economy, what does it lock in, and how
+do current regulatory decisions amplify or distort those outcomes?**
+
+This is not a commodity demand forecast. It is an analysis of how capital flows
+create infrastructure path dependencies — commitments that persist regardless of
+whether the investment thesis that justified them holds.
+
+---
+
+## Analytical Framework
+
+### 1. Capital Flow Mapping
+
+Trace $1 of hyperscaler capex through the physical supply chain. Identify where
+the capital converts from financial commitment to physical asset.
+
 ```
-AI Commercial Success
-    ├──> AI CapEx (hyperscaler spending)
-    │       ├──> Data Center Construction
-    │       │       ├──> Electricity Demand
-    │       │       ├──> Water Demand (cooling)
-    │       │       ├──> Real Estate / Land Use
-    │       │       └──> Construction Materials
-    │       ├──> Semiconductor Demand
-    │       │       ├──> Critical Minerals (silicon, rare earths, copper)
-    │       │       └──> Fab Capacity Investment
-    │       └──> Network Infrastructure
-    │               ├──> Fiber Optic Demand
-    │               └──> Edge Computing Buildout
+AI CapEx ($200B+/year)
     │
-    ├──> Grid Capacity Constraints (balancing loop)
-    │       ├──> Utility CapEx Response
-    │       ├──> Renewable Energy Buildout
-    │       └──> Permitting / Regulatory Delays
+    ├── Power Infrastructure (~40-50% of site cost)
+    │     ├── Generation capacity (gas plants, solar, nuclear PPAs)
+    │     ├── Transmission (high-voltage lines, substations, LPTs)
+    │     ├── Distribution (transformers, switchgear, interconnection)
+    │     └── On-site power (backup generation, UPS, battery storage)
     │
-    └──> Supply Chain Bottlenecks (balancing loop)
-            ├──> Mining Capacity Expansion (long lead times)
-            ├──> Price Signals → Substitution Effects
-            └──> Recycling / Secondary Supply
+    ├── Physical Plant (~25-30%)
+    │     ├── Real estate and land
+    │     ├── Building construction (concrete, steel, HVAC)
+    │     └── Cooling systems (water, liquid, air)
+    │
+    ├── Compute Hardware (~15-20%)
+    │     ├── GPUs/accelerators (NVIDIA, AMD, custom ASICs)
+    │     ├── Semiconductor fabs (TSMC, Intel, Samsung)
+    │     └── Critical minerals (silicon, copper, rare earths)
+    │
+    └── Network (~5-10%)
+          ├── Fiber optic (intra-campus, metro, long-haul)
+          ├── Subsea cables
+          └── Edge infrastructure
 ```
 
-### Key Feedback Loops to Model
-1. **Reinforcing: AI success → more CapEx → more infrastructure → enables more AI adoption**
-2. **Balancing: Grid constraints → higher energy costs → reduced data center margins → slower buildout**
-3. **Balancing: Mineral scarcity → higher input costs → slower semiconductor production → CapEx delays**
-4. **Reinforcing: Data center cluster effects → utility investment → improved grid → attracts more data centers**
-5. **Balancing: Water scarcity → regulatory pressure → cooling technology shifts → design cost increases**
+The percentages are approximate and vary by deployment type (hyperscale greenfield
+vs. colo expansion vs. edge). The key insight is that **power infrastructure
+dominates** — and power infrastructure has the longest asset life and the most
+complex regulatory entanglement.
 
-### Tools
-- **Primary:** Python with [PySD](https://pysd.readthedocs.io/) library (integrates with data science stack)
-- **Alternative:** Vensim PLE (free for learning, industry standard GUI)
-- **Learning resource:** MIT OpenCourseWare -- System Dynamics (15.871/15.872)
+### 2. Durability Taxonomy
+
+For each investment node, classify the durability of the capital commitment:
+
+| Category | Definition | Examples | Asset Life |
+| :--- | :--- | :--- | :--- |
+| **Structural** | Justified by demand that persists regardless of AI's commercial outcome | Grid modernization, utility transformer replacement, transmission upgrades | 30-50 years |
+| **Policy-dependent** | Durable only under a specific regulatory regime | Tariff-protected domestic manufacturing, subsidized generation capacity | Varies with political cycles |
+| **Demand-thesis-dependent** | Durable only if AI demand growth continues | GPU fabs at current scale, AI-optimized cooling, AI-specific data center designs | 3-10 years (hardware); 20-30 years (buildings) |
+
+The interesting cases are investments that start as demand-thesis-dependent but
+create structural demand through second-order effects. Example: a gas plant built
+to power a data center campus is demand-thesis-dependent at inception. But once
+built, it becomes a 40-year generating asset that operates regardless of whether
+the data center scales as planned. The capital decision was AI-driven; the
+infrastructure consequence is not.
+
+### 3. Regulatory Interaction Analysis
+
+Current regulatory decisions shape where and how AI capital converts to
+infrastructure. Four dimensions:
+
+**Trade policy and tariffs.**
+Tariffs on transformers, steel (Section 232), and other equipment create a time
+horizon mismatch: tariffs are administrative actions reversible within a single
+administration, but manufacturing capacity requires 15-20 year investment horizons.
+The result is not reshoring — it is a price transfer from buyers to existing
+producers, followed by permanent price floor establishment through revealed
+willingness-to-pay. When tariffs are removed, prices do not fully revert. The
+delta is pure capital loss — the buyer paid more without gaining supply chain
+resilience or domestic capacity.
+
+The exception is vertical integration that doesn't depend on tariff protection
+(e.g., Cleveland-Cliffs' Weirton plant, which is hedged on structural demand and
+GOES supply control, not trade policy).
+
+**Energy and environmental policy.**
+Accelerated permitting for gas generation to meet data center demand locks in
+30-40 year fossil assets. Simultaneously, data center operators are signing the
+largest corporate renewable PPAs in history. The policy environment determines
+which generation mix gets built, and that choice outlives multiple administrations.
+Rolling back clean energy mandates while AI drives the largest grid buildout in
+decades creates a tension: the capital flows regardless of policy, but *what kind*
+of infrastructure it builds depends on the regulatory moment.
+
+**FERC and utility regulation.**
+Cost allocation rules determine who pays for grid upgrades driven by data center
+demand. FERC's December 2025 order requiring 100% cost allocation to large load
+customers for co-location upgrades is a structural shift. Interconnection queue
+reform (or failure to reform) determines whether new generation can reach the grid
+at all — currently, the average queue wait is 4-5 years, which is itself a binding
+constraint on AI buildout.
+
+**Industrial policy.**
+The IRA, CHIPS Act, and Defense Production Act authorizations for grid equipment
+create subsidy flows that interact with private AI capital. These policies have
+different durability profiles — the IRA's tax credits are statutory (harder to
+repeal), while DPA authorizations are executive (easier to reverse).
+
+**Labor displacement and political economy.**
+AI capital flows simultaneously create and destroy jobs, but on different
+timelines, in different skill categories, and in different geographies:
+
+- **Build phase** — High demand for construction trades, electricians, welders,
+  heavy equipment operators. This demand is temporary and front-loaded. Once a
+  data center or substation is built, the construction workforce moves on or
+  disperses.
+- **Operations phase** — Much lower headcount with different skills (facility
+  managers, maintenance technicians, network engineers). The transition from
+  build to operations is a structural drop in labor demand at each site.
+- **Displacement** — AI deployment automates knowledge work (software engineering,
+  data analysis, content, administration). These layoffs are ongoing, visible, and
+  affect a different population than the people hired for construction.
+- **Skills mismatch** — A laid-off software engineer cannot wire a substation.
+  Retraining pathways exist (apprenticeship programs, community college trades
+  programs) but have 2-4 year lead times, and there is no guarantee of uptake.
+
+The net labor effect has a time structure: during the build phase (roughly
+2024-2032), infrastructure job creation may partially offset knowledge-work
+displacement. After the build phase, the infrastructure requires only maintenance-
+level labor while AI continues displacing knowledge work. The long-term net effect
+could be strongly negative.
+
+This matters for the regulatory environment because public tolerance for
+AI-favorable policy (fast permitting, tax incentives, relaxed environmental
+review) depends on whether people perceive AI as creating or destroying jobs
+*for them.* If the visible effect is tech layoffs while infrastructure jobs are
+temporary, geographically concentrated, and inaccessible to the displaced
+population, the political environment shifts toward restriction — which feeds
+back into every other regulatory dimension.
+
+### 4. Systems Dynamics Modeling
+
+Systems dynamics remains a core analytical tool, but its role shifts from
+"predict commodity demand" to "map feedback architecture and identify leverage
+points." The CLD and stock-and-flow approach is used to:
+
+- Identify reinforcing and balancing loops in each supply chain node
+- Test which parameters the outcome is most sensitive to
+- Find tipping points where the system shifts between regimes
+- Understand delay structures (capacity expansion, permitting, workforce training)
+
+The Vensim/PySD models are tools for structural insight, not numerical prediction.
+Parameter calibration matters only to the extent that it changes which loops
+dominate.
 
 ---
 
-## 2. Bayesian Inference Layer
+## Case Studies
 
-### Purpose
-Many parameters in the systems dynamics model are uncertain and contested. Bayesian methods let us formally represent this uncertainty, update estimates as new data arrives, and propagate uncertainty through to conclusions.
+Each case study is a deep dive into one supply chain node where AI capital creates
+structural transformation. The case studies are independent but share the analytical
+framework (capital flow → durability → regulatory interaction → feedback architecture).
 
-### Key Uncertain Parameters
-| Parameter | Why It's Uncertain |
-|---|---|
-| AI-specific share of data center growth | Hyperscalers report total CapEx but don't break out AI vs. cloud vs. enterprise |
-| Energy intensity per AI workload | Varies by model size, inference vs. training, hardware generation |
-| Grid expansion timeline | Depends on permitting, utility investment cycles, political environment |
-| Mineral supply elasticity | New mines take 7-15 years; recycling capacity is nascent |
-| Water consumption per MW of cooling | Varies by climate, cooling technology, and local water availability |
+### CS-1: Transformer Manufacturing and Grid Equipment
 
-### Approach
-1. Define prior distributions for each uncertain parameter based on published estimates and expert ranges
-2. Use available data (EIA reports, SEC filings, industry surveys) as likelihood functions
-3. Compute posterior distributions via MCMC sampling
-4. Feed posterior parameter distributions into the systems dynamics model to produce probabilistic output ranges
+*Status: Draft complete (notebooks 01 and 02)*
 
-### Tools
-- **PyMC** or **Stan** (via PyStan/CmdStanPy) for Bayesian modeling
-- **ArviZ** for posterior diagnostics and visualization
-- **Learning resource:** "Statistical Rethinking" by Richard McElreath (book + lectures)
+**Focus:** How AI-driven demand is reshaping the transformer supply chain through
+vertical integration, standardization pressure, trade dynamics, and labor constraints.
+
+**Key findings so far:**
+- Distribution transformers are a credible candidate for learning curves; LPTs are not
+- Cleveland-Cliffs' vertical integration is a structural bet independent of tariffs
+- The system sits near a tipping point between scarcity equilibrium and learning-curve regime
+- Labor and trade policy are binding constraints not captured by the initial model
+
+**Needs:**
+- Validate which transformer segment AI demand actually concentrates in (LPT vs. distribution)
+- Replace PPI proxy with actual production volume data (NEMA shipments, Census NAICS 335311)
+- Ground the regulatory analysis in DOE rulemaking history
+- Strengthen references with primary sources
+
+### CS-2: Power Generation Mix and Asset Lock-in
+
+*Status: Not started*
+
+**Focus:** What generation assets are being built to serve data center demand, and
+what are their 30-40 year implications?
+
+**Key questions:**
+- What fraction of new gas capacity is driven by data center demand vs. general load growth?
+- How do corporate renewable PPAs interact with utility-scale generation planning?
+- What happens to gas plants built for data centers if AI demand plateaus in 2032?
+- How does the permitting environment determine the generation mix?
+
+**Data sources:** EIA Form 860 (generator-level), EIA-923 (generation), FERC Form 1
+(utility capex), hyperscaler sustainability reports, state PUC filings.
+
+### CS-3: Grid Interconnection and Transmission
+
+*Status: Not started*
+
+**Focus:** The interconnection queue as a binding constraint on AI infrastructure,
+and how queue reform (or its absence) shapes where capital physically lands.
+
+**Key questions:**
+- What is the current interconnection queue backlog by region and project type?
+- How does queue wait time interact with data center site selection?
+- What does FERC interconnection reform actually change, and on what timeline?
+- How do transmission buildout decisions create 50-year grid topology lock-in?
+
+**Data sources:** LBNL interconnection queue reports, FERC dockets, ISO/RTO queue
+data (PJM, ERCOT, CAISO, MISO), Grid Strategies reports.
+
+### CS-4: Material Supply Chains (GOES, Copper, Critical Minerals)
+
+*Status: Not started*
+
+**Focus:** Concentration risk, trade dynamics, and vertical integration in the
+materials that underpin power infrastructure.
+
+**Key questions:**
+- How concentrated is GOES production, and what does Cleveland-Cliffs' entry mean
+  for the market structure?
+- How do Section 232 steel tariffs interact with transformer manufacturing costs?
+- Where does copper supply elasticity bind — and is it the same constraint for
+  grid buildout as for data center construction?
+- Which material constraints take 10+ years to resolve (mine development timelines)?
+
+**Data sources:** USGS Mineral Commodity Summaries, ITC trade data, Cleveland-Cliffs
+and Nippon Steel filings, NEMA shipments data, copper industry reports.
+
+### CS-5: Labor Market Dynamics
+
+*Status: Not started*
+
+**Focus:** The full labor picture — infrastructure workforce constraints on the
+supply side, knowledge-work displacement on the demand side, and the temporal
+mismatch between build-phase job creation and long-term operations staffing.
+
+**Key questions:**
+
+*Supply constraint (infrastructure workforce):*
+- What is the current workforce gap in electrical trades and power engineering?
+- What are the training pipeline lead times (apprenticeship → journeyman)?
+- How does the aging workforce demographic interact with demand growth?
+- Where does automation substitute for labor, and where doesn't it?
+
+*Temporal dynamics (build vs. operate):*
+- What is the ratio of build-phase to operations-phase labor for a typical data
+  center campus? For a substation? For a transmission line?
+- What happens to construction workforces when the build phase ends in a region?
+- How does the concentration of build activity in specific geographies (Northern
+  Virginia, Central Ohio, Dallas-Fort Worth) create and then withdraw local
+  economic stimulus?
+
+*Displacement and reallocation:*
+- What is the net labor effect of AI investment (infrastructure jobs created vs.
+  knowledge jobs displaced)?
+- What is the skills gap between displaced knowledge workers and infrastructure
+  demand? What retraining pathways exist, and what are their lead times and
+  completion rates?
+- How does labor displacement affect public and political support for AI-favorable
+  infrastructure policy?
+
+*Cross-cutting:*
+- How do immigration policies affect the supply of both construction trades and
+  tech workers?
+- What is the geographic mismatch between where jobs are created (data center
+  corridors) and where jobs are lost (tech hubs)?
+
+**Data sources:** BLS Occupational Outlook Handbook, BLS QCEW (Quarterly Census of
+Employment and Wages), BLS JOLTS (Job Openings and Labor Turnover Survey), NEMA
+workforce surveys, IBEW apprenticeship data, DOE workforce reports, Challenger
+Gray & Christmas layoff tracker, WARN Act filings, Census Bureau County Business
+Patterns.
 
 ---
 
-## 3. Markov Regime Switching
+## Reference Foundation
 
-### Purpose
-Rather than picking a single scenario, model the economy as existing in one of several "regimes" with probabilistic transitions between them. This captures the reality that AI's trajectory is uncertain and can shift.
+The analysis rests on sources that need to be read firsthand, not cited secondhand.
+Priority reading list, organized by function:
 
-### Proposed Regimes
-| Regime | Description | Commodity Demand Implications |
-|---|---|---|
-| **AI Boom** | Continued exponential CapEx growth, strong commercial returns | Maximum demand pressure across all sectors |
-| **AI Plateau** | CapEx stabilizes, AI becomes utility-like infrastructure | Sustained but flattening demand; grid and minerals remain constrained |
-| **AI Bust** | Commercial disappointment, CapEx cuts | Demand drops for AI-specific inputs; but grid/data center infrastructure persists for general cloud |
+### Systems dynamics and modeling methodology
+- Sterman, J. (2000). *Business Dynamics.* McGraw-Hill.
+- Meadows, D. (2008). *Thinking in Systems.* Chelsea Green.
+- MIT OCW 15.871 / 15.872 — Systems Dynamics I and II.
 
-### Key Analytical Questions
-- Which commodities show **durable demand across all three regimes**? (These are the "regime-robust" bets)
-- Which commodities are **regime-sensitive**? (High demand in boom, collapse in bust)
-- What are the **transition probabilities** between regimes, and how do they shift based on observable signals?
+### Learning curves and technology cost dynamics
+- Wright, T.P. (1936). "Factors Affecting the Cost of Airplanes." *Journal of
+  the Aeronautical Sciences* 3(4).
+- Rubin, E. et al. (2015). "A review of learning rates for electricity supply
+  technologies." *Energy Policy* 86.
+- Kavlak, G. et al. (2018). "Evaluating the causes of cost reduction in
+  photovoltaic modules." *Energy Policy* 123.
+- Grubler, A. (2010). "The costs of the French nuclear scale-up." *Energy Policy*
+  38(9).
+- Potter, B. — *Construction Physics* newsletter, esp. "How Accurate Are Learning
+  Curves?" and "Where Are My Damn Learning Curves?"
+- Henderson, B. (1968). *Perspectives on Experience.* BCG.
 
-### Approach
-1. Define state-dependent demand equations for each commodity sector under each regime
-2. Estimate transition probabilities using historical analogies (dot-com, shale boom, crypto) and current market signals
-3. Run Monte Carlo simulations across regime paths to generate demand probability distributions
-4. Identify regime-robust vs. regime-sensitive commodity exposures
+### AI infrastructure and data center demand
+- Grid Strategies (2023). *The Era of Flat Power Demand is Over.*
+- LBNL — U.S. Data Center Energy Usage Report series (Shehabi et al.)
+- IEA (2024). World Energy Outlook, electricity grids chapter.
+- IEA (2023). *Electricity Grids and Secure Energy Transitions.*
+- Goldman Sachs (2024). "AI, data centers, and the coming US power demand surge."
+- EPRI (2024). "Powering Intelligence: Analyzing AI and Data Center Energy
+  Consumption."
 
-### Tools
-- **statsmodels** `MarkovRegression` / `MarkovAutoregression` for regime switching models
-- **hmmlearn** for hidden Markov model implementation
-- Custom simulation code for Monte Carlo regime path generation
+### Transformer and grid equipment markets
+- DOE (2022). *Electric Grid Supply Chain Review.*
+- DOE Transformer Rulemaking Docket (EERE-2019-BT-STD-0018).
+- NREL (2024). Distribution transformer assessment.
+- Wood Mackenzie (2025). Power transformer supply deficit analysis.
+- Cleveland-Cliffs investor presentations and earnings calls (2024-2025).
+- ABB, Siemens Energy, Hitachi Energy, Schneider Electric annual reports.
+- NEMA Electroindustry shipments statistics.
+- Census Bureau Annual Survey of Manufactures, NAICS 335311.
+
+### Trade, regulatory, and policy
+- FERC Order on large-load cost allocation (December 2025).
+- DOE efficiency standards final rule (2024) for distribution transformers.
+- Section 232 steel and aluminum tariff history and modifications.
+- LBNL interconnection queue reports (annual).
+- Union of Concerned Scientists (2025). PJM data center grid cost socialization.
+
+### Energy markets and utility data
+- EIA Electricity Data Browser + Forms 860, 861, 923.
+- FERC Form 1 (major electric utility annual reports).
+- FRED — PPI series for transformers, copper, steel.
+- S&P Global / IHS Markit power market data.
+
+### Labor markets and workforce dynamics
+- BLS Occupational Employment and Wage Statistics (OEWS) — electrical trades,
+  construction, power engineering occupations.
+- BLS JOLTS — job openings and separations in construction vs. information sectors.
+- IBEW apprenticeship completion data.
+- DOE (2024). U.S. Energy and Employment Report (USEER).
+- Challenger, Gray & Christmas — tech layoff tracking data.
+- WARN Act filings — advance layoff notification data by state and industry.
+- Autor, D. (2024). "Applying AI to Rebuild Middle Class Jobs." NBER Working Paper.
+
+### Historical analogies
+- Dot-com/telecom overbuilding (1996-2003): fiber overcapacity, eventual absorption.
+- Shale boom-bust (2010-2020): commodity capital cycle dynamics.
+- French nuclear scale-up (1970-2000): negative learning from regulatory ratcheting.
 
 ---
 
-## 4. Sector Analysis Approach
+## Phased Plan
 
-For each of the five key sectors, the analysis will address:
+### Phase 1: Tighten CS-1 and establish the framework (Current)
 
-### Electricity Generation and Grid Capacity
-- Current data center share of US/global electricity consumption
-- Projected growth under each regime
-- Grid expansion bottlenecks (permitting, transformer lead times, interconnection queues)
-- Implications for natural gas, renewables, nuclear
-- Key question: Does grid investment become self-sustaining once started, regardless of AI trajectory?
+- Strengthen the transformer case study with primary data sources
+- Replace the PPI proxy with NEMA or Census production data
+- Validate which transformer segment AI demand concentrates in
+- Finalize the durability taxonomy and regulatory interaction framework
+- Publish CS-1 as a self-contained piece
 
-### Water Consumption and Cooling Infrastructure
-- Water intensity of different cooling technologies (evaporative, liquid, air)
-- Geographic concentration of data centers vs. water stress
-- Regulatory risk (water rights, drought restrictions)
-- Key question: Does water scarcity become a binding constraint that redirects data center geography?
+**Deliverable:** One publishable analysis: "Where does AI capex land in the grid?"
 
-### Critical Minerals
-- Copper: grid expansion + data center construction + EV overlap
-- Lithium: battery storage for grid reliability
-- Rare earths: permanent magnets in generators, hard drives
-- Silicon: semiconductor feedstock
-- Key question: Which minerals face supply constraints that take 10+ years to resolve?
+### Phase 2: Capital flow mapping and CS-2
 
-### Fiber Optic and Network Backbone
-- Bandwidth demand from AI inference (serving models to users)
-- Edge computing buildout requirements
-- Subsea cable investment
-- Key question: Is network infrastructure demand a durable tailwind regardless of which AI applications succeed?
+- Trace hyperscaler capex through to physical infrastructure commitments
+- Begin CS-2 (power generation mix) with EIA and FERC data
+- Map the generation asset lock-in problem
+- Develop the tariff / trade policy analysis with specific data
 
-### Real Estate and Construction (Data Centers)
-- Data center construction pipeline and vacancy rates
-- Geographic clustering patterns and constraints
-- Construction material demand (concrete, steel, specialized electrical equipment)
-- Key question: Are data centers becoming general-purpose cloud infrastructure that persists post-AI-hype?
+**Deliverable:** Capital flow map + generation mix analysis
+
+### Phase 3: CS-3 through CS-5
+
+- Grid interconnection queue analysis (LBNL data)
+- Material supply chain deep dive (USGS, trade data, company filings)
+- Labor market constraints (BLS, NEMA workforce)
+
+**Deliverable:** Complete case study set
+
+### Phase 4: Synthesis and publication
+
+- Cross-case synthesis: which infrastructure commitments are durable?
+- Regulatory interaction analysis across all case studies
+- Final publication as an integrated analysis
+
+**Deliverable:** Integrated research output suitable for publication
 
 ---
 
-## 5. Phased Learning Plan
+## Tools
 
-### Phase 1: Foundation (Weeks 1-4)
-**Goal:** Literature review + basic systems dynamics competency
-- [ ] Complete MIT OCW systems dynamics introductory materials
-- [ ] Read IEA data center energy reports (2023, 2024 editions)
-- [ ] Read key papers on AI infrastructure energy demand
-- [ ] Build a simple causal loop diagram (CLD) of AI → energy → commodities
-- [ ] Get PySD running with a toy model
-- [ ] Collect and organize bookmarks for all data sources
+| Tool | Purpose |
+| :--- | :--- |
+| **PySD / Vensim PLE** | Systems dynamics modeling (feedback architecture, not prediction) |
+| **Marimo** | Reactive notebooks for analysis and publication drafts |
+| **FRED / fredapi** | Economic time series (PPI, production indices) |
+| **yfinance** | Financial data (company filings, commodity prices) |
+| **pandas / matplotlib** | Data analysis and visualization |
+| **ruff / mypy** | Code quality |
 
-**Deliverable:** Causal loop diagram + annotated bibliography
+Bayesian (PyMC) and regime switching (statsmodels) remain available as tools if a
+specific case study needs them, but they are not prerequisites for the core analysis.
 
-### Phase 2: Data and Bayesian Foundations (Weeks 5-8)
-**Goal:** Data collection + Bayesian methods competency
-- [ ] Pull EIA electricity generation and consumption data
-- [ ] Pull USGS mineral commodity summaries
-- [ ] Pull SEC CapEx data for MSFT, GOOG, AMZN, META
-- [ ] Build exploratory visualizations of key trends
-- [ ] Work through "Statistical Rethinking" chapters 1-8
-- [ ] Build first Bayesian parameter estimation model (e.g., estimate AI share of data center energy)
+---
 
-**Deliverable:** Cleaned datasets + exploratory analysis notebook + first Bayesian model
+## Constraints
 
-### Phase 3: Model Integration (Weeks 9-12)
-**Goal:** Build the integrated systems dynamics + Bayesian + regime switching model
-- [ ] Convert CLD to stock-and-flow model in PySD
-- [ ] Integrate Bayesian posterior distributions as parameter inputs
-- [ ] Build Markov regime switching model with historical calibration
-- [ ] Connect regime states to demand equations in the systems dynamics model
-- [ ] Run initial simulations and debug
-
-**Deliverable:** Working integrated model with preliminary results
-
-### Phase 4: Analysis and Write-up (Weeks 13-16)
-**Goal:** Run scenarios, extract insights, produce final output
-- [ ] Run Monte Carlo simulations across regime paths
-- [ ] Identify regime-robust vs. regime-sensitive commodities
-- [ ] Sensitivity analysis on key uncertain parameters
-- [ ] Write up findings as a research report
-- [ ] Create presentation-ready visualizations
-- [ ] Prepare portfolio-ready summary
-
-**Deliverable:** Research report + model code + presentation materials
+- Zero budget — all tools and data sources must be freely accessible
+- Learning project — building analytical capability alongside the analysis
+- Aligned with Sprint 1 goals (Feb 9 - May 3, 2026)
+- Publication-oriented — every case study should be writable as a standalone piece

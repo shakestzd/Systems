@@ -1,0 +1,77 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[project]
+name = "systems"
+version = "0.1.0"
+description = "Modeling durable commodity and infrastructure impacts of AI capital flows"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+
+dependencies = [
+    # Core scientific computing
+    "numpy>=1.24",
+    "pandas>=2.0",
+    "scipy>=1.10",
+    "matplotlib>=3.7",
+    "seaborn>=0.12",
+    # Systems dynamics modeling
+    "pysd>=3.13",
+    # Bayesian inference
+    "pymc>=5.10",
+    "arviz>=0.17",
+    # Markov regime switching and time series
+    "statsmodels>=0.14",
+    "hmmlearn>=0.3",
+    # Data access and storage
+    "fredapi>=0.5",
+    "yfinance>=0.2",
+    "requests>=2.31",
+    "pandas-datareader>=0.10",
+    "duckdb>=1.4",
+    "pyarrow>=14.0",
+    # Notebooks (Marimo, not Jupyter)
+    "marimo>=0.9",
+    "pydantic-ai-slim>=1.58.0",
+    "auto-mix-prep>=0.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "ruff>=0.3",
+    "mypy>=1.8",
+]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+
+[dependency-groups]
+dev = [
+    "mcp>=1",
+    "nbformat>=5.10.4",
+    "openai>=2.20.0",
+    "polars[pyarrow]>=1.38.1",
+    "pydantic>=2",
+    "python-lsp-ruff>=2.3.0",
+    "python-lsp-server>=1.14.0",
+    "sqlglot>=28.10.1",
+    "websockets>=16.0",
+]
