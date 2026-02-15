@@ -182,6 +182,14 @@ data/external/
 !data/processed/.gitkeep
 !data/external/.gitkeep
 
+# DuckDB database (rebuilt by pipelines)
+data/research.duckdb
+data/research.duckdb.wal
+data/.dlt/
+
+# GitHub Pages build output
+_site/
+
 # API keys
 .env.local
 secrets.json

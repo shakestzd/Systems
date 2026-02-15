@@ -69,12 +69,12 @@ def _(cfg, np, plt, save_fig):
     _ax.grid(True, axis="x", linestyle=":", alpha=0.4)
     plt.tight_layout()
 
-    save_fig(fig_timeline, cfg.img_dir / "dd002_asset_timeline.png")
-    return (fig_timeline,)
+    asset_timeline=save_fig(fig_timeline, cfg.img_dir / "dd002_asset_timeline.png")
+    return
 
 
 @app.cell(hide_code=True)
-def _(cfg, fig_timeline, mo):
+def _(cfg, mo):
     _chart = mo.image(
         src=(cfg.img_dir / "dd002_asset_timeline.png").read_bytes(), width=850
     )
@@ -113,7 +113,6 @@ def _():
 
     cfg = setup()
     return (
-        annotated_series,
         cfg,
         horizontal_bar_ranking,
         mo,
@@ -243,12 +242,12 @@ def _(cfg, gen_pivot, major_fuels, save_fig, stacked_bar):
             bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="#333333", alpha=0.8),
         )
 
-    save_fig(fig_mix, cfg.img_dir / "dd002_generation_mix.png")
-    return (fig_mix,)
+    generation_mix=save_fig(fig_mix, cfg.img_dir / "dd002_generation_mix.png")
+    return
 
 
 @app.cell(hide_code=True)
-def _(cfg, fig_mix, mo):
+def _(cfg, mo):
     _mix_chart = mo.image(
         src=(cfg.img_dir / "dd002_generation_mix.png").read_bytes(), width=800
     )
@@ -328,12 +327,12 @@ def _(cfg, eia, np, plt, save_fig):
     _ax.legend(fontsize=9)
     plt.tight_layout()
 
-    save_fig(fig_capfactor, cfg.img_dir / "dd002_capacity_factor.png")
-    return (fig_capfactor,)
+    capacity_factor=save_fig(fig_capfactor, cfg.img_dir / "dd002_capacity_factor.png")
+    return
 
 
 @app.cell(hide_code=True)
-def _(cfg, fig_capfactor, mo):
+def _(cfg, mo):
     _cf_chart = mo.image(
         src=(cfg.img_dir / "dd002_capacity_factor.png").read_bytes(), width=800
     )
@@ -385,7 +384,7 @@ def _(mo):
 
 
 @app.cell
-def _(cfg, np, plt, save_fig):
+def _(cfg, plt, save_fig):
     # Generation spectrum: 2D positioning by asset life and grid benefit
     _strategies = [
         {"name": "Gas peaker\n(BTM)", "life": 25, "grid": 0.05, "size": 300,
@@ -443,12 +442,12 @@ def _(cfg, np, plt, save_fig):
     _ax.grid(True, linestyle=":", alpha=0.3)
     plt.tight_layout()
 
-    save_fig(fig_spectrum, cfg.img_dir / "dd002_generation_spectrum.png")
-    return (fig_spectrum,)
+    generation_spectrum=save_fig(fig_spectrum, cfg.img_dir / "dd002_generation_spectrum.png")
+    return
 
 
 @app.cell(hide_code=True)
-def _(cfg, fig_spectrum, mo):
+def _(cfg, mo):
     _chart = mo.image(
         src=(cfg.img_dir / "dd002_generation_spectrum.png").read_bytes(), width=800
     )
@@ -490,12 +489,12 @@ def _(cfg, eia, horizontal_bar_ranking, save_fig):
         xlabel="New Capacity Since 2020 (GW)",
         highlight_indices=_highlight,
     )
-    save_fig(fig_states, cfg.img_dir / "dd002_state_generation.png")
-    return (fig_states,)
+    state_generation=save_fig(fig_states, cfg.img_dir / "dd002_state_generation.png")
+    return
 
 
 @app.cell(hide_code=True)
-def _(cfg, fig_states, mo):
+def _(cfg, mo):
     _state_chart = mo.image(
         src=(cfg.img_dir / "dd002_state_generation.png").read_bytes(), width=800
     )
@@ -566,12 +565,12 @@ def _(cfg, elec_ppi, natgas, pd, plt, save_fig):
     _ax1.legend(_lines1 + _lines2, _labels1 + _labels2, loc="upper left", fontsize=8)
 
     plt.tight_layout()
-    save_fig(fig_gas, cfg.img_dir / "dd002_energy_prices.png")
-    return (fig_gas,)
+    energy_prices=save_fig(fig_gas, cfg.img_dir / "dd002_energy_prices.png")
+    return
 
 
 @app.cell(hide_code=True)
-def _(cfg, fig_gas, mo):
+def _(cfg, mo):
     _price_chart = mo.image(
         src=(cfg.img_dir / "dd002_energy_prices.png").read_bytes(), width=800
     )
@@ -620,12 +619,12 @@ def _(cfg, horizontal_bar_ranking, save_fig):
         highlight_color="#2ca02c",
         color="#4ecdc4",
     )
-    save_fig(fig_ppa, cfg.img_dir / "dd002_hyperscaler_ppa.png")
-    return (fig_ppa,)
+    hyperscaler_ppa=save_fig(fig_ppa, cfg.img_dir / "dd002_hyperscaler_ppa.png")
+    return
 
 
 @app.cell(hide_code=True)
-def _(cfg, fig_ppa, mo):
+def _(cfg, mo):
     _ppa_chart = mo.image(
         src=(cfg.img_dir / "dd002_hyperscaler_ppa.png").read_bytes(), width=800
     )
