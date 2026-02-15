@@ -182,8 +182,7 @@ data/external/
 !data/processed/.gitkeep
 !data/external/.gitkeep
 
-# DuckDB database (rebuilt by pipelines)
-data/research.duckdb
+# DuckDB pipeline state
 data/research.duckdb.wal
 data/.dlt/
 

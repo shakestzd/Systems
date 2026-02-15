@@ -33,6 +33,7 @@ dependencies = [
     "requests>=2.31",
     "pandas-datareader>=0.10",
     "duckdb>=1.4",
+    "dlt[duckdb]>=1.0",
     "pyarrow>=14.0",
     # Notebooks (Marimo, not Jupyter)
     "marimo>=0.9",
