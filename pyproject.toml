@@ -35,6 +35,8 @@ dependencies = [
     "duckdb>=1.4",
     "dlt[duckdb]>=1.0",
     "pyarrow>=14.0",
+    # Geographic visualization
+    "geopandas>=1.0",
     # Notebooks (Marimo, not Jupyter)
     "marimo>=0.9",
     "pydantic-ai-slim>=1.58.0",

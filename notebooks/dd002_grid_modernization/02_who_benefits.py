@@ -1,7 +1,10 @@
 import marimo
 
 __generated_with = "0.19.11"
-app = marimo.App(width="medium")
+app = marimo.App(
+    width="medium",
+    layout_file="layouts/02_who_benefits.slides.json",
+)
 
 
 @app.cell(hide_code=True)
@@ -119,72 +122,18 @@ def _(mo):
     return
 
 
-@app.cell
-def _(cfg, np, plt, save_fig):
-    # Interconnection queue funnel — LBNL Queued Up 2025 Edition
-    # ~2,300 GW enter → ~300 GW eventually built (13% completion rate)
-    _stages = [
-        "Queue entry",
-        "Feasibility study\ncomplete",
-        "System impact\nstudy complete",
-        "Interconnection\nagreement",
-        "Under\nconstruction",
-        "Built",
-    ]
-    _gw = [2300, 1500, 850, 450, 250, 300]
-    _colors = ["#cccccc", "#ddbbaa", "#e8a87c", "#f0b429", "#4ecdc4", "#2ca02c"]
-
-    fig_funnel, _ax = plt.subplots(figsize=(10, 4.5))
-    _y = np.arange(len(_stages))
-    _ax.barh(_y, _gw, color=_colors, height=0.55, edgecolor="white", linewidth=1.5)
-
-    for i, gw in enumerate(_gw):
-        _pct = gw / 2300 * 100
-        _ax.text(
-            gw + 40, i, f"{gw:,} GW  ({_pct:.0f}%)",
-            va="center", fontsize=10, fontweight="bold",
-        )
-
-    # Attrition annotations between stages
-    for i in range(len(_stages) - 1):
-        _drop = _gw[i] - _gw[i + 1]
-        if _drop > 100:
-            _ax.annotate(
-                f"\u2193 {_drop:,} GW drop",
-                xy=(min(_gw[i], _gw[i + 1]) + _drop / 2, i + 0.5),
-                fontsize=7, color="#e74c3c", ha="center", va="center",
-                alpha=0.7,
-            )
-
-    _ax.set_yticks(_y)
-    _ax.set_yticklabels(_stages, fontsize=10)
-    _ax.set_xlabel("GW")
-    _ax.set_title(
-        "The queue is a funnel: 2,300 GW proposed, ~300 GW built (13%)",
-        fontsize=11, fontweight="bold",
-    )
-    _ax.set_xlim(0, 3000)
-    _ax.invert_yaxis()
-    _ax.grid(True, axis="x", linestyle=":", alpha=0.3)
-    plt.tight_layout()
-
-    save_fig(fig_funnel, cfg.img_dir / "dd002_queue_funnel_data.png")
-    return (fig_funnel,)
-
-
 @app.cell(hide_code=True)
-def _(cfg, fig_funnel, mo):
-    _chart = mo.image(
-        src=(cfg.img_dir / "dd002_queue_funnel_data.png").read_bytes(), width=800
+def _(cfg, mo):
+    _funnel = mo.image(
+        src=(cfg.img_dir / "dd002_queue_funnel.png").read_bytes(), width=500
     )
     mo.md(
         f"""
-    {_chart}
+    {_funnel}
 
-    *Each stage loses projects to cost escalation, engineering obstacles, or
-    changed economics. The queue is the binding constraint on grid modernization
-    — not technology, not cost competitiveness, but administrative and
-    engineering process throughput.*
+    *The interconnection queue is a funnel, not a pipeline. Of the 2,300 GW
+    waiting to connect, only about 13% will ever be built. The rest withdraws
+    due to cost escalation, engineering obstacles, or changing project economics.*
     """
     )
     return
@@ -217,7 +166,7 @@ def _(cfg, horizontal_bar_ranking, save_fig):
         highlight_indices=[0, 4],  # PJM and ERCOT — major data center regions
         highlight_color="#e74c3c",
     )
-    save_fig(fig_queue, cfg.img_dir / "dd002_queue_by_region.png")
+    queue_by_region=save_fig(fig_queue, cfg.img_dir / "dd002_queue_by_region.png")
     return
 
 
@@ -613,9 +562,14 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _(cfg, mo):
+    _scenarios = mo.image(
+        src=(cfg.img_dir / "dd002_three_scenarios.png").read_bytes(), width=800
+    )
     mo.md(
-        """
+        f"""
+    {_scenarios}
+
     The question "does anyone else benefit?" has three possible answers,
     depending on regulatory choices being made now:
 

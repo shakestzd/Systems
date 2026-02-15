@@ -109,6 +109,7 @@ def _():
         annotated_series,
         stacked_bar,
         horizontal_bar_ranking,
+        us_scatter_map,
     )
 
     cfg = setup()
@@ -122,6 +123,7 @@ def _():
         query,
         save_fig,
         stacked_bar,
+        us_scatter_map,
     )
 
 
@@ -130,7 +132,8 @@ def _(pd, query):
     # Load EIA Form 860 generator data from DuckDB
     eia = query(
         """
-        SELECT fuel_category, operating_year, state, nameplate_capacity_mw, status
+        SELECT fuel_category, operating_year, state, nameplate_capacity_mw, status,
+               latitude, longitude
         FROM energy_data.eia860_generators
         WHERE operating_year IS NOT NULL
           AND nameplate_capacity_mw > 0
@@ -493,29 +496,163 @@ def _(cfg, eia, horizontal_bar_ranking, save_fig):
     return
 
 
+@app.cell
+def _(cfg, eia, np, plt, save_fig, us_scatter_map):
+    # Map: new power plants since 2020, colored by fuel type
+    _recent_geo = eia[
+        (eia["operating_year"] >= 2020)
+        & eia["latitude"].notna()
+        & eia["longitude"].notna()
+        # Filter to continental US bounds
+        & (eia["longitude"] > -130) & (eia["longitude"] < -60)
+        & (eia["latitude"] > 23) & (eia["latitude"] < 51)
+    ].copy()
+
+    _fuel_colors = {
+        "solar": "#f0b429", "wind": "#4ecdc4", "gas_cc": "#e74c3c",
+        "gas_ct": "#ff8c69", "battery": "#7b68ee", "nuclear": "#3498db",
+        "hydro": "#2ecc71", "coal": "#555555",
+    }
+
+    _colors = [_fuel_colors.get(f, "#aaaaaa") for f in _recent_geo["fuel_category"]]
+    _sizes = np.clip(_recent_geo["nameplate_capacity_mw"].values / 5, 3, 120)
+
+    # Build legend
+    _legend_handles = [
+        plt.Line2D([0], [0], marker="o", color="w", markerfacecolor=c,
+                   markersize=8, label=label.replace("_", " ").title())
+        for label, c in _fuel_colors.items()
+        if label in _recent_geo["fuel_category"].values
+    ]
+
+    fig_plant_map = us_scatter_map(
+        _recent_geo["latitude"].values,
+        _recent_geo["longitude"].values,
+        _colors,
+        _sizes,
+        "New power plants since 2020 cluster in data center corridors and renewable-rich regions",
+        legend_handles=_legend_handles,
+        alpha=0.5,
+    )
+
+    plant_map=save_fig(fig_plant_map, cfg.img_dir / "dd002_plant_map.png")
+    return
+
+
 @app.cell(hide_code=True)
 def _(cfg, mo):
-    _state_chart = mo.image(
-        src=(cfg.img_dir / "dd002_state_generation.png").read_bytes(), width=800
+    _plant_map = mo.image(
+        src=(cfg.img_dir / "dd002_plant_map.png").read_bytes(), width=850
     )
     mo.md(
         f"""
     ## Geographic Concentration
 
+    {_plant_map}
+
+    The map reveals clear spatial patterns. Solar concentrates in the
+    Sun Belt — Texas, California, the Southeast. Wind clusters in the
+    Great Plains corridor. Gas combined cycle plants dot the eastern
+    seaboard and Texas Gulf Coast. The geographic distribution is not
+    random: it follows resource availability (sun, wind), existing
+    grid infrastructure, and permitting environments.
+    """
+    )
+    return
+
+
+@app.cell
+def _(cfg, np, plt, save_fig, us_scatter_map):
+    # Frontier AI data center locations (Epoch AI, February 2025)
+    # Filtered to US-based facilities with confirmed power capacity
+    _datacenters = [
+        {"name": "Amazon Canton MS", "lat": 32.59, "lon": -90.09, "mw": 341, "owner": "Amazon"},
+        {"name": "Anthropic-Amazon New Carlisle IN", "lat": 41.69, "lon": -86.46, "mw": 751, "owner": "Amazon"},
+        {"name": "Google Pryor OK", "lat": 36.24, "lon": -95.33, "mw": 195, "owner": "Google"},
+        {"name": "Google New Albany OH", "lat": 40.06, "lon": -82.76, "mw": 543, "owner": "Google"},
+        {"name": "Google Omaha NE", "lat": 41.34, "lon": -96.09, "mw": 189, "owner": "Google"},
+        {"name": "Google Council Bluffs IA", "lat": 41.17, "lon": -95.79, "mw": 190, "owner": "Google"},
+        {"name": "Meta Prometheus OH", "lat": 40.07, "lon": -82.75, "mw": 814, "owner": "Meta"},
+        {"name": "Meta Temple TX", "lat": 31.13, "lon": -97.37, "mw": 198, "owner": "Meta"},
+        {"name": "OpenAI-Oracle Stargate TX", "lat": 32.50, "lon": -99.78, "mw": 295, "owner": "Oracle"},
+        {"name": "Microsoft Goodyear AZ", "lat": 33.41, "lon": -112.37, "mw": 316, "owner": "Microsoft"},
+        {"name": "xAI Colossus 1 TN", "lat": 35.06, "lon": -90.16, "mw": 498, "owner": "xAI"},
+        {"name": "xAI Colossus 2 TN", "lat": 35.00, "lon": -90.03, "mw": 302, "owner": "xAI"},
+    ]
+
+    _owner_colors = {
+        "Amazon": "#ff9900", "Google": "#4285f4", "Meta": "#1877f2",
+        "Microsoft": "#00a4ef", "xAI": "#333333", "Oracle": "#f80000",
+    }
+
+    _lats = [d["lat"] for d in _datacenters]
+    _lons = [d["lon"] for d in _datacenters]
+    _colors = [_owner_colors.get(d["owner"], "#aaaaaa") for d in _datacenters]
+    _sizes = np.array([d["mw"] for d in _datacenters]) / 2
+
+    _legend_handles = [
+        plt.Line2D([0], [0], marker="o", color="w", markerfacecolor=c,
+                   markersize=8, label=owner)
+        for owner, c in _owner_colors.items()
+        if owner in {d["owner"] for d in _datacenters}
+    ]
+
+    fig_dc_map = us_scatter_map(
+        _lats, _lons, _colors, _sizes,
+        "Frontier AI data centers concentrate in a few states — the same ones building generation",
+        legend_handles=_legend_handles,
+        alpha=0.8,
+        edgecolors="#333333",
+        linewidth=1.0,
+    )
+
+    # Add labels for largest facilities
+    _ax = fig_dc_map.axes[0]
+    _labels = {
+        "Meta Prometheus OH": "Meta Prometheus\n814 MW",
+        "Anthropic-Amazon New Carlisle IN": "Anthropic-Amazon\n751 MW",
+        "Google New Albany OH": "Google New Albany\n543 MW",
+        "xAI Colossus 1 TN": "xAI Colossus\n498 MW",
+    }
+    for d in _datacenters:
+        if d["name"] in _labels:
+            _ax.annotate(
+                _labels[d["name"]],
+                (d["lon"], d["lat"]),
+                textcoords="offset points", xytext=(10, 5),
+                fontsize=7, color="#333333",
+                bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="#cccccc", alpha=0.8),
+            )
+
+    dc_map=save_fig(fig_dc_map, cfg.img_dir / "dd002_datacenter_map.png")
+    return
+
+
+@app.cell(hide_code=True)
+def _(cfg, mo):
+    _dc_map = mo.image(
+        src=(cfg.img_dir / "dd002_datacenter_map.png").read_bytes(), width=850
+    )
+    _state_chart = mo.image(
+        src=(cfg.img_dir / "dd002_state_generation.png").read_bytes(), width=800
+    )
+    mo.md(
+        f"""
+    {_dc_map}
+
+    *Source: Epoch AI Frontier Data Centers dataset (February 2025). Only facilities
+    with confirmed power capacity shown. Bubble size proportional to MW.*
+
+    The overlap between these two maps is the core geographic story: AI data
+    centers are landing in the same states that are adding the most generation
+    capacity. Ohio, Texas, and the Southeast corridor dominate both.
+
     {_state_chart}
 
-    New generation capacity concentrates in the same states that host the
-    largest data center corridors. Texas leads by a wide margin, driven by
-    both renewable resources and data center demand. Virginia — home to
-    Loudoun County, the densest data center market in the world — is building
-    generation to match its load growth. Georgia, Ohio, and California
-    round out the top data center states.
-
-    This geographic overlap is not coincidental. Data centers locate where
-    power is available (or can be built). The infrastructure they require —
-    substations, transmission upgrades, generation capacity — shapes the
-    grid topology for decades. Where AI capital lands today determines the
-    grid geography of 2060.
+    Data centers locate where power is available (or can be built). The
+    infrastructure they require — substations, transmission upgrades,
+    generation capacity — shapes the grid topology for decades. Where AI
+    capital lands today determines the grid geography of 2060.
     """
     )
     return

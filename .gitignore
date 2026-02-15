@@ -176,7 +176,9 @@ cython_debug/
 # Project-specific: raw and processed data
 data/raw/
 data/processed/
-data/external/
+data/external/*
+!data/external/.gitkeep
+!data/external/cb_2024_us_state_20m/
 !data/.gitkeep
 !data/raw/.gitkeep
 !data/processed/.gitkeep

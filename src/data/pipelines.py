@@ -106,15 +106,29 @@ def eia860_generators(url: str = EIA860_URL) -> dlt.sources.DltResource:
         with zf.open(gen_files[0]) as f:
             gen_df = pd.read_excel(f, skiprows=1)
 
-        # Parse plant data for state/location info
-        plant_state: dict[int, str] = {}
+        # Parse plant data for state/location info (including lat/lon)
+        plant_info: dict[int, dict] = {}
         if plant_files:
             with zf.open(plant_files[0]) as f:
                 plant_df = pd.read_excel(f, skiprows=1)
-            if "Plant Code" in plant_df.columns and "State" in plant_df.columns:
-                plant_state = dict(
-                    zip(plant_df["Plant Code"], plant_df["State"], strict=False)
-                )
+            for _, prow in plant_df.iterrows():
+                pc = prow.get("Plant Code")
+                if pd.notna(pc):
+                    lat = prow.get("Latitude")
+                    lon = prow.get("Longitude")
+                    try:
+                        lat_f = float(lat) if pd.notna(lat) else None
+                    except (TypeError, ValueError):
+                        lat_f = None
+                    try:
+                        lon_f = float(lon) if pd.notna(lon) else None
+                    except (TypeError, ValueError):
+                        lon_f = None
+                    plant_info[int(pc)] = {
+                        "state": str(prow.get("State", "")),
+                        "latitude": lat_f,
+                        "longitude": lon_f,
+                    }
 
     # Yield clean records
     for _, row in gen_df.iterrows():
@@ -138,10 +152,13 @@ def eia860_generators(url: str = EIA860_URL) -> dlt.sources.DltResource:
         except (TypeError, ValueError):
             operating_year = None
 
+        info = plant_info.get(plant_id, {})
         yield {
             "plant_id": plant_id,
             "generator_id": str(row.get("Generator ID", "")),
-            "state": plant_state.get(plant_id, str(row.get("State", ""))),
+            "state": info.get("state", str(row.get("State", ""))),
+            "latitude": info.get("latitude"),
+            "longitude": info.get("longitude"),
             "nameplate_capacity_mw": capacity,
             "energy_source_code": energy_source,
             "prime_mover": prime_mover,
