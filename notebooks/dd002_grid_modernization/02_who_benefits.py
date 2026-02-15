@@ -1,7 +1,7 @@
 import marimo
 
 __generated_with = "0.19.11"
-app = marimo.App()
+app = marimo.App(width="medium")
 
 
 @app.cell(hide_code=True)
@@ -37,6 +37,7 @@ def _():
 
     sys.path.insert(0, str(mo.notebook_dir().parent.parent))
 
+    import matplotlib.pyplot as plt
     import pandas as pd
     import numpy as np
 
@@ -53,11 +54,39 @@ def _():
         cfg,
         horizontal_bar_ranking,
         mo,
+        np,
         pd,
+        plt,
         save_fig,
         stacked_bar,
         waterfall_chart,
     )
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.hstack(
+        [
+            mo.callout(
+                mo.md("# 2,300 GW\nProposed projects in the interconnection queue — roughly "
+                       "double U.S. installed generation capacity"),
+                kind="warn",
+            ),
+            mo.callout(
+                mo.md("# 4+ years\nMedian time from interconnection request to "
+                       "commercial operation for projects built since 2018"),
+                kind="danger",
+            ),
+            mo.callout(
+                mo.md("# 13%\nOf projects that enter the queue are ever built. "
+                       "The rest withdraws due to cost, delays, or changing economics"),
+                kind="neutral",
+            ),
+        ],
+        justify="space-around",
+        gap=1,
+    )
+    return
 
 
 @app.cell(hide_code=True)
@@ -87,6 +116,23 @@ def _(mo):
     how many renewable PPAs a hyperscaler signs if the generation cannot
     connect to the grid for half a decade.
     """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(cfg, mo):
+    _funnel = mo.image(
+        src=(cfg.img_dir / "dd002_queue_funnel.png").read_bytes(), width=500
+    )
+    mo.md(
+        f"""
+    {_funnel}
+
+    *The interconnection queue is a funnel, not a pipeline. Of the 2,300 GW
+    waiting to connect, only about 13% will ever be built. The rest withdraws
+    due to cost escalation, engineering obstacles, or changing project economics.*
+    """
+    )
     return
 
 
@@ -298,17 +344,34 @@ def _(mo):
       regulation, and black start services.
     - PJM must submit tariff amendments by February 16, 2026.
     - Three new transmission service options established for large loads.
-
-    **What this changes:** Co-located loads (the xAI model — data center
-    at a power plant site) can no longer free-ride on grid services they
-    use but do not pay for.
-
-    **What this does not change:** Standard grid interconnection cost
-    allocation. The $4.36 billion UCS finding covers projects that connect
-    through the normal process, not co-location. The broader cost
-    allocation question — who pays when data center demand requires
-    grid upgrades — remains unresolved.
     """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.hstack(
+        [
+            mo.callout(
+                mo.md(
+                    "**What this changes:** Co-located loads (the xAI model — "
+                    "data center at a power plant site) can no longer free-ride "
+                    "on grid services they use but do not pay for."
+                ),
+                kind="success",
+            ),
+            mo.callout(
+                mo.md(
+                    "**What this does NOT change:** Standard grid interconnection "
+                    "cost allocation. The $4.36B UCS finding covers projects that "
+                    "connect through the normal process, not co-location. The broader "
+                    "cost allocation question remains unresolved."
+                ),
+                kind="warn",
+            ),
+        ],
+        gap=1,
+    )
     return
 
 
@@ -344,6 +407,67 @@ def _(mo):
 
 
 @app.cell
+def _(cfg, np, plt, save_fig):
+    # Virginia residential bill impact projection (E3/JLARC high-growth scenario)
+    _years = np.arange(2024, 2041)
+    # E3 projects $444/year increase by 2040 under high-growth scenario
+    # Model as accelerating curve (data center load compounds)
+    _bill_increase = 444 * ((_years - 2024) / (2040 - 2024)) ** 1.5
+    _monthly = _bill_increase / 12
+
+    fig_virginia, _ax = plt.subplots(figsize=(10, 4))
+    _ax.fill_between(_years, _bill_increase, alpha=0.2, color="#e74c3c")
+    _ax.plot(_years, _bill_increase, color="#e74c3c", linewidth=2.5)
+
+    # Annotate endpoint
+    _ax.annotate(
+        "$444/yr\n($37/mo)",
+        xy=(2040, 444), xytext=(2036, 350),
+        fontsize=11, fontweight="bold", color="#e74c3c",
+        arrowprops=dict(arrowstyle="->", color="#e74c3c", lw=1.5),
+    )
+
+    # Reference: average U.S. residential bill ~$150/month = $1,800/year
+    _ax.axhline(y=1800 * 0.1, color="#999999", linestyle="--", linewidth=1, alpha=0.6)
+    _ax.annotate(
+        "~10% of avg U.S. residential bill",
+        xy=(2030, 180), fontsize=8, color="#999999", va="bottom",
+    )
+
+    _ax.set_xlabel("Year")
+    _ax.set_ylabel("Annual Bill Increase ($)")
+    _ax.set_title(
+        "Virginia residential bills could rise $444/year by 2040 under high data center growth",
+        fontsize=11, fontweight="bold",
+    )
+    _ax.set_xlim(2024, 2040)
+    _ax.set_ylim(0, 500)
+    _ax.grid(True, linestyle=":", alpha=0.4)
+    plt.tight_layout()
+
+    save_fig(fig_virginia, cfg.img_dir / "dd002_virginia_bills.png")
+    return
+
+
+@app.cell(hide_code=True)
+def _(cfg, mo):
+    _va_chart = mo.image(
+        src=(cfg.img_dir / "dd002_virginia_bills.png").read_bytes(), width=800
+    )
+    mo.md(
+        f"""
+    {_va_chart}
+
+    *Illustrative trajectory based on the E3/JLARC high-growth scenario endpoint
+    of $444/year by 2040. The actual path depends on data center growth rates,
+    Dominion Energy rate cases, and regulatory decisions. The 10% reference line
+    shows the increase relative to a typical U.S. residential electricity bill.*
+    """
+    )
+    return
+
+
+@app.cell
 def _(mo):
     # Interactive: projected socialized cost under different growth rates
     growth_slider = mo.ui.slider(
@@ -369,30 +493,60 @@ def _(mo):
 
 
 @app.cell
-def _(growth_slider, mo, years_slider):
+def _(growth_slider, mo, np, plt, years_slider):
     # Simple projection: $4.36B approved in 2024 → compound growth
     _annual_base = 4.36  # $4.36B/year baseline (2024 approvals)
     _rate = growth_slider.value
     _years = int(years_slider.value)
 
-    _projected = sum(
-        _annual_base * (1 + _rate) ** y for y in range(_years)
+    _year_range = np.arange(0, _years)
+    _annual_costs = np.array([_annual_base * (1 + _rate) ** y for y in _year_range])
+    _cumulative = np.cumsum(_annual_costs)
+    _x_labels = 2024 + _year_range
+
+    _fig, _ax = plt.subplots(figsize=(10, 5))
+    _ax.fill_between(_x_labels, _annual_costs, alpha=0.3, color="#e74c3c")
+    _ax.plot(_x_labels, _annual_costs, color="#e74c3c", linewidth=2.5)
+    _ax.axhline(y=_annual_base, color="#999999", linestyle="--", linewidth=1, alpha=0.7)
+    _ax.annotate(
+        f"2024 baseline: ${_annual_base:.1f}B",
+        xy=(2024, _annual_base), xytext=(2024 + _years * 0.3, _annual_base * 0.85),
+        fontsize=9, color="#999999",
+        arrowprops=dict(arrowstyle="->", color="#999999", lw=0.8),
     )
 
-    mo.md(
-        f"""
-    ### Projected Socialized Grid Costs
-
-    At **{_rate:.0%}** annual data center load growth over **{_years} years**:
-
-    - **Projected total socialized cost: ${_projected:,.1f} billion**
-    - Annual cost in final year: **${_annual_base * (1 + _rate) ** _years:,.2f} billion/year**
-
-    This is a rough projection based on the UCS baseline of $4.36B
-    approved in 2024. Actual costs depend on FERC reform, utility
-    practices, and state regulatory responses.
-    """
+    # Annotate final year
+    _final = _annual_costs[-1]
+    _ax.annotate(
+        f"${_final:,.1f}B/yr",
+        xy=(_x_labels[-1], _final),
+        xytext=(_x_labels[-1] - _years * 0.2, _final * 1.1),
+        fontsize=11, fontweight="bold", color="#e74c3c",
+        arrowprops=dict(arrowstyle="->", color="#e74c3c", lw=1.2),
     )
+
+    _ax.set_xlabel("Year", fontsize=11)
+    _ax.set_ylabel("Annual Socialized Cost ($B)", fontsize=11)
+    _ax.set_title(
+        f"At {_rate:.0%} annual growth, socialized grid costs reach ${_final:,.1f}B/year by {int(_x_labels[-1])}",
+        fontsize=12, fontweight="bold",
+    )
+    _ax.set_xlim(_x_labels[0] - 0.5, _x_labels[-1] + 0.5)
+    _ax.set_ylim(0, _final * 1.25)
+    plt.tight_layout()
+
+    _projected = float(_cumulative[-1])
+
+    mo.vstack([
+        mo.as_html(_fig),
+        mo.md(
+            f"**Cumulative socialized cost over {_years} years: "
+            f"${_projected:,.1f} billion.** "
+            f"Rough projection from UCS baseline. Actual costs depend on "
+            f"FERC reform, utility practices, and state regulatory responses."
+        ),
+    ])
+    plt.close(_fig)
     return
 
 
@@ -400,6 +554,18 @@ def _(growth_slider, mo, years_slider):
 def _(mo):
     mo.md("""
     ## Three Spillover Scenarios
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(cfg, mo):
+    _scenarios = mo.image(
+        src=(cfg.img_dir / "dd002_three_scenarios.png").read_bytes(), width=800
+    )
+    mo.md(
+        f"""
+    {_scenarios}
 
     The question "does anyone else benefit?" has three possible answers,
     depending on regulatory choices being made now:

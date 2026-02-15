@@ -6,8 +6,7 @@ app = marimo.App()
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        """
+    mo.md("""
     # AI Capital and Grid Modernization
     ## Part 3 — Feedback Architecture
 
@@ -25,8 +24,7 @@ def _(mo):
     catalyzes grid modernization for everyone or builds private infrastructure
     for a few. The central question: **does the system tip toward shared grid
     investment (spillover) or behind-the-meter bypass (capture)?**
-    """
-    )
+    """)
     return
 
 
@@ -48,19 +46,26 @@ def _():
     from src.plotting import multi_panel
 
     cfg = setup()
-    return cfg, mo, mpatches, multi_panel, np, pd, plt, pysd, save_fig
+    return cfg, mo, mpatches, multi_panel, np, plt, pysd, save_fig
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        """
+    mo.md("""
     ## Five Feedback Loops
 
     The grid modernization system contains two reinforcing loops (which
     amplify change) and three balancing loops (which resist it). Which set
     dominates determines whether AI capital drives broad grid modernization
     or private infrastructure buildout.
+
+    | | Loop | Mechanism | Favors |
+    | :--- | :--- | :--- | :--- |
+    | **R1** | Grid Investment Cycle | Grid investment → lower costs → more connection | Grid modernization |
+    | **R2** | Renewable Learning | More renewables → cheaper renewables → more renewables | Everyone (structural) |
+    | **B1** | Regulatory Uncertainty | Policy ambiguity → investment pause → longer queues | Stagnation |
+    | **B2** | BTM Bypass | Long queues → bypass grid → no spillover → backlash | Private infrastructure |
+    | **B3** | Stranded Asset Risk | Carbon uncertainty → hesitation on all investments | Paralysis |
 
     ### Reinforcing Loops (Amplify)
 
@@ -113,6 +118,23 @@ def _(mo):
     This loop creates paralysis. Neither fossil nor clean investments
     proceed at the pace needed because both face policy risk. The
     constraint is not economics — it is regulatory uncertainty.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(cfg, mo):
+    _grid_btm = mo.image(
+        src=(cfg.img_dir / "dd002_grid_vs_btm.png").read_bytes(), width=800
+    )
+    mo.md(
+        f"""
+    {_grid_btm}
+
+    *The central choice: grid-connected infrastructure creates shared benefit
+    (left), while behind-the-meter bypass creates private infrastructure that
+    leaves the broader grid — and its ratepayers — worse off (right). The
+    regulatory environment determines which path dominates.*
     """
     )
     return
@@ -142,55 +164,53 @@ def _(cfg, mpatches, np, plt, save_fig):
         "Political\nSupport": (0.4, -1.0),
     }
 
-    # Draw nodes
+    # Draw nodes — larger radius and font for readability
     for label, (x, y) in _nodes.items():
-        ax.add_patch(plt.Circle((x, y), 0.12, color="white", ec="black", lw=1.5, zorder=3))
-        ax.text(x, y, label, ha="center", va="center", fontsize=7, fontweight="bold", zorder=4)
+        ax.add_patch(plt.Circle((x, y), 0.14, color="white", ec="black", lw=2, zorder=3))
+        ax.text(x, y, label, ha="center", va="center", fontsize=9, fontweight="bold", zorder=4)
 
     # Edge drawing helper
-    def _draw_edge(start, end, color, polarity, offset=0.13, curve=0.0):
+    def _draw_edge(start, end, color, polarity, offset=0.15, curve=0.0, lw=1.8):
         x1, y1 = _nodes[start]
         x2, y2 = _nodes[end]
         dx, dy = x2 - x1, y2 - y1
         dist = np.sqrt(dx**2 + dy**2)
-        # Shorten to node boundaries
         x1 += offset * dx / dist
         y1 += offset * dy / dist
         x2 -= offset * dx / dist
         y2 -= offset * dy / dist
 
-        style = f"arc3,rad={curve}" if curve else "->"
         ax.annotate(
             "",
             xy=(x2, y2),
             xytext=(x1, y1),
             arrowprops=dict(
-                arrowstyle="->",
+                arrowstyle="-|>",
                 color=color,
-                lw=1.8,
+                lw=lw,
                 connectionstyle=f"arc3,rad={curve}",
+                mutation_scale=15,
             ),
             zorder=2,
         )
-        # Polarity label at midpoint
         mx = (x1 + x2) / 2 + curve * 0.3
         my = (y1 + y2) / 2 + curve * 0.3
-        ax.text(mx, my, polarity, fontsize=8, color=color, fontweight="bold",
+        ax.text(mx, my, polarity, fontsize=9, color=color, fontweight="bold",
                 ha="center", va="center",
                 bbox=dict(boxstyle="round,pad=0.15", fc="white", ec=color, alpha=0.9))
 
-    # R1: Grid Investment Virtuous Cycle (blue)
+    # R1: Grid Investment Virtuous Cycle (blue) — thicker for reinforcing
     _r1 = "#1f77b4"
-    _draw_edge("AI\nDemand", "Grid\nInvestment", _r1, "+", curve=0.15)
-    _draw_edge("Grid\nInvestment", "Grid\nCapacity", _r1, "+", curve=0.1)
-    _draw_edge("Grid\nCapacity", "Energy\nCosts", _r1, "-", curve=0.1)
-    _draw_edge("Energy\nCosts", "AI\nDemand", _r1, "-", curve=-0.3)
+    _draw_edge("AI\nDemand", "Grid\nInvestment", _r1, "+", curve=0.15, lw=2.5)
+    _draw_edge("Grid\nInvestment", "Grid\nCapacity", _r1, "+", curve=0.1, lw=2.5)
+    _draw_edge("Grid\nCapacity", "Energy\nCosts", _r1, "-", curve=0.1, lw=2.5)
+    _draw_edge("Energy\nCosts", "AI\nDemand", _r1, "-", curve=-0.3, lw=2.5)
 
-    # R2: Renewable Learning (green)
+    # R2: Renewable Learning (green) — thicker for reinforcing
     _r2 = "#2ca02c"
-    _draw_edge("AI\nDemand", "Renewable\nPPAs", _r2, "+", curve=-0.15)
-    _draw_edge("Renewable\nPPAs", "Renewable\nCost", _r2, "-", curve=0.1)
-    _draw_edge("Renewable\nCost", "Renewable\nPPAs", _r2, "-", curve=0.3)
+    _draw_edge("AI\nDemand", "Renewable\nPPAs", _r2, "+", curve=-0.15, lw=2.5)
+    _draw_edge("Renewable\nPPAs", "Renewable\nCost", _r2, "-", curve=0.1, lw=2.5)
+    _draw_edge("Renewable\nCost", "Renewable\nPPAs", _r2, "-", curve=0.3, lw=2.5)
 
     # B1: Regulatory Uncertainty (orange)
     _b1 = "#ff7f0e"
@@ -208,6 +228,23 @@ def _(cfg, mpatches, np, plt, save_fig):
     _b3 = "#9467bd"
     _draw_edge("Regulatory\nEnvironment", "Queue\nBacklog", _b3, "-", curve=-0.15)
 
+    # Loop labels placed near center of each loop's path
+    ax.text(-0.45, 0.2, "R1", fontsize=14, fontweight="bold", color=_r1,
+            ha="center", va="center", alpha=0.7,
+            bbox=dict(boxstyle="circle,pad=0.3", fc="white", ec=_r1, alpha=0.7))
+    ax.text(0.9, 0.25, "R2", fontsize=14, fontweight="bold", color=_r2,
+            ha="center", va="center", alpha=0.7,
+            bbox=dict(boxstyle="circle,pad=0.3", fc="white", ec=_r2, alpha=0.7))
+    ax.text(-0.35, -0.4, "B1", fontsize=12, fontweight="bold", color=_b1,
+            ha="center", va="center", alpha=0.7,
+            bbox=dict(boxstyle="circle,pad=0.3", fc="white", ec=_b1, alpha=0.7))
+    ax.text(0.15, -0.65, "B2", fontsize=12, fontweight="bold", color=_b2,
+            ha="center", va="center", alpha=0.7,
+            bbox=dict(boxstyle="circle,pad=0.3", fc="white", ec=_b2, alpha=0.7))
+    ax.text(-0.15, -0.3, "B3", fontsize=12, fontweight="bold", color=_b3,
+            ha="center", va="center", alpha=0.7,
+            bbox=dict(boxstyle="circle,pad=0.3", fc="white", ec=_b3, alpha=0.7))
+
     # Legend
     _legend_items = [
         mpatches.Patch(color=_r1, label="R1: Grid Investment Virtuous Cycle"),
@@ -223,11 +260,11 @@ def _(cfg, mpatches, np, plt, save_fig):
         fontsize=14, fontweight="bold", pad=20,
     )
     save_fig(fig_cld, cfg.img_dir / "dd002_cld.png")
-    return (fig_cld,)
+    return
 
 
 @app.cell(hide_code=True)
-def _(cfg, fig_cld, mo):
+def _(cfg, mo):
     _cld = mo.image(
         src=(cfg.img_dir / "dd002_cld.png").read_bytes(), width=850
     )
@@ -252,8 +289,7 @@ def _(cfg, fig_cld, mo):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        """
+    mo.md("""
     ## From Loops to Stocks and Flows
 
     The CLD shows the structure. To test which loops dominate, we need a
@@ -270,8 +306,7 @@ def _(mo):
     The key output metric is the **grid spillover index**: the fraction of
     total capacity that is grid-connected. Higher means more spillover benefit
     to non-data-center users. Lower means more private infrastructure.
-    """
-    )
+    """)
     return
 
 
@@ -322,12 +357,41 @@ def _(baseline, cfg, multi_panel, save_fig):
     ]
 
     fig_baseline = multi_panel(baseline, _panels, "Baseline: Grid vs. Behind-the-Meter Dynamics", ncols=2)
+
+    # Annotate start/end values on each panel for self-sufficiency
+    _axes = fig_baseline.get_axes()
+    _t0, _tf = baseline.index[0], baseline.index[-1]
+
+    # Panel 0: Capacity — annotate Grid and BTM end values
+    _grid_end = baseline["Grid Capacity"].iloc[-1]
+    _btm_end = baseline["Behind the Meter Capacity"].iloc[-1]
+    _axes[0].annotate(f"{_grid_end:.0f}", xy=(_tf, _grid_end), fontsize=8, color="#1f77b4",
+                      fontweight="bold", va="bottom", ha="right")
+    _axes[0].annotate(f"{_btm_end:.0f}", xy=(_tf, _btm_end), fontsize=8, color="#d62728",
+                      fontweight="bold", va="bottom", ha="right")
+
+    # Panel 3: Spillover — annotate start and end
+    _spill_start = baseline["grid spillover index"].iloc[0]
+    _spill_end = baseline["grid spillover index"].iloc[-1]
+    _axes[3].annotate(f"{_spill_start:.2f}", xy=(_t0, _spill_start), fontsize=9, color="#9467bd",
+                      fontweight="bold", va="bottom", ha="left")
+    _axes[3].annotate(f"{_spill_end:.2f}", xy=(_tf, _spill_end), fontsize=9, color="#9467bd",
+                      fontweight="bold", va="top", ha="right")
+
+    # Panel 2: Renewable cost — annotate start and end
+    _cost_start = baseline["Renewable Cost Index"].iloc[0]
+    _cost_end = baseline["Renewable Cost Index"].iloc[-1]
+    _axes[2].annotate(f"${_cost_start:.0f}", xy=(_t0, _cost_start), fontsize=9, color="#2ca02c",
+                      fontweight="bold", va="bottom", ha="left")
+    _axes[2].annotate(f"${_cost_end:.0f}", xy=(_tf, _cost_end), fontsize=9, color="#2ca02c",
+                      fontweight="bold", va="top", ha="right")
+
     save_fig(fig_baseline, cfg.img_dir / "dd002_baseline_simulation.png")
-    return (fig_baseline,)
+    return
 
 
 @app.cell(hide_code=True)
-def _(cfg, fig_baseline, mo):
+def _(cfg, mo):
     _baseline_chart = mo.image(
         src=(cfg.img_dir / "dd002_baseline_simulation.png").read_bytes(), width=850
     )
@@ -385,7 +449,7 @@ def _(mo):
 
 
 @app.cell
-def _(baseline, btm_cost_slider, grid_inv_slider, mo, model, np, plt, reg_slider):
+def _(baseline, btm_cost_slider, grid_inv_slider, mo, model, plt, reg_slider):
     # Run scenario with slider values
     _scenario = model.run(params={
         "expansion aggressiveness": grid_inv_slider.value,
@@ -394,39 +458,59 @@ def _(baseline, btm_cost_slider, grid_inv_slider, mo, model, np, plt, reg_slider
     })
 
     # Compare baseline vs scenario
-    _fig, _axes = plt.subplots(1, 3, figsize=(15, 4))
+    _fig, _axes = plt.subplots(1, 3, figsize=(15, 4.5))
 
     # Panel 1: Grid vs BTM capacity
-    _axes[0].plot(baseline.index, baseline["Grid Capacity"], "b-", label="Grid (baseline)", alpha=0.5)
-    _axes[0].plot(baseline.index, baseline["Behind the Meter Capacity"], "r--", label="BTM (baseline)", alpha=0.5)
-    _axes[0].plot(_scenario.index, _scenario["Grid Capacity"], "b-", linewidth=2, label="Grid (scenario)")
-    _axes[0].plot(_scenario.index, _scenario["Behind the Meter Capacity"], "r--", linewidth=2, label="BTM (scenario)")
-    _axes[0].set_title("Capacity (GW)")
-    _axes[0].legend(fontsize=7)
+    _axes[0].plot(baseline.index, baseline["Grid Capacity"], "#1f77b4", alpha=0.4, label="Grid (baseline)")
+    _axes[0].plot(baseline.index, baseline["Behind the Meter Capacity"], "#d62728", linestyle="--", alpha=0.4, label="BTM (baseline)")
+    _axes[0].plot(_scenario.index, _scenario["Grid Capacity"], "#1f77b4", linewidth=2.5, label="Grid (scenario)")
+    _axes[0].plot(_scenario.index, _scenario["Behind the Meter Capacity"], "#d62728", linestyle="--", linewidth=2.5, label="BTM (scenario)")
+    _axes[0].set_title("Capacity (GW)", fontweight="bold")
+    _axes[0].set_ylabel("GW")
+    _axes[0].legend(fontsize=7, loc="upper left")
+    _axes[0].grid(True, linestyle=":", alpha=0.4)
 
     # Panel 2: Spillover index
-    _axes[1].plot(baseline.index, baseline["grid spillover index"], "k--", label="Baseline", alpha=0.5)
-    _axes[1].plot(_scenario.index, _scenario["grid spillover index"], "#9467bd", linewidth=2, label="Scenario")
-    _axes[1].set_title("Grid Spillover Index")
+    _axes[1].plot(baseline.index, baseline["grid spillover index"], "k--", label="Baseline", alpha=0.4)
+    _axes[1].plot(_scenario.index, _scenario["grid spillover index"], "#9467bd", linewidth=2.5, label="Scenario")
+    _axes[1].set_title("Grid Spillover Index", fontweight="bold")
+    _axes[1].set_ylabel("Fraction (0-1)")
     _axes[1].set_ylim(0, 1)
-    _axes[1].axhline(0.5, color="gray", linestyle=":", alpha=0.5)
+    _axes[1].axhline(0.5, color="#e74c3c", linestyle="--", linewidth=1.2, alpha=0.6, label="50% threshold")
     _axes[1].legend(fontsize=8)
+    _axes[1].grid(True, linestyle=":", alpha=0.4)
 
     # Panel 3: Socialized cost
-    _axes[2].plot(baseline.index, baseline["cost allocation to ratepayers"], "k--", label="Baseline", alpha=0.5)
-    _axes[2].plot(_scenario.index, _scenario["cost allocation to ratepayers"], "#e74c3c", linewidth=2, label="Scenario")
-    _axes[2].set_title("Socialized Cost ($B/year)")
+    _axes[2].plot(baseline.index, baseline["cost allocation to ratepayers"], "k--", label="Baseline", alpha=0.4)
+    _axes[2].plot(_scenario.index, _scenario["cost allocation to ratepayers"], "#e74c3c", linewidth=2.5, label="Scenario")
+    _axes[2].set_title("Socialized Cost ($B/year)", fontweight="bold")
+    _axes[2].set_ylabel("$B/year")
     _axes[2].legend(fontsize=8)
+    _axes[2].grid(True, linestyle=":", alpha=0.4)
+
+    # Extract scenario 2035 spillover for reactive interpretation
+    _idx_2035 = _scenario.index.get_indexer([2035], method="nearest")[0]
+    scenario_spillover_2035 = float(_scenario["grid spillover index"].iloc[_idx_2035])
+    _b_idx_2035 = baseline.index.get_indexer([2035], method="nearest")[0]
+    baseline_spillover_2035 = float(baseline["grid spillover index"].iloc[_b_idx_2035])
 
     plt.tight_layout()
-    _fig
+
+    mo.vstack([
+        mo.as_html(_fig),
+        mo.md(
+            f"**2035 spillover index: {scenario_spillover_2035:.2f}** "
+            f"(baseline: {baseline_spillover_2035:.2f}). "
+            f"{'The grid captures more investment than baseline.' if scenario_spillover_2035 > baseline_spillover_2035 else 'Behind-the-meter captures more investment than baseline.' if scenario_spillover_2035 < baseline_spillover_2035 else 'No change from baseline.'}"
+        ),
+    ])
+    plt.close(_fig)
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        """
+    mo.md("""
     The sliders above control three parameters that together determine
     whether AI capital drives shared grid modernization or private
     infrastructure. Adjusting them exposes three structural insights:
@@ -446,8 +530,7 @@ def _(mo):
        environment. The constraint is not willingness to invest — it is
        the structural incentive to bypass the grid when queue times are
        long and cost allocation is unfavorable.
-    """
-    )
+    """)
     return
 
 
@@ -496,6 +579,12 @@ def _(cfg, model, np, plt, save_fig):
         bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="black"),
     )
 
+    # Regime labels
+    _ax.text(0.7, 0.85, "GRID\nMODERNIZATION", fontsize=10, fontweight="bold",
+             color="white", ha="center", va="center", alpha=0.8)
+    _ax.text(1.8, 0.2, "PRIVATE\nINFRASTRUCTURE", fontsize=10, fontweight="bold",
+             color="white", ha="center", va="center", alpha=0.8)
+
     _ax.set_xlabel("BTM Cost Advantage", fontsize=12)
     _ax.set_ylabel("Regulatory Favorability", fontsize=12)
     _ax.set_title(
@@ -505,11 +594,11 @@ def _(cfg, model, np, plt, save_fig):
     )
 
     save_fig(fig_sensitivity, cfg.img_dir / "dd002_sensitivity.png")
-    return (fig_sensitivity,)
+    return
 
 
 @app.cell(hide_code=True)
-def _(cfg, fig_sensitivity, mo):
+def _(cfg, mo):
     _heatmap = mo.image(
         src=(cfg.img_dir / "dd002_sensitivity.png").read_bytes(), width=800
     )
@@ -545,8 +634,7 @@ def _(cfg, fig_sensitivity, mo):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        """
+    mo.md("""
     ## Limitations
 
     This model captures structural dynamics, not numerical prediction.
@@ -608,8 +696,7 @@ def _(mo):
     - Grid Strategies (2023) — *The Era of Flat Power Demand is Over*
     - IRENA (2024) — renewable energy cost trends and learning rates
     - Wright, T.P. (1936). Factors Affecting the Cost of Airplanes.
-    """
-    )
+    """)
     return
 
 

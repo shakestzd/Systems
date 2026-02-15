@@ -25,6 +25,23 @@ def _(mo):
     return
 
 
+@app.cell(hide_code=True)
+def _(cfg, mo):
+    _horizon = mo.image(
+        src=(cfg.img_dir / "dd002_time_horizon_mismatch.png").read_bytes(), width=800
+    )
+    mo.md(
+        f"""
+    {_horizon}
+
+    *The fundamental mismatch: AI demand forecasts span 3 years. The infrastructure
+    being built to serve that demand lasts 25-60 years. Every generation technology
+    decision made today creates a different grid in 2060.*
+    """
+    )
+    return
+
+
 @app.cell
 def _():
     import sys
@@ -33,6 +50,7 @@ def _():
 
     sys.path.insert(0, str(mo.notebook_dir().parent.parent))
 
+    import matplotlib.pyplot as plt
     import pandas as pd
     import numpy as np
 
@@ -51,7 +69,9 @@ def _():
         cfg,
         horizontal_bar_ranking,
         mo,
+        np,
         pd,
+        plt,
         query,
         save_fig,
         stacked_bar,
@@ -92,7 +112,7 @@ def _(pd, query):
     )
     elec_ppi["date"] = pd.to_datetime(elec_ppi["date"])
     elec_ppi = elec_ppi.set_index("date")
-    return eia, natgas
+    return eia, elec_ppi, natgas
 
 
 @app.cell(hide_code=True)
@@ -161,6 +181,20 @@ def _(cfg, gen_pivot, major_fuels, save_fig, stacked_bar):
         "Solar and battery storage dominate new U.S. generation since 2020",
         ylabel="New Capacity (GW)",
     )
+
+    # Add IRA annotation — the policy catalyst for clean energy acceleration
+    _ax = fig_mix.axes[0]
+    _years_list = gen_pivot["year"].tolist()
+    if 2022 in _years_list:
+        _ira_idx = _years_list.index(2022)
+        _ax.axvline(x=_ira_idx + 0.4, color="#333333", linestyle="--", linewidth=1, alpha=0.6)
+        _ax.annotate(
+            "IRA signed\nAug 2022",
+            xy=(_ira_idx + 0.4, _ax.get_ylim()[1] * 0.9),
+            fontsize=8, ha="center",
+            bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="#333333", alpha=0.8),
+        )
+
     save_fig(fig_mix, cfg.img_dir / "dd002_generation_mix.png")
     return (fig_mix,)
 
@@ -193,6 +227,78 @@ def _(cfg, fig_mix, mo):
     This matters for the AI infrastructure thesis because it means the generation
     mix being built to serve data centers is cleaner than the existing grid. The
     question is whether that holds as AI demand accelerates.
+    """
+    )
+    return
+
+
+@app.cell
+def _(cfg, eia, np, plt, save_fig):
+    # Compare nameplate vs energy-equivalent capacity by fuel type since 2020
+    _recent = eia[eia["operating_year"] >= 2020].copy()
+    _by_fuel = _recent.groupby("fuel_category")["nameplate_capacity_mw"].sum() / 1000
+
+    # Reference capacity factors (EIA national averages)
+    _cap_factors = {
+        "solar": 0.25, "wind": 0.35, "gas_cc": 0.57,
+        "gas_ct": 0.12, "nuclear": 0.93,
+    }
+
+    _fuels = ["solar", "wind", "gas_cc", "gas_ct", "nuclear"]
+    _labels = ["Solar", "Wind", "Gas CC", "Gas CT", "Nuclear"]
+    _nameplate = [_by_fuel.get(f, 0) for f in _fuels]
+    _effective = [_by_fuel.get(f, 0) * _cap_factors.get(f, 0.3) for f in _fuels]
+
+    fig_capfactor, _ax = plt.subplots(figsize=(10, 5))
+    _x = np.arange(len(_fuels))
+    _w = 0.35
+    _bars1 = _ax.bar(_x - _w / 2, _nameplate, _w, color="#4ecdc4", label="Nameplate Capacity")
+    _bars2 = _ax.bar(_x + _w / 2, _effective, _w, color="#e74c3c", label="Energy-Equivalent Capacity")
+
+    for _bar in _bars1:
+        _h = _bar.get_height()
+        if _h > 0.5:
+            _ax.text(
+                _bar.get_x() + _bar.get_width() / 2, _h + 0.3, f"{_h:.1f}",
+                ha="center", va="bottom", fontsize=8, color="#333333",
+            )
+    for _bar in _bars2:
+        _h = _bar.get_height()
+        if _h > 0.5:
+            _ax.text(
+                _bar.get_x() + _bar.get_width() / 2, _h + 0.3, f"{_h:.1f}",
+                ha="center", va="bottom", fontsize=8, color="#333333",
+            )
+
+    _ax.set_xticks(_x)
+    _ax.set_xticklabels(_labels)
+    _ax.set_ylabel("GW Added Since 2020")
+    _ax.set_title(
+        "Solar leads in nameplate, but gas CC closes the gap when adjusted for capacity factor",
+        fontsize=11, fontweight="bold",
+    )
+    _ax.legend(fontsize=9)
+    plt.tight_layout()
+
+    save_fig(fig_capfactor, cfg.img_dir / "dd002_capacity_factor.png")
+    return (fig_capfactor,)
+
+
+@app.cell(hide_code=True)
+def _(cfg, fig_capfactor, mo):
+    _cf_chart = mo.image(
+        src=(cfg.img_dir / "dd002_capacity_factor.png").read_bytes(), width=800
+    )
+    mo.md(
+        f"""
+    {_cf_chart}
+
+    The comparison makes the caveat concrete. Solar dominates nameplate additions,
+    but when adjusted for capacity factor — the fraction of time a plant actually
+    generates at full output — gas combined cycle narrows the gap substantially.
+    A single GW of gas CC delivers roughly twice the annual energy of a GW of solar.
+    Battery storage is excluded here; its value is in shifting supply timing, not
+    raw energy output.
     """
     )
     return
@@ -288,22 +394,49 @@ def _(cfg, fig_states, mo):
 
 
 @app.cell
-def _(annotated_series, cfg, natgas, pd, save_fig):
-    # Natural gas price time series with AI milestone annotations
+def _(cfg, elec_ppi, natgas, pd, plt, save_fig):
+    # Natural gas price + electricity PPI with AI milestone annotations
     _gas = natgas["2015":].copy()
-    _gas = _gas.rename(columns={"price": "Henry Hub ($/MMBtu)"})
+    _elec = elec_ppi["2015":].copy()
 
-    fig_gas = annotated_series(
-        _gas,
-        {"Henry Hub ($/MMBtu)": {"color": "#e74c3c", "linewidth": 2, "label": "Henry Hub Spot Price"}},
-        "Natural gas prices spiked with the energy crisis, not AI demand",
-        ylabel="$/MMBtu",
-        annotations=[
-            ("ChatGPT\nlaunch", pd.Timestamp("2022-11-30"), 7.0, (pd.Timestamp("2021-06-01"), 8.5)),
-            ("GPT-4", pd.Timestamp("2023-03-14"), 2.5, (pd.Timestamp("2021-01-01"), 3.5)),
-        ],
-        figsize=(10, 4),
+    fig_gas, _ax1 = plt.subplots(figsize=(10, 4.5))
+
+    # Primary axis: natural gas price
+    _ax1.plot(_gas.index, _gas["price"], color="#e74c3c", linewidth=2, label="Henry Hub Spot Price")
+    _ax1.set_ylabel("Natural Gas ($/MMBtu)", color="#e74c3c", fontsize=11)
+    _ax1.tick_params(axis="y", labelcolor="#e74c3c")
+    _ax1.set_ylim(0, 10)
+
+    # Secondary axis: electricity PPI (indexed)
+    _ax2 = _ax1.twinx()
+    _ax2.plot(_elec.index, _elec["price"], color="#1f77b4", linewidth=1.5, alpha=0.7, label="Electricity PPI")
+    _ax2.set_ylabel("Electricity PPI (Index)", color="#1f77b4", fontsize=11)
+    _ax2.tick_params(axis="y", labelcolor="#1f77b4")
+
+    # AI milestone annotations
+    for _text, _date, _y, _xytext in [
+        ("ChatGPT\nlaunch", pd.Timestamp("2022-11-30"), 7.0, (pd.Timestamp("2021-06-01"), 8.5)),
+        ("GPT-4", pd.Timestamp("2023-03-14"), 2.5, (pd.Timestamp("2021-01-01"), 3.5)),
+    ]:
+        _ax1.annotate(
+            _text, xy=(_date, _y), xytext=_xytext,
+            arrowprops=dict(facecolor="black", shrink=0.05, width=1, headwidth=5),
+            fontsize=9, fontweight="bold",
+            bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="black", alpha=0.8),
+        )
+
+    _ax1.set_title(
+        "Gas prices spiked with the energy crisis — electricity prices followed and stayed elevated",
+        fontsize=11, fontweight="bold",
     )
+    _ax1.grid(True, linestyle=":", alpha=0.4)
+
+    # Combined legend
+    _lines1, _labels1 = _ax1.get_legend_handles_labels()
+    _lines2, _labels2 = _ax2.get_legend_handles_labels()
+    _ax1.legend(_lines1 + _lines2, _labels1 + _labels2, loc="upper left", fontsize=8)
+
+    plt.tight_layout()
     save_fig(fig_gas, cfg.img_dir / "dd002_energy_prices.png")
     return (fig_gas,)
 
@@ -322,8 +455,10 @@ def _(cfg, fig_gas, mo):
     Natural gas prices tell a more nuanced story than the "AI is raising
     electricity costs" narrative suggests. The 2022 price spike was driven
     by the Ukraine war and the European energy crisis, not by data center
-    demand. Since then, prices have collapsed to near-historic lows thanks
-    to abundant U.S. shale production.
+    demand. Since then, gas prices have collapsed to near-historic lows —
+    but the electricity PPI (blue) tells a different story: electricity
+    prices rose with gas and have not fully come back down. The divergence
+    reflects grid congestion, capacity costs, and growing demand.
 
     For data center operators, cheap gas is a double-edged sword. It makes
     gas-fired generation economically attractive in the near term, but it
@@ -341,10 +476,35 @@ def _(cfg, fig_gas, mo):
     return
 
 
+@app.cell
+def _(cfg, horizontal_bar_ranking, save_fig):
+    # Hyperscaler renewable portfolio sizes (approximate, from sustainability reports)
+    _companies = ["Microsoft", "Amazon", "Meta", "Google"]
+    _gw = [34, 32.5, 12, 10]
+
+    fig_ppa = horizontal_bar_ranking(
+        _companies,
+        _gw,
+        "Microsoft and Amazon have contracted more renewable energy than most countries generate",
+        xlabel="Contracted Renewable Capacity (GW)",
+        highlight_indices=[0, 1],
+        highlight_color="#2ca02c",
+        color="#4ecdc4",
+    )
+    save_fig(fig_ppa, cfg.img_dir / "dd002_hyperscaler_ppa.png")
+    return (fig_ppa,)
+
+
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
+def _(cfg, fig_ppa, mo):
+    _ppa_chart = mo.image(
+        src=(cfg.img_dir / "dd002_hyperscaler_ppa.png").read_bytes(), width=800
+    )
+    mo.md(
+        f"""
     ## The Hyperscaler PPA Landscape
+
+    {_ppa_chart}
 
     The major AI companies are signing the largest corporate power purchase
     agreements in history:
@@ -378,7 +538,8 @@ def _(mo):
     environment, companies are continuing their clean energy strategies
     but muting public messaging. The underlying economics still favor
     renewables, but the visible narrative has shifted.
-    """)
+    """
+    )
     return
 
 
