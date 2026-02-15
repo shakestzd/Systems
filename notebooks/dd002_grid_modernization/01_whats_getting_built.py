@@ -25,18 +25,66 @@ def _(mo):
     return
 
 
+@app.cell
+def _(cfg, np, plt, save_fig):
+    # Asset lifetime vs AI forecast horizon — the fundamental mismatch
+    _techs = [
+        "AI demand forecast",
+        "Gas peaker (BTM)",
+        "Battery storage",
+        "Solar PPA",
+        "Wind farm",
+        "Gas CC (grid)",
+        "Nuclear restart",
+        "Transmission line",
+    ]
+    _lifetimes = [3, 25, 25, 30, 30, 35, 50, 50]
+    _colors = [
+        "#333333", "#e74c3c", "#7b68ee", "#f0b429",
+        "#4ecdc4", "#ff8c69", "#3498db", "#2ca02c",
+    ]
+
+    fig_timeline, _ax = plt.subplots(figsize=(11, 4.5))
+    _y = np.arange(len(_techs))
+
+    for i, (life, c) in enumerate(zip(_lifetimes, _colors)):
+        _ax.barh(i, life, left=2024, height=0.55, color=c, alpha=0.85, edgecolor="white")
+        _ax.text(2024 + life + 0.5, i, f"{life} yrs", va="center", fontsize=9, fontweight="bold")
+
+    # AI forecast horizon band
+    _ax.axvspan(2024, 2027, alpha=0.12, color="#333333", zorder=0)
+    _ax.axvline(2027, color="#333333", linestyle="--", linewidth=1.5, alpha=0.7)
+    _ax.text(2025.5, -0.8, "AI forecast\nhorizon", fontsize=9, color="#555555",
+             ha="center", fontweight="bold")
+
+    _ax.set_yticks(_y)
+    _ax.set_yticklabels(_techs, fontsize=10)
+    _ax.set_xlabel("Year")
+    _ax.set_title(
+        "AI demand forecasts span 3 years — the infrastructure lasts 25-60",
+        fontsize=12, fontweight="bold",
+    )
+    _ax.set_xlim(2022, 2080)
+    _ax.invert_yaxis()
+    _ax.grid(True, axis="x", linestyle=":", alpha=0.4)
+    plt.tight_layout()
+
+    save_fig(fig_timeline, cfg.img_dir / "dd002_asset_timeline.png")
+    return (fig_timeline,)
+
+
 @app.cell(hide_code=True)
-def _(cfg, mo):
-    _horizon = mo.image(
-        src=(cfg.img_dir / "dd002_time_horizon_mismatch.png").read_bytes(), width=800
+def _(cfg, fig_timeline, mo):
+    _chart = mo.image(
+        src=(cfg.img_dir / "dd002_asset_timeline.png").read_bytes(), width=850
     )
     mo.md(
         f"""
-    {_horizon}
+    {_chart}
 
-    *The fundamental mismatch: AI demand forecasts span 3 years. The infrastructure
-    being built to serve that demand lasts 25-60 years. Every generation technology
-    decision made today creates a different grid in 2060.*
+    *Every bar represents a capital decision being made today. The dark band shows
+    the AI demand forecast window (~3 years). Everything to the right will still be
+    operating long after the demand thesis that funded it is confirmed or refuted.*
     """
     )
     return
@@ -333,6 +381,87 @@ def _(mo):
     without AI demand. Nuclear restarts are policy-dependent — they require
     favorable NRC treatment and sustained political support.
     """)
+    return
+
+
+@app.cell
+def _(cfg, np, plt, save_fig):
+    # Generation spectrum: 2D positioning by asset life and grid benefit
+    _strategies = [
+        {"name": "Gas peaker\n(BTM)", "life": 25, "grid": 0.05, "size": 300,
+         "color": "#e74c3c"},
+        {"name": "BTM\nrenewables", "life": 27, "grid": 0.1, "size": 250,
+         "color": "#7b68ee"},
+        {"name": "Corporate\nrenewable PPA", "life": 20, "grid": 0.5, "size": 500,
+         "color": "#2ca02c"},
+        {"name": "Grid\ngas CC", "life": 35, "grid": 0.7, "size": 400,
+         "color": "#ff8c69"},
+        {"name": "Solar+storage\nPPA", "life": 30, "grid": 0.8, "size": 550,
+         "color": "#f0b429"},
+        {"name": "Nuclear\nrestart / SMR", "life": 50, "grid": 0.9, "size": 200,
+         "color": "#3498db"},
+    ]
+
+    fig_spectrum, _ax = plt.subplots(figsize=(10, 6))
+
+    for s in _strategies:
+        _ax.scatter(
+            s["life"], s["grid"], s=s["size"], c=s["color"],
+            alpha=0.7, edgecolors="white", linewidth=1.5, zorder=3,
+        )
+        _offset = (12, 0) if s["life"] < 45 else (-12, 0)
+        _ha = "left" if s["life"] < 45 else "right"
+        _ax.annotate(
+            s["name"], (s["life"], s["grid"]),
+            textcoords="offset points", xytext=_offset,
+            fontsize=9, va="center", ha=_ha,
+        )
+
+    # Quadrant shading — upper right is the policy target
+    _ax.axhspan(0.5, 1.05, xmin=0.4, xmax=1.0, alpha=0.06, color="#2ca02c", zorder=0)
+    _ax.axhline(0.5, color="#cccccc", linestyle="--", linewidth=1, alpha=0.6)
+    _ax.axvline(30, color="#cccccc", linestyle="--", linewidth=1, alpha=0.6)
+
+    # Quadrant labels
+    _ax.text(22, 0.97, "Short-lived\nhigh grid benefit", fontsize=8,
+             color="#aaaaaa", ha="center", va="top")
+    _ax.text(45, 0.97, "Long-lived\nhigh grid benefit", fontsize=8,
+             color="#2ca02c", ha="center", va="top", fontweight="bold")
+    _ax.text(22, 0.03, "Short-lived\nno grid benefit", fontsize=8,
+             color="#aaaaaa", ha="center", va="bottom")
+    _ax.text(45, 0.03, "Long-lived\nno grid benefit", fontsize=8,
+             color="#e74c3c", ha="center", va="bottom")
+
+    _ax.set_xlabel("Asset Lifetime (years)", fontsize=11)
+    _ax.set_ylabel("Grid Benefit (shared infrastructure value)", fontsize=11)
+    _ax.set_title(
+        "Not all AI-driven generation is equal — long-lived grid assets create the most spillover",
+        fontsize=11, fontweight="bold",
+    )
+    _ax.set_xlim(15, 58)
+    _ax.set_ylim(-0.05, 1.05)
+    _ax.grid(True, linestyle=":", alpha=0.3)
+    plt.tight_layout()
+
+    save_fig(fig_spectrum, cfg.img_dir / "dd002_generation_spectrum.png")
+    return (fig_spectrum,)
+
+
+@app.cell(hide_code=True)
+def _(cfg, fig_spectrum, mo):
+    _chart = mo.image(
+        src=(cfg.img_dir / "dd002_generation_spectrum.png").read_bytes(), width=800
+    )
+    mo.md(
+        f"""
+    {_chart}
+
+    *Bubble size reflects approximate relative new capacity. The green-shaded
+    upper-right quadrant — long-lived assets with high grid benefit — is where
+    policy should steer AI capital. The lower-left is where it lands without
+    intervention. The regulatory environment determines which quadrant dominates.*
+    """
+    )
     return
 
 

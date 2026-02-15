@@ -122,24 +122,6 @@ def _(mo):
     return
 
 
-@app.cell(hide_code=True)
-def _(cfg, mo):
-    _grid_btm = mo.image(
-        src=(cfg.img_dir / "dd002_grid_vs_btm.png").read_bytes(), width=800
-    )
-    mo.md(
-        f"""
-    {_grid_btm}
-
-    *The central choice: grid-connected infrastructure creates shared benefit
-    (left), while behind-the-meter bypass creates private infrastructure that
-    leaves the broader grid — and its ratepayers — worse off (right). The
-    regulatory environment determines which path dominates.*
-    """
-    )
-    return
-
-
 @app.cell
 def _(cfg, mpatches, np, plt, save_fig):
     # Draw the Causal Loop Diagram
