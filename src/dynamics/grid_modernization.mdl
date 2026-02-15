@@ -1,0 +1,264 @@
+{UTF-8}
+Grid Capacity= INTEG (
+	grid additions-grid retirements,
+	50)
+	~	GW
+	~	Total grid-connected generation capacity serving data center corridors.
+	|
+
+Behind the Meter Capacity= INTEG (
+	btm additions,
+	5)
+	~	GW
+	~	Data center on-site generation (gas, solar, batteries) bypassing the grid.
+	|
+
+Queue Backlog= INTEG (
+	queue entries-queue completions-queue withdrawals,
+	200)
+	~	GW
+	~	Interconnection queue: projects waiting for grid connection.
+	|
+
+Renewable Cost Index= INTEG (
+	-renewable learning,
+	40)
+	~	Dollars/MWh
+	~	Levelized cost of utility-scale solar plus storage.
+	|
+
+Regulatory Favorability= INTEG (
+	regulatory change,
+	0.6)
+	~	Dimensionless
+	~	Index (0-1) of regulatory support for grid-connected data centers.
+	|
+
+grid additions=
+	DELAY3(desired grid expansion, permitting delay)
+	~	GW/Year
+	~	New grid-connected generation coming online after permitting delay.
+	|
+
+grid retirements=
+	Grid Capacity*retirement fraction
+	~	GW/Year
+	~	Annual grid capacity retirement.
+	|
+
+btm additions=
+	AI demand growth*btm fraction
+	~	GW/Year
+	~	New behind-the-meter capacity added by data center operators.
+	|
+
+queue entries=
+	AI demand growth+non AI generation proposals
+	~	GW/Year
+	~	New projects entering the interconnection queue.
+	|
+
+queue completions=
+	Queue Backlog/queue processing time
+	~	GW/Year
+	~	Projects completing the interconnection process.
+	|
+
+queue withdrawals=
+	Queue Backlog*withdrawal fraction
+	~	GW/Year
+	~	Projects withdrawn from the queue (never built).
+	|
+
+renewable learning=
+	learning rate*renewable production growth*Renewable Cost Index
+	~	Dollars/MWh/Year
+	~	Wright Law cost reduction in renewables.
+	|
+
+regulatory change=
+	(target regulatory favorability-Regulatory Favorability)/regulatory adjustment time
+	~	1/Year
+	~	Convergence toward target regulatory environment.
+	|
+
+AI demand growth=
+	base AI demand*(1+AI growth rate)^(Time-2024)
+	~	GW/Year
+	~	Annual new data center power demand driven by AI buildout.
+	|
+
+base AI demand=
+	5
+	~	GW/Year
+	~	Baseline annual AI-driven power demand growth (2024 level).
+	|
+
+AI growth rate=
+	0.15
+	~	1/Year
+	~	Annual growth rate of AI power demand.
+	|
+
+non AI generation proposals=
+	15
+	~	GW/Year
+	~	Non-AI generation projects entering the queue (renewables, replacements).
+	|
+
+btm fraction=
+	btm attractiveness/(btm attractiveness+grid attractiveness)
+	~	Dimensionless
+	~	Share of new AI demand going behind-the-meter.
+	|
+
+btm attractiveness=
+	(1-Regulatory Favorability)*btm cost advantage
+	~	Dimensionless
+	~	Attractiveness of bypassing the grid. Increases when regulatory \
+		environment is hostile.
+	|
+
+btm cost advantage=
+	1.2
+	~	Dimensionless
+	~	Cost advantage of behind-the-meter relative to grid (>1 means BTM is cheaper).
+	|
+
+grid attractiveness=
+	Regulatory Favorability*(reference queue time/queue wait time)*grid reliability premium
+	~	Dimensionless
+	~	Attractiveness of grid connection. Higher when regulatory environment \
+		is favorable and queue is short.
+	|
+
+grid reliability premium=
+	1.5
+	~	Dimensionless
+	~	Premium for grid reliability vs behind-the-meter risk.
+	|
+
+queue wait time=
+	MAX(1, Queue Backlog/queue processing rate)
+	~	Years
+	~	Average time to get through the interconnection queue.
+	|
+
+queue processing rate=
+	40
+	~	GW/Year
+	~	Queue throughput capacity (projects processed per year).
+	|
+
+queue processing time=
+	MAX(1, Queue Backlog/queue processing rate)
+	~	Years
+	~	Time for average project to clear the queue.
+	|
+
+reference queue time=
+	3
+	~	Years
+	~	Reference queue wait time for attractiveness normalization.
+	|
+
+desired grid expansion=
+	MAX(0, (AI demand growth*(1-btm fraction)+queue completions*expansion capture fraction-grid retirements)*expansion aggressiveness)
+	~	GW/Year
+	~	Desired new grid capacity based on demand and queue throughput.
+	|
+
+expansion capture fraction=
+	0.6
+	~	Dimensionless
+	~	Fraction of queue completions that actually become operational capacity.
+	|
+
+expansion aggressiveness=
+	0.3
+	~	1/Year
+	~	Responsiveness of grid investment to perceived need.
+	|
+
+permitting delay=
+	3
+	~	Years
+	~	Time from investment decision to operational capacity.
+	|
+
+retirement fraction=
+	0.02
+	~	1/Year
+	~	Annual grid capacity retirement rate.
+	|
+
+withdrawal fraction=
+	0.15
+	~	1/Year
+	~	Annual fraction of queued projects that withdraw.
+	|
+
+learning rate=
+	0.20
+	~	Dimensionless
+	~	Wright Law learning rate for renewables (20 percent cost reduction \
+		per doubling of cumulative production).
+	|
+
+renewable production growth=
+	0.08
+	~	1/Year
+	~	Annual growth rate of renewable energy production.
+	|
+
+target regulatory favorability=
+	0.5
+	~	Dimensionless
+	~	Long-run regulatory favorability target.
+	|
+
+regulatory adjustment time=
+	5
+	~	Years
+	~	Time for regulatory environment to shift.
+	|
+
+grid spillover index=
+	Grid Capacity/(Grid Capacity+Behind the Meter Capacity)
+	~	Dimensionless
+	~	Share of total capacity that is grid-connected. Higher = more spillover.
+	|
+
+cost allocation to ratepayers=
+	(1-Regulatory Favorability)*grid additions*cost per GW
+	~	Dollars/Year
+	~	Grid investment costs socialized to non-data-center ratepayers.
+	|
+
+cost per GW=
+	2
+	~	Dollars
+	~	Cost of grid infrastructure per GW (in $B, normalized).
+	|
+
+total grid investment=
+	grid additions*cost per GW
+	~	Dollars/Year
+	~	Total annual grid investment.
+	|
+
+INITIAL TIME = 2024
+	~	Year
+	~	|
+
+FINAL TIME = 2040
+	~	Year
+	~	|
+
+TIME STEP = 0.25
+	~	Year
+	~	|
+
+SAVEPER = TIME STEP
+	~	Year
+	~	|

@@ -142,3 +142,202 @@ def multi_panel(
     fig.suptitle(suptitle, fontsize=14, fontweight="bold")
     plt.tight_layout()
     return fig
+
+
+def stacked_bar(
+    df: pd.DataFrame,
+    x_col: str,
+    stack_cols: dict[str, dict],
+    title: str,
+    *,
+    ylabel: str = "",
+    figsize: tuple[float, float] = (10, 5),
+) -> plt.Figure:
+    """Stacked bar chart for categorical breakdowns.
+
+    Parameters
+    ----------
+    df : DataFrame
+        Source data.
+    x_col : str
+        Column to use for x-axis categories.
+    stack_cols : dict
+        Mapping of column name -> style kwargs (must include 'color', 'label').
+    title : str
+        Insight-driven chart title.
+    ylabel : str
+        Y-axis label.
+    figsize : tuple
+        Figure size.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+    """
+    fig, ax = plt.subplots(figsize=figsize)
+    x = np.arange(len(df[x_col]))
+    width = 0.7
+    bottom = np.zeros(len(x))
+
+    for col, style in stack_cols.items():
+        color = style.pop("color", None)
+        label = style.pop("label", col)
+        values = df[col].values.astype(float)
+        ax.bar(x, values, width, bottom=bottom, color=color, label=label, **style)
+        bottom += values
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(df[x_col], rotation=45, ha="right")
+    ax.set_title(title, fontsize=12, fontweight="bold")
+    ax.set_ylabel(ylabel)
+    ax.legend(fontsize=8, loc="upper left")
+    plt.tight_layout()
+    return fig
+
+
+def waterfall_chart(
+    items: list[tuple[str, float]],
+    title: str,
+    *,
+    total_label: str = "Total",
+    figsize: tuple[float, float] = (10, 5),
+    positive_color: str = "#2ca02c",
+    negative_color: str = "#d62728",
+    total_color: str = "#1f77b4",
+) -> plt.Figure:
+    """Waterfall chart for cost allocation or flow breakdowns.
+
+    Parameters
+    ----------
+    items : list of (label, value)
+        Each item adds or subtracts from the running total.
+        The final total bar is added automatically.
+    title : str
+        Insight-driven chart title.
+    total_label : str
+        Label for the total bar.
+    figsize : tuple
+        Figure size.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+    """
+    labels = [label for label, _ in items] + [total_label]
+    values = [value for _, value in items]
+    total = sum(values)
+
+    # Compute bar positions: each starts where the previous ended
+    cumulative = np.zeros(len(values) + 1)
+    for i, v in enumerate(values):
+        cumulative[i + 1] = cumulative[i] + v
+
+    bottoms = np.zeros(len(labels))
+    heights = np.zeros(len(labels))
+    colors = []
+
+    for i, v in enumerate(values):
+        if v >= 0:
+            bottoms[i] = cumulative[i]
+            heights[i] = v
+            colors.append(positive_color)
+        else:
+            bottoms[i] = cumulative[i + 1]
+            heights[i] = abs(v)
+            colors.append(negative_color)
+
+    # Total bar starts from zero
+    bottoms[-1] = 0
+    heights[-1] = total
+    colors.append(total_color)
+
+    fig, ax = plt.subplots(figsize=figsize)
+    x = np.arange(len(labels))
+    ax.bar(x, heights, bottom=bottoms, color=colors, width=0.6, edgecolor="white")
+
+    # Value labels on bars
+    for i, (b, h) in enumerate(zip(bottoms, heights)):
+        val = values[i] if i < len(values) else total
+        label = f"${val:,.1f}B" if abs(val) >= 1 else f"${val * 1000:,.0f}M"
+        ax.text(i, b + h + total * 0.01, label, ha="center", va="bottom", fontsize=9)
+
+    # Connector lines between bars
+    for i in range(len(values)):
+        ax.plot(
+            [i + 0.3, i + 0.7],
+            [cumulative[i + 1], cumulative[i + 1]],
+            color="gray",
+            linewidth=0.8,
+            linestyle="--",
+        )
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels, rotation=30, ha="right")
+    ax.set_title(title, fontsize=12, fontweight="bold")
+    ax.set_ylabel("$ Billions")
+    plt.tight_layout()
+    return fig
+
+
+def horizontal_bar_ranking(
+    labels: list[str],
+    values: list[float],
+    title: str,
+    *,
+    xlabel: str = "",
+    color: str | list[str] = "#1f77b4",
+    figsize: tuple[float, float] = (10, 6),
+    highlight_indices: list[int] | None = None,
+    highlight_color: str = "#d62728",
+) -> plt.Figure:
+    """Horizontal bar chart for ranking comparisons.
+
+    Parameters
+    ----------
+    labels : list of str
+        Category labels (displayed on y-axis).
+    values : list of float
+        Values for each category.
+    title : str
+        Insight-driven chart title.
+    xlabel : str
+        X-axis label.
+    color : str or list of str
+        Bar color(s).
+    figsize : tuple
+        Figure size.
+    highlight_indices : list of int, optional
+        Indices to highlight in a different color.
+    highlight_color : str
+        Color for highlighted bars.
+
+    Returns
+    -------
+    matplotlib.figure.Figure
+    """
+    fig, ax = plt.subplots(figsize=figsize)
+    y = np.arange(len(labels))
+
+    if isinstance(color, str):
+        colors = [color] * len(labels)
+    else:
+        colors = list(color)
+
+    if highlight_indices:
+        for idx in highlight_indices:
+            if 0 <= idx < len(colors):
+                colors[idx] = highlight_color
+
+    ax.barh(y, values, color=colors, height=0.6)
+    ax.set_yticks(y)
+    ax.set_yticklabels(labels)
+    ax.set_xlabel(xlabel)
+    ax.set_title(title, fontsize=12, fontweight="bold")
+    ax.invert_yaxis()
+
+    # Value labels at end of bars
+    for i, v in enumerate(values):
+        ax.text(v + max(values) * 0.01, i, f"{v:,.0f}", va="center", fontsize=9)
+
+    plt.tight_layout()
+    return fig

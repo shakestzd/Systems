@@ -109,7 +109,80 @@ Systems/
 ├── tests/                       # pytest tests
 │
 └── .claude/                     # Claude Code config
+    └── agents/                  # Specialized sub-agents
+        ├── researcher.md
+        ├── critic.md
+        ├── writer.md
+        └── fact-checker.md
 ```
+
+---
+
+## Agent Workflow
+
+Four specialized agents handle distinct phases of the research-to-publication pipeline.
+Delegate to them using the Task tool with `subagent_type` matching the agent name.
+
+### Agents
+
+| Agent | Color | Purpose |
+| :--- | :--- | :--- |
+| **researcher** | cyan | Finds and validates primary data sources (government databases, academic repos, company filings). Actively searches for contradictory evidence. Zero-budget aware. |
+| **critic** | red | Rigorous intellectual review. Evaluates logical structure, evidence quality, structural omissions, and reference strength. Does not soften criticism. |
+| **writer** | green | Transforms draft analysis into accessible, rigorous narrative. Applies storytelling principles (inverted pyramid, insight-driven chart titles, Tufte, Knaflic). |
+| **fact-checker** | yellow | Final gate before publication. Verifies every number, citation, date, and entity. Flags unsourced claims and stale data. |
+
+### Publication Pipeline
+
+The agents are designed to run in sequence, each building on the previous:
+
+```
+1. RESEARCH    (researcher)  Find primary data, validate existing references
+       ↓
+2. DRAFT       (you)         Write the analysis in a Marimo notebook
+       ↓
+3. CRITIQUE    (critic)      Identify logical gaps, weak evidence, omissions
+       ↓
+4. REVISE      (you)         Address the critic's findings
+       ↓
+5. POLISH      (writer)      Rewrite prose for clarity, fix chart titles, structure
+       ↓
+6. VERIFY      (fact-checker) Check every claim against its source
+       ↓
+7. PUBLISH
+```
+
+Steps 3-6 may iterate. The critic and fact-checker may surface issues that require
+returning to the researcher for additional data.
+
+### How to Delegate
+
+**Research a topic:**
+> "Use the researcher agent to find primary data on U.S. transformer imports and
+> domestic manufacturing capacity."
+
+**Review a draft:**
+> "Use the critic agent to review notebook 02 for logical gaps and missing evidence."
+
+**Polish prose:**
+> "Use the writer agent to improve the narrative structure and chart titles in the
+> generation mix analysis."
+
+**Pre-publication check:**
+> "Use the fact-checker agent to verify all claims in CS-1 before publishing."
+
+**Parallel delegation** works when agents don't depend on each other's output:
+- researcher + critic can run simultaneously on different content
+- writer and fact-checker should run sequentially (writer first, then fact-checker)
+
+### Agent Design Principles
+
+- Each agent has a single, clear responsibility — no overlap
+- Agents read project context (`CLAUDE.md`, `research-framework.md`, notebooks) before acting
+- The critic does not hedge or soften — it identifies what does not hold up
+- The writer preserves analytical substance while improving prose
+- The fact-checker does not evaluate arguments — only verifiable facts
+- All agents respect the zero-budget constraint (flag paywalls, suggest free alternatives)
 
 ---
 
