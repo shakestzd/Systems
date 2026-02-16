@@ -1,0 +1,353 @@
+{
+  "version": "1",
+  "metadata": {
+    "marimo_version": "0.19.11"
+  },
+  "cells": [
+    {
+      "id": "Hbol",
+      "code_hash": "cb28031471cc149980304fe6d8702b54",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h1 id=\"the-learning-curve-of-power-infrastructure\">The Learning Curve of Power Infrastructure</h1>\n<h2 id=\"part-1-the-investigation\">Part 1 \u2014 The Investigation</h2>\n<span class=\"paragraph\"><em>Thandolwethu Zwelakhe Dlamini</em></span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Xref",
+      "code_hash": "437223e80a8a7a0d9596b499f16dc2b4",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"where-this-started\">Where This Started</h2>\n<span class=\"paragraph\">Three numbers frame the problem. Bloomberg NEF projects U.S. data center power\ndemand reaching 106 GW by 2035. Wood Mackenzie forecasts a 30% supply deficit for\npower transformers through 2025. And lead times for Large Power Transformers have\nstretched to <strong>38 months</strong> (Wood Mackenzie, 2025).</span>\n<span class=\"paragraph\">The framing in most coverage \u2014 Canary Media, Volts, utility filings to FERC \u2014 is\n<strong>scarcity</strong>: AI is consuming the grid faster than it can be built. That framing\ntreats the grid as a fixed resource being depleted. But a demand shock of this\nmagnitude also reshapes the industrial economics of the supply chain itself. The\nquestion I wanted to investigate: is AI demand changing <em>how</em> grid hardware gets\nmanufactured, not just how much of it gets consumed?</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "iLit",
+      "code_hash": "d64855cd4bd9f1239618ade009dc9e73",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><table>\n<thead>\n<tr>\n<th style=\"text-align: left;\">Domain</th>\n<th style=\"text-align: left;\">Role</th>\n<th style=\"text-align: left;\">Key Hardware</th>\n<th style=\"text-align: left;\">Standardizable?</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td style=\"text-align: left;\"><strong>Generation</strong></td>\n<td style=\"text-align: left;\">Creating electrons</td>\n<td style=\"text-align: left;\">Generators, step-up transformers</td>\n<td style=\"text-align: left;\">Partially (site-dependent)</td>\n</tr>\n<tr>\n<td style=\"text-align: left;\"><strong>Transmission</strong></td>\n<td style=\"text-align: left;\">High-voltage superhighway (66kV-765kV)</td>\n<td style=\"text-align: left;\"><strong>Large Power Transformers</strong></td>\n<td style=\"text-align: left;\">No (custom engineering)</td>\n</tr>\n<tr>\n<td style=\"text-align: left;\"><strong>Distribution</strong></td>\n<td style=\"text-align: left;\">Last-mile delivery (11kV-33kV)</td>\n<td style=\"text-align: left;\"><strong>Distribution transformers</strong></td>\n<td style=\"text-align: left;\"><strong>Yes</strong> (factory-built, repeatable)</td>\n</tr>\n</tbody>\n</table></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "qnkX",
+      "code_hash": "0e3a655e1eff5d1651f50dbbe01b2cc0",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"the-skeptical-case-when-learning-curves-dont-show-up\">The Skeptical Case: When Learning Curves Don't Show Up</h2>\n<span class=\"paragraph\">Brian Potter's <em>Construction Physics</em> work (and his book <em>The Origins of Efficiency</em>,\nStripe Press, 2024) provides the strongest framework for <strong>why learning curves fail</strong>\nin construction-adjacent industries. His core argument: Wright's Law is not a law of\nnature. It is an empirical regularity that holds when specific structural conditions\nare met. When those conditions are absent, costs stagnate \u2014 or even <em>increase</em> with\nvolume.</span>\n<span class=\"paragraph\">Potter identifies five conditions that must hold for learning curves to emerge:</span>\n<span class=\"paragraph\"><strong>1. Repetition of identical units.</strong> Every variation resets the learning clock. In\nconstruction, every project means new workers, new site, new design. With 80,000+\ntransformer configurations, is AI demand actually compressing this variation \u2014 or just\nadding volume across the same fragmented landscape?</span>\n<span class=\"paragraph\"><strong>2. Stable production environment.</strong> Factory beats field. LPTs are partially\nsite-assembled (too large to ship fully built). Distribution transformers are\nfactory-built \u2014 a point <em>in favor</em> of the hypothesis for that segment.</span>\n<span class=\"paragraph\"><strong>3. Continuous production runs.</strong> Learning degrades with stop-start ordering.\nHistorically, transformer orders came in irregular batches from different utilities\nwith different specs. Hyperscalers are now placing multi-year, multi-site contracts \u2014\nCompass Datacenters partnered with Eaton in 2025 to deploy standardized modular power\nblocks. This is new.</span>\n<span class=\"paragraph\"><strong>4. No regulatory ratcheting.</strong> This is the nuclear lesson. Arnulf Grubler's 2010\nstudy of France's nuclear program is the canonical counterexample: France had\ncentralized decision-making, standardized reactor designs, regulatory stability \u2014\neverything going for it. Yet reactor costs <em>tripled in real terms</em> over the program's\nlifetime. Each generation triggered new safety requirements that reset the learning\ncurve. Grubler called this <strong>\"negative learning by doing.\"</strong> The transformer parallel:\nDOE's 2023 efficiency standards mandate higher-grade GOES steel, increasing material\ncosts. If regulations ratchet faster than manufacturing can optimize, you get the\nnuclear outcome.</span>\n<span class=\"paragraph\"><strong>5. The product doesn't increase in complexity.</strong> Solar panels get simpler as they\nscale (thinner cells, fewer materials, streamlined processes). Nuclear reactors got more\ncomplex (safety systems, fuel cycle management). Are data center transformers getting\nsimpler through standardization, or more complex through smart grid integration and\nmonitoring requirements? This remains an open question.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "TqIu",
+      "code_hash": "19983e4a3e5d7408d37f280bc591af99",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"testing-the-hypothesis-a-scorecard\">Testing the Hypothesis: A Scorecard</h2>\n<span class=\"paragraph\">Applying Potter's five conditions to the two segments of the transformer market\nproduces a diagnostic rather than a conclusion:</span>\n<table>\n<thead>\n<tr>\n<th style=\"text-align: left;\">Condition</th>\n<th style=\"text-align: left;\">LPTs (Transmission)</th>\n<th style=\"text-align: left;\">Distribution Transformers</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td style=\"text-align: left;\">Identical units</td>\n<td style=\"text-align: left;\"><strong>Fail</strong> \u2014 custom-engineered</td>\n<td style=\"text-align: left;\"><strong>Partial pass</strong> \u2014 standardizing via hyperscaler specs</td>\n</tr>\n<tr>\n<td style=\"text-align: left;\">Stable environment</td>\n<td style=\"text-align: left;\"><strong>Fail</strong> \u2014 partial site assembly</td>\n<td style=\"text-align: left;\"><strong>Pass</strong> \u2014 factory-built</td>\n</tr>\n<tr>\n<td style=\"text-align: left;\">Continuous production</td>\n<td style=\"text-align: left;\"><strong>Fail</strong> \u2014 irregular, one-off orders</td>\n<td style=\"text-align: left;\"><strong>Passing</strong> \u2014 multi-year hyperscaler contracts</td>\n</tr>\n<tr>\n<td style=\"text-align: left;\">No regulatory ratcheting</td>\n<td style=\"text-align: left;\"><strong>Risk</strong> \u2014 DOE efficiency mandates</td>\n<td style=\"text-align: left;\"><strong>Risk</strong> \u2014 same DOE mandates</td>\n</tr>\n<tr>\n<td style=\"text-align: left;\">Decreasing complexity</td>\n<td style=\"text-align: left;\"><strong>Fail</strong> \u2014 smart grid adds complexity</td>\n<td style=\"text-align: left;\"><strong>Uncertain</strong> \u2014 standardization simplifies, monitoring adds</td>\n</tr>\n</tbody>\n</table>\n<span class=\"paragraph\">LPTs fail on almost every condition. They are the Grubler nuclear analogy \u2014\nlarge, lumpy, bespoke, and subject to regulatory ratcheting. Asserting learning\ncurves for LPTs is not supported by the structural evidence.</span>\n<span class=\"paragraph\">Distribution transformers are a credible candidate. They pass on factory environment\nand are increasingly passing on continuous production. The open risks are regulatory\nratcheting (DOE standards) and whether complexity is trending up or down.</span>\n<span class=\"paragraph\">The scorecard identifies <em>where to look next</em>, not what the answer is.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ulZA",
+      "code_hash": "35fefeacd83104067fd3ab0ac54c5339",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\">This estimate is <em>consistent with</em> a ~12% learning rate, which falls within the\nrange BCG observed across heavy industrial products in the 1960s-70s (10-25%).\nThree caveats constrain how far this result can be pushed:</span>\n<ul>\n<li>This is a <strong>proxy</strong>, not a measurement. A real Wright's Law fit needs cumulative\n  production volume, not a cumulative price index.</li>\n<li>The PPI aggregates <em>all</em> transformers \u2014 LPTs, distribution, specialty. It doesn't\n  isolate the standardizable segment where learning curves would most plausibly emerge.</li>\n<li>The signal is pre-2020. Whether AI demand <em>accelerates</em> or <em>disrupts</em> this trend is\n  the open question.</li>\n</ul>\n<span class=\"paragraph\"><strong>The data is consistent with the hypothesis but does not prove it.</strong> Confirmation\nwould require segment-level production volume and cost data, which may exist in\nproprietary industry databases (IHS Markit, Wood Mackenzie) but is not publicly\navailable.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ecfG",
+      "code_hash": "59ea61ffe1cd76ff83cdc065f0ca07af",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"open-questions\">Open Questions</h2>\n<span class=\"paragraph\">Six questions need to be resolved to move from hypothesis to conviction:</span>\n<span class=\"paragraph\"><strong>1. Segment-level data.</strong> The PPI bundles all transformers together. Can I isolate\ndistribution transformer pricing from LPTs? NREL's 2024 assessment and DOE's supply\nchain reports may have this.</span>\n<span class=\"paragraph\"><strong>2. The DOE regulatory ratchet.</strong> The 2023 efficiency standards mandate amorphous\nsteel cores for many distribution transformers, which are more expensive than\nconventional GOES. Is this a one-time step-change that manufacturers absorb, or the\nstart of a French nuclear-style escalation?</span>\n<span class=\"paragraph\"><strong>3. Hyperscaler spec convergence.</strong> Are Microsoft, Google, and Amazon actually ordering\nthe same transformer designs? Or are they each specifying custom configurations? The\nCompass/Eaton partnership suggests convergence, but I need more evidence.</span>\n<span class=\"paragraph\"><strong>4. Cleveland-Cliffs as a leading indicator.</strong> A steel company vertically integrating\ninto transformer manufacturing is a strong signal that <em>someone</em> believes standardized\nvolume is coming. But is this a bet on AI demand specifically, or on broader grid\nmodernization and the IRA?</span>\n<span class=\"paragraph\"><strong>5. The solid-state wildcard.</strong> Solid-state transformers (SSTs) use power electronics\ninstead of iron cores. If they scale like semiconductors, they leapfrog the entire\ntraditional manufacturing question. Canary Media flagged them as \"advancing faster than\nexpected\" in their 2026 outlook. This could render the whole\nlearning-curve-for-traditional-transformers question moot.</span>\n<span class=\"paragraph\"><strong>6. Who captures the benefit?</strong> Even if learning curves emerge in the standardizable\nsegment, the financing question matters. If hyperscalers capture the cost decline through\nprivate procurement while ratepayers bear the infrastructure costs, the \"AI modernizes\nthe grid\" narrative becomes more complicated. In 2024, $4.3B in systemic grid connection\ncosts were assigned to general ratepayers in the mid-Atlantic (Union of Concerned\nScientists).</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Pvdt",
+      "code_hash": "bf8d69a5a1dc9cfe1addc4de23012cb6",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"where-this-goes-next\">Where This Goes Next</h2>\n<span class=\"paragraph\">This investigation established a hypothesis and a first-pass data signal. The\nremaining parts formalize and stress-test it:</span>\n<ul>\n<li><strong>Part 2 \u2014 Feedback Architecture</strong> (<code>02_feedback_architecture.py</code>): Causal loop\n  diagram and PySD stock-and-flow simulation identifying which feedback loops\n  dominate under different parameter regimes.</li>\n<li><strong>Part 3 \u2014 Bayesian Estimation</strong> (<code>03_bayesian_estimation.py</code>): PyMC model\n  quantifying uncertainty around the learning rate with proper production volume\n  priors.</li>\n<li><strong>Part 4 \u2014 Regime Switching</strong> (<code>04_regime_switching.py</code>): Markov switching model\n  testing whether AI demand constitutes a structural break or another commodity cycle.</li>\n</ul>\n<span class=\"paragraph\">The goal is a model that makes assumptions explicit and uncertainties measurable.\nIf the learning curve thesis is wrong, the model should identify <em>where</em> it breaks.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ZBYS",
+      "code_hash": "6010f99274adcf1d2d4122cac00c4c96",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><hr />\n<h3 id=\"sources-and-further-reading\">Sources and Further Reading</h3>\n<span class=\"paragraph\"><strong>Data:</strong></span>\n<ul>\n<li><strong>FRED:</strong> PPI Series <code>PCU335311335311</code> (Transformers), <code>WPU102501</code> (Copper), <code>WPU1017</code> (Steel)</li>\n<li><strong>NREL (2024):</strong> <em>Distribution Transformer Supply and Demand Assessment.</em> <a href=\"https://www.nrel.gov/docs/fy24osti/88441.pdf\" rel=\"noopener noreferrer\" target=\"_blank\">Link</a></li>\n</ul>\n<span class=\"paragraph\"><strong>Industry Analysis:</strong></span>\n<ul>\n<li><strong>Wood Mackenzie (2024):</strong> <em>The Era of Flat Power Demand is Over.</em> <a href=\"https://www.woodmac.com/news/opinion/the-era-of-flat-power-demand-is-over/\" rel=\"noopener noreferrer\" target=\"_blank\">Link</a></li>\n<li><strong>Wood Mackenzie (2025):</strong> <em>Power transformers and distribution transformers will face supply deficits of 30% and 10% in 2025.</em> <a href=\"https://www.woodmac.com/press-releases/power-transformers-and-distribution-transformers-will-face-supply-deficits-of-30-and-10-in-2025/\" rel=\"noopener noreferrer\" target=\"_blank\">Link</a></li>\n<li><strong>Bloomberg NEF (2025):</strong> <em>AI and the Power Grid: Where the Rubber Meets the Road.</em> <a href=\"https://about.bnef.com/insights/clean-energy/ai-and-the-power-grid-where-the-rubber-meets-the-road/\" rel=\"noopener noreferrer\" target=\"_blank\">Link</a></li>\n<li><strong>DOE (2022):</strong> <em>Electric Grid Supply Chain Review.</em> <a href=\"https://www.energy.gov/sites/default/files/2022-02/Electric%20Grid%20Supply%20Chain%20Report%20-%20Final.pdf\" rel=\"noopener noreferrer\" target=\"_blank\">Link</a></li>\n</ul>\n<span class=\"paragraph\"><strong>Learning Curves and Skepticism:</strong></span>\n<ul>\n<li><strong>Brian Potter:</strong> <em>How Accurate Are Learning Curves?</em> and <em>Where Are My Damn Learning Curves?</em> \u2014 <a href=\"https://www.construction-physics.com/\" rel=\"noopener noreferrer\" target=\"_blank\">Construction Physics</a></li>\n<li><strong>Brian Potter:</strong> <em>The Origins of Efficiency</em> (Stripe Press, 2024)</li>\n<li><strong>Arnulf Grubler (2010):</strong> <em>The costs of the French nuclear scale-up: A case of negative learning by doing.</em> <a href=\"https://www.sciencedirect.com/science/article/abs/pii/S0301421510003526\" rel=\"noopener noreferrer\" target=\"_blank\">Energy Policy</a></li>\n<li><strong>Ramez Naam (2020):</strong> <em>Solar's Future is Insanely Cheap.</em> <a href=\"https://rameznaam.com/2020/05/14/solars-future-is-insanely-cheap-2020/\" rel=\"noopener noreferrer\" target=\"_blank\">Link</a></li>\n<li><strong>Casey Handmer:</strong> <em>Grid Storage: Batteries Will Win</em> and <em>Direct Current Data Centers.</em> <a href=\"https://caseyhandmer.wordpress.com/\" rel=\"noopener noreferrer\" target=\"_blank\">Blog</a></li>\n</ul>\n<span class=\"paragraph\"><strong>Manufacturing:</strong></span>\n<ul>\n<li><strong>Cleveland-Cliffs (2024):</strong> Weirton transformer plant announcement. <a href=\"https://www.clevelandcliffs.com/news/news-releases/detail/644/\" rel=\"noopener noreferrer\" target=\"_blank\">Press release</a></li>\n<li><strong>Northfield Transformers (2025):</strong> <em>Data Center Expansion is Reshaping Transformer Demand.</em> <a href=\"https://northfieldtransformers.com/blog/data-center-expansion-reshaping-transformer-demand/\" rel=\"noopener noreferrer\" target=\"_blank\">Link</a></li>\n</ul>\n<span class=\"paragraph\"><em>DD-001 \u00b7 Part 1 of 4</em></span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "MJUe",
+      "code_hash": "8fc24c381258e991943ffd7ad48fbdee",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "vblA",
+      "code_hash": "a6c58d6f26b6fcf1215dad5562da6e70",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "bkHC",
+      "code_hash": "1d776b050df6f01d6474a3354ec33742",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "lEQa",
+      "code_hash": "fd8ceadf583324c545fea195d13d161a",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "PKri",
+      "code_hash": "ba71d0838da7d3efb803facd5f6dd1ab",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "SFPL",
+      "code_hash": "4eed026eb7b26b9f67cd3cf656d8fd97",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"why-transformers\">Why Transformers</h2>\n<span class=\"paragraph\">Why focus on transformers? Because they are the only technology class that appears\nat every layer of the grid \u2014 generation, transmission, distribution. Every megawatt\nof new capacity requires them at every stage. If AI demand is reshaping grid\neconomics, transformer markets are where the pressure shows up first.\n<img src='./@file/1246550-12842320-rEOJKutL.png' style='width: 800px' /></span>\n<ul>\n<li><strong>Generation:</strong> Step-up transformers raise voltage from generators to transmission levels</li>\n<li><strong>Transmission:</strong> Large Power Transformers move electricity across the high-voltage backbone</li>\n<li><strong>Distribution:</strong> Step-down transformers deliver power to homes, businesses, and data centers</li>\n</ul>\n<h3 id=\"two-commodities-one-bottleneck\">Two Commodities, One Bottleneck</h3>\n<span class=\"paragraph\">Transformers also sit at the intersection of two critical commodity markets:</span>\n<ul>\n<li><strong>Copper</strong> \u2014 for the windings that carry current</li>\n<li><strong>Grain-Oriented Electrical Steel (GOES)</strong> \u2014 for the magnetic cores that transfer energy between windings</li>\n</ul>\n<span class=\"paragraph\">This means transformer costs are a <em>composite signal</em>: part manufacturing efficiency,\npart commodity market, part supply chain structure. Disentangling these is the\nanalytical challenge at the heart of this notebook.</span>\n<span class=\"paragraph\">There's a related technology I want to flag for future investigation: <strong>switchgear</strong>.\nLike transformers, switchgear is required at every level of the grid (generation,\ntransmission, distribution). Like transformers, it depends on copper and specialized\nsteel. And like transformers, it's been historically bespoke. If AI demand is\nindustrializing transformer manufacturing, the same forces likely apply to switchgear \u2014\nbut that's a separate analysis.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "BYtC",
+      "code_hash": "b6869dd21d7dad39fc174f70c1e2294c",
+      "outputs": [
+        {
+          "type": "error",
+          "ename": "exception",
+          "evalue": "HTTP Error 504: Gateway Time-out",
+          "traceback": []
+        }
+      ],
+      "console": [
+        {
+          "type": "stream",
+          "name": "stderr",
+          "text": "<span class=\"codehilite\"><div class=\"highlight\"><pre><span></span><span class=\"gt\">Traceback (most recent call last):</span>\n  File <span class=\"nb\">&quot;/var/folders/5l/h3slgb611jx217k86v3jfcm40000gn/T/marimo_49571/__marimo__cell_BYtC_.py&quot;</span>, line <span class=\"m\">3</span>, in <span class=\"n\">&lt;module&gt;</span>\n<span class=\"w\">    </span><span class=\"n\">steel_ppi</span> <span class=\"o\">=</span> <span class=\"n\">fetch_csv</span><span class=\"p\">(</span><span class=\"s2\">&quot;WPU1017&quot;</span><span class=\"p\">)</span>\n  File <span class=\"nb\">&quot;/Users/shakes/DevProjects/Systems/src/data/fred.py&quot;</span>, line <span class=\"m\">26</span>, in <span class=\"n\">fetch_csv</span>\n<span class=\"w\">    </span><span class=\"n\">response</span> <span class=\"o\">=</span> <span class=\"n\">urllib</span><span class=\"o\">.</span><span class=\"n\">request</span><span class=\"o\">.</span><span class=\"n\">urlopen</span><span class=\"p\">(</span><span class=\"n\">url</span><span class=\"p\">)</span>\n  File <span class=\"nb\">&quot;/opt/homebrew/Cellar/python@3.14/3.14.0_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/urllib/request.py&quot;</span>, line <span class=\"m\">187</span>, in <span class=\"n\">urlopen</span>\n<span class=\"w\">    </span><span class=\"k\">return</span> <span class=\"n\">opener</span><span class=\"o\">.</span><span class=\"n\">open</span><span class=\"p\">(</span><span class=\"n\">url</span><span class=\"p\">,</span> <span class=\"n\">data</span><span class=\"p\">,</span> <span class=\"n\">timeout</span><span class=\"p\">)</span>\n<span class=\"w\">           </span><span class=\"pm\">~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^</span>\n  File <span class=\"nb\">&quot;/opt/homebrew/Cellar/python@3.14/3.14.0_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/urllib/request.py&quot;</span>, line <span class=\"m\">493</span>, in <span class=\"n\">open</span>\n<span class=\"w\">    </span><span class=\"n\">response</span> <span class=\"o\">=</span> <span class=\"n\">meth</span><span class=\"p\">(</span><span class=\"n\">req</span><span class=\"p\">,</span> <span class=\"n\">response</span><span class=\"p\">)</span>\n  File <span class=\"nb\">&quot;/opt/homebrew/Cellar/python@3.14/3.14.0_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/urllib/request.py&quot;</span>, line <span class=\"m\">602</span>, in <span class=\"n\">http_response</span>\n<span class=\"w\">    </span><span class=\"n\">response</span> <span class=\"o\">=</span> <span class=\"bp\">self</span><span class=\"o\">.</span><span class=\"n\">parent</span><span class=\"o\">.</span><span class=\"n\">error</span><span class=\"p\">(</span>\n<span class=\"w\">    </span>    <span class=\"s1\">&#39;http&#39;</span><span class=\"p\">,</span> <span class=\"n\">request</span><span class=\"p\">,</span> <span class=\"n\">response</span><span class=\"p\">,</span> <span class=\"n\">code</span><span class=\"p\">,</span> <span class=\"n\">msg</span><span class=\"p\">,</span> <span class=\"n\">hdrs</span><span class=\"p\">)</span>\n  File <span class=\"nb\">&quot;/opt/homebrew/Cellar/python@3.14/3.14.0_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/urllib/request.py&quot;</span>, line <span class=\"m\">531</span>, in <span class=\"n\">error</span>\n<span class=\"w\">    </span><span class=\"k\">return</span> <span class=\"bp\">self</span><span class=\"o\">.</span><span class=\"n\">_call_chain</span><span class=\"p\">(</span><span class=\"o\">*</span><span class=\"n\">args</span><span class=\"p\">)</span>\n<span class=\"w\">           </span><span class=\"pm\">~~~~~~~~~~~~~~~~^^^^^^^</span>\n  File <span class=\"nb\">&quot;/opt/homebrew/Cellar/python@3.14/3.14.0_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/urllib/request.py&quot;</span>, line <span class=\"m\">464</span>, in <span class=\"n\">_call_chain</span>\n<span class=\"w\">    </span><span class=\"n\">result</span> <span class=\"o\">=</span> <span class=\"n\">func</span><span class=\"p\">(</span><span class=\"o\">*</span><span class=\"n\">args</span><span class=\"p\">)</span>\n  File <span class=\"nb\">&quot;/opt/homebrew/Cellar/python@3.14/3.14.0_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/urllib/request.py&quot;</span>, line <span class=\"m\">611</span>, in <span class=\"n\">http_error_default</span>\n<span class=\"w\">    </span><span class=\"k\">raise</span> <span class=\"n\">HTTPError</span><span class=\"p\">(</span><span class=\"n\">req</span><span class=\"o\">.</span><span class=\"n\">full_url</span><span class=\"p\">,</span> <span class=\"n\">code</span><span class=\"p\">,</span> <span class=\"n\">msg</span><span class=\"p\">,</span> <span class=\"n\">hdrs</span><span class=\"p\">,</span> <span class=\"n\">fp</span><span class=\"p\">)</span>\n<span class=\"gr\">urllib.error.HTTPError</span>: <span class=\"n\">HTTP Error 504: Gateway Time-out</span>\n</pre></div>\n</span>",
+          "mimetype": "application/vnd.marimo+traceback"
+        }
+      ]
+    },
+    {
+      "id": "RGSE",
+      "code_hash": "a4a4e20918891784e06b047705c1a1a8",
+      "outputs": [
+        {
+          "type": "error",
+          "ename": "exception",
+          "evalue": "An ancestor raised an exception (HTTPError): ",
+          "traceback": []
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Kclp",
+      "code_hash": "2471a4cdcab094680aa14dd334b15f6b",
+      "outputs": [
+        {
+          "type": "error",
+          "ename": "exception",
+          "evalue": "An ancestor raised an exception (HTTPError): ",
+          "traceback": []
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "emfo",
+      "code_hash": "5ee7164f929ee73aab950fa5ed1ac28c",
+      "outputs": [
+        {
+          "type": "error",
+          "ename": "exception",
+          "evalue": "An ancestor raised an exception (HTTPError): ",
+          "traceback": []
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Hstk",
+      "code_hash": "7568d4af0bb94e9f39efdbfef21dd839",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"decomposing-the-price-signal\">Decomposing the Price Signal</h2>\n<span class=\"paragraph\">Transformer prices are rising. But is that because manufacturing is getting less\nefficient, or because the raw materials are getting more expensive? To separate the\ntwo, I built a rough cost decomposition: ~30% copper, ~30% steel, ~40% labor and\nfixed costs (NREL, 2024). Dividing the transformer PPI by a weighted material index\nisolates a proxy for the manufacturing efficiency trend.</span>\n<h1 id=\"transformer-prices-nominal-vs-material-adjusted\">Transformer Prices: Nominal vs. Material-Adjusted</h1>\n<span class=\"paragraph\"><img src='./@file/95095-12842320-fDQkXr5N.png' style='width: 800px' /></span>\n<span class=\"paragraph\">The red line is the nominal PPI \u2014 the headline number in industry reports. The\ngreen dashed line strips out commodity volatility. It shows a different dynamic:\n<strong>the manufacturing process itself has been getting steadily more efficient.</strong> The\npost-2021 price surge is almost entirely a raw material and lead-time tax, not a\nmanufacturing failure.</span>\n<span class=\"paragraph\">This distinction matters. If the price increase were driven by worsening\nmanufacturing economics, the scarcity framing would be the whole story. Instead,\nthere appears to be a <strong>learning curve</strong> hiding under commodity noise.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "nWHF",
+      "code_hash": "b049a6b4e0fb9adea64acf13d1f10da7",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"the-hypothesis-wrights-law-in-grid-hardware\">The Hypothesis: Wright's Law in Grid Hardware?</h2>\n<span class=\"paragraph\"><strong>Wright's Law</strong> is the empirical observation that for every doubling of cumulative\nproduction, unit cost falls by a roughly constant percentage. Solar PV exhibits a\nlearning rate of ~20% (IRENA, 2023). Lithium-ion batteries ~18% (BloombergNEF,\n2024). These rates reflect the compounding effects of manufacturing experience,\nprocess optimization, and design-for-manufacturing.</span>\n<span class=\"paragraph\">Grid hardware has historically shown <strong>near-zero</strong> learning rates. The standard\nexplanation is that the grid is old and slow-moving. But the data suggests a more\nspecific structural reason. The grid is a <strong>spectrum</strong>:</span>\n<span class=\"paragraph\"><img src='./@file/970548-12842320-r9tMgrjO.png' style='width: 800px' /></span>\n<span class=\"paragraph\">At one end: <strong>Large Power Transformers (LPTs)</strong> \u2014 500kV+, custom impedance matching,\nsite-specific thermal designs. Each one is engineered from scratch. At the other end:\n<strong>distribution transformers</strong> \u2014 pad-mounted units, modular switchgear. These <em>could</em> be\nstandardized, but historically there was never enough volume of any single design to\njustify manufacturing innovation. Over 80,000 unique transformer configurations exist\nglobally (Uptime Institute).</span>\n<span class=\"paragraph\">The question: <strong>is AI demand concentrated enough in the standardizable segment\nto trigger learning effects that historical demand patterns never could?</strong></span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ZHCJ",
+      "code_hash": "a08958193e0107579e45e5f4f7fcc31d",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><div style='display: flex;flex: 1;flex-direction: row;justify-content: space-around;align-items: normal;flex-wrap: nowrap;gap: 0.5rem'><div style='display: flex;flex: 1;flex-direction: column;justify-content: flex-start;align-items: normal;flex-wrap: nowrap;gap: 0.5rem'><span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\"><strong>The Transmission Titan (LPT)</strong></span></span><img src='./@file/1931353-12842320-dxRCFMEM.png' style='width: 400px' /><span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\">100MVA+ units (<marimo-tex class=\"arithmatex\">||(1.4M-||)</marimo-tex>2.5M). Custom-engineered. Lead times: ~38 months.</span></span></div><div style='display: flex;flex: 1;flex-direction: column;justify-content: flex-start;align-items: normal;flex-wrap: nowrap;gap: 0.5rem'><span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\"><strong>The Distribution Hub</strong></span></span><img src='./@file/1920982-12842320-hmi8fX3M.png' style='width: 400px' /><span class=\"markdown prose dark:prose-invert contents\"><span class=\"paragraph\">Pad-mounted units. Factory-built. <strong>This is where standardization could bite.</strong></span></span></div></div></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "ROlb",
+      "code_hash": "75f71d83973f6fd3dfebeff264788b9e",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"a-precedent-what-tesla-did-for-batteries\">A Precedent: What Tesla Did for Batteries</h2>\n<span class=\"paragraph\">The closest precedent for a demand shock unlocking a dormant learning curve is\nEV batteries.</span>\n<ul>\n<li><strong>Phase 1 \u2014 Premium funds capability.</strong> Tesla's Roadster and Model S/X were\n  low-volume, high-margin. They funded battery R&amp;D but didn't bend the cost curve\n  themselves.</li>\n<li><strong>Phase 2 \u2014 Volume unlocks manufacturing innovation.</strong> The Model 3/Y justified\n  gigacasting, structural battery packs, simplified wiring. Fundamentally different\n  manufacturing designed for scale. <em>That</em> is where the learning rate kicked in.</li>\n<li><strong>Phase 3 \u2014 Both segments coexist.</strong> Model S/X are still produced. The premium didn't\n  disappear \u2014 volume unlocked a parallel commodity track alongside it.</li>\n</ul>\n<span class=\"paragraph\">Government incentives (EV tax credits, ZEV mandates) created the demand certainty that\njustified the capex. The IRA and grid modernization mandates may be playing the same\nrole for transformers today.</span>\n<span class=\"paragraph\"><img src='./@file/932138-12842320-zsed0KRN.png' style='width: 800px' />\n<em>A Bugatti is still hand-built. A Volkswagen rolls off a robotic line. Both exist \u2014 but\nonly one segment has a learning curve. The question is which segment of the grid AI\ndemand is growing.</em></span>\n<span class=\"paragraph\">There is a direct supply chain parallel unfolding now. <strong>Cleveland-Cliffs</strong> \u2014 the\nsole U.S. producer of Grain-Oriented Electrical Steel \u2014 announced a $150M vertically\nintegrated transformer plant in Weirton, WV (online H1 2026). A steel company\nbuilding transformers is a structural bet on sustained, standardized volume.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "Vxnm",
+      "code_hash": "24d879f1c53979c562a037cb617abb37",
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/markdown": "<span class=\"markdown prose dark:prose-invert contents\"><h2 id=\"back-to-the-data-fitting-a-learning-rate\">Back to the Data: Fitting a Learning Rate</h2>\n<span class=\"paragraph\">With Potter's framework as a filter, the pre-2020 FRED data warrants a closer look.\nBefore the commodity shock, the material-adjusted price shows a visible downward\ntrend. The next step is to fit a Wright's Law model to it.</span>\n<h1 id=\"pre-2020-the-signal-under-the-noise\">Pre-2020: The Signal Under the Noise</h1>\n<span class=\"paragraph\"><img src='./@file/103330-12842320-fqaWbyel.png' style='width: 800px' /></span>\n<span class=\"paragraph\">A proper Wright's Law fit requires cumulative <em>units produced</em> on the x-axis.\nSegment-level production volume data for U.S. transformers does not appear to be\npublicly available. As a proxy, I use the cumulative sum of the PPI index as a\nstand-in for production activity. <strong>This is a meaningful limitation</strong> \u2014 the proxy\nis directionally informative but not equivalent to actual production volume. The\nNREL 2024 distribution transformer assessment may contain better data for a future\niteration.</span></span>"
+          }
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "DnEU",
+      "code_hash": "7eddcc629248b25fdc7ac936bda35077",
+      "outputs": [
+        {
+          "type": "error",
+          "ename": "exception",
+          "evalue": "An ancestor raised an exception (HTTPError): ",
+          "traceback": []
+        }
+      ],
+      "console": []
+    },
+    {
+      "id": "aLJB",
+      "code_hash": null,
+      "outputs": [
+        {
+          "type": "data",
+          "data": {
+            "text/plain": ""
+          }
+        }
+      ],
+      "console": []
+    }
+  ]
+}
