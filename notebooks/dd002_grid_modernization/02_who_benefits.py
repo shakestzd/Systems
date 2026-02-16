@@ -1,10 +1,7 @@
 import marimo
 
 __generated_with = "0.19.11"
-app = marimo.App(
-    width="medium",
-    layout_file="layouts/02_who_benefits.slides.json",
-)
+app = marimo.App(width="medium")
 
 
 @app.cell(hide_code=True)
@@ -47,6 +44,8 @@ def _():
     from src.notebook import setup, save_fig
     from src.data.db import query
     from src.plotting import (
+        FONTS,
+        legend_below,
         stacked_bar,
         waterfall_chart,
         horizontal_bar_ranking,
@@ -54,8 +53,10 @@ def _():
 
     cfg = setup()
     return (
+        FONTS,
         cfg,
         horizontal_bar_ranking,
+        legend_below,
         mo,
         np,
         pd,
@@ -140,7 +141,7 @@ def _(cfg, mo):
 
 
 @app.cell
-def _(cfg, horizontal_bar_ranking, save_fig):
+def _(cfg, horizontal_bar_ranking, legend_below, plt, save_fig):
     # LBNL queue data — if not loaded, use representative summary data
     # from the LBNL Queued Up 2025 Edition report
     #
@@ -166,6 +167,14 @@ def _(cfg, horizontal_bar_ranking, save_fig):
         highlight_indices=[0, 4],  # PJM and ERCOT — major data center regions
         highlight_color="#e74c3c",
     )
+    _ax_q = fig_queue.axes[0]
+    _legend_handles = [
+        plt.Line2D([0], [0], marker="s", color="w", markerfacecolor="#e74c3c",
+                   markersize=14, label="Major data center region"),
+        plt.Line2D([0], [0], marker="s", color="w", markerfacecolor="#1f77b4",
+                   markersize=14, label="Other region"),
+    ]
+    legend_below(_ax_q, handles=_legend_handles, ncol=2)
     queue_by_region=save_fig(fig_queue, cfg.img_dir / "dd002_queue_by_region.png")
     return
 
@@ -177,6 +186,8 @@ def _(cfg, mo):
     )
     mo.md(
         f"""
+    # PJM and MISO carry the largest interconnection backlogs
+
     {_queue_chart}
 
     PJM — the grid operator covering the mid-Atlantic from Virginia to
@@ -227,7 +238,7 @@ def _(cfg, pd, save_fig, stacked_bar):
         "The queue is overwhelmingly clean energy — gas is a shrinking sliver",
         ylabel="Queue Capacity (GW)",
     )
-    save_fig(fig_comp, cfg.img_dir / "dd002_queue_composition.png")
+    _comp_path=save_fig(fig_comp, cfg.img_dir / "dd002_queue_composition.png")
     return
 
 
@@ -238,6 +249,8 @@ def _(cfg, mo):
     )
     mo.md(
         f"""
+    # The queue is overwhelmingly clean energy — gas is a shrinking sliver
+
     {_comp_chart}
 
     The composition of the queue reveals an important structural fact:
@@ -277,7 +290,7 @@ def _(cfg, save_fig, waterfall_chart):
         "$4.36B in PJM data center grid costs shifted to ratepayers in 2024 (estimated breakdown)",
         total_label="Total\nsocialized",
     )
-    save_fig(fig_cost, cfg.img_dir / "dd002_cost_allocation.png")
+    _cost_path=save_fig(fig_cost, cfg.img_dir / "dd002_cost_allocation.png")
     return
 
 
@@ -289,6 +302,8 @@ def _(cfg, mo):
     mo.md(
         f"""
     ## The $4.36 Billion Question
+
+    # $4.36B in PJM data center grid costs shifted to ratepayers in 2024 (estimated breakdown)
 
     {_cost_chart}
 
@@ -410,7 +425,7 @@ def _(mo):
 
 
 @app.cell
-def _(cfg, np, plt, save_fig):
+def _(FONTS, cfg, np, plt, save_fig):
     # Virginia residential bill impact projection (E3/JLARC high-growth scenario)
     _years = np.arange(2024, 2041)
     # E3 projects $444/year increase by 2040 under high-growth scenario
@@ -422,11 +437,11 @@ def _(cfg, np, plt, save_fig):
     _ax.fill_between(_years, _bill_increase, alpha=0.2, color="#e74c3c")
     _ax.plot(_years, _bill_increase, color="#e74c3c", linewidth=2.5)
 
-    # Annotate endpoint
+    # Annotate endpoint — position above the line to avoid overlap
     _ax.annotate(
-        "$444/yr\n($37/mo)",
-        xy=(2040, 444), xytext=(2036, 350),
-        fontsize=11, fontweight="bold", color="#e74c3c",
+        "$444/yr ($37/mo)",
+        xy=(2040, 444), xytext=(2034, 470),
+        fontsize=FONTS["annotation"], fontweight="bold", color="#e74c3c",
         arrowprops=dict(arrowstyle="->", color="#e74c3c", lw=1.5),
     )
 
@@ -434,21 +449,17 @@ def _(cfg, np, plt, save_fig):
     _ax.axhline(y=1800 * 0.1, color="#999999", linestyle="--", linewidth=1, alpha=0.6)
     _ax.annotate(
         "~10% of avg U.S. residential bill",
-        xy=(2030, 180), fontsize=8, color="#999999", va="bottom",
+        xy=(2025, 190), fontsize=FONTS["annotation"], color="#999999", va="bottom",
     )
 
-    _ax.set_xlabel("Year")
-    _ax.set_ylabel("Annual Bill Increase ($)")
-    _ax.set_title(
-        "Virginia residential bills could rise $444/year by 2040 under high data center growth",
-        fontsize=11, fontweight="bold",
-    )
+    _ax.set_xlabel("Year", fontsize=FONTS["axis_label"])
+    _ax.set_ylabel("Annual Bill Increase ($)", fontsize=FONTS["axis_label"])
     _ax.set_xlim(2024, 2040)
-    _ax.set_ylim(0, 500)
+    _ax.set_ylim(0, 520)
     _ax.grid(True, linestyle=":", alpha=0.4)
     plt.tight_layout()
 
-    save_fig(fig_virginia, cfg.img_dir / "dd002_virginia_bills.png")
+    _virginia_path=save_fig(fig_virginia, cfg.img_dir / "dd002_virginia_bills.png")
     return
 
 
@@ -459,6 +470,8 @@ def _(cfg, mo):
     )
     mo.md(
         f"""
+    # Virginia residential bills could rise $444/year by 2040 under high data center growth
+
     {_va_chart}
 
     *Illustrative trajectory based on the E3/JLARC high-growth scenario endpoint
@@ -496,7 +509,7 @@ def _(mo):
 
 
 @app.cell
-def _(growth_slider, mo, np, plt, years_slider):
+def _(FONTS, growth_slider, mo, np, plt, years_slider):
     # Simple projection: $4.36B approved in 2024 → compound growth
     _annual_base = 4.36  # $4.36B/year baseline (2024 approvals)
     _rate = growth_slider.value
@@ -514,7 +527,7 @@ def _(growth_slider, mo, np, plt, years_slider):
     _ax.annotate(
         f"2024 baseline: ${_annual_base:.1f}B",
         xy=(2024, _annual_base), xytext=(2024 + _years * 0.3, _annual_base * 0.85),
-        fontsize=9, color="#999999",
+        fontsize=FONTS["annotation"], color="#999999",
         arrowprops=dict(arrowstyle="->", color="#999999", lw=0.8),
     )
 
@@ -524,16 +537,12 @@ def _(growth_slider, mo, np, plt, years_slider):
         f"${_final:,.1f}B/yr",
         xy=(_x_labels[-1], _final),
         xytext=(_x_labels[-1] - _years * 0.2, _final * 1.1),
-        fontsize=11, fontweight="bold", color="#e74c3c",
+        fontsize=FONTS["annotation"], fontweight="bold", color="#e74c3c",
         arrowprops=dict(arrowstyle="->", color="#e74c3c", lw=1.2),
     )
 
-    _ax.set_xlabel("Year", fontsize=11)
-    _ax.set_ylabel("Annual Socialized Cost ($B)", fontsize=11)
-    _ax.set_title(
-        f"At {_rate:.0%} annual growth, socialized grid costs reach ${_final:,.1f}B/year by {int(_x_labels[-1])}",
-        fontsize=12, fontweight="bold",
-    )
+    _ax.set_xlabel("Year", fontsize=FONTS["axis_label"])
+    _ax.set_ylabel("Annual Socialized Cost ($B)", fontsize=FONTS["axis_label"])
     _ax.set_xlim(_x_labels[0] - 0.5, _x_labels[-1] + 0.5)
     _ax.set_ylim(0, _final * 1.25)
     plt.tight_layout()
@@ -541,6 +550,10 @@ def _(growth_slider, mo, np, plt, years_slider):
     _projected = float(_cumulative[-1])
 
     mo.vstack([
+        mo.md(
+            f"# At {_rate:.0%} annual growth, socialized grid costs reach "
+            f"${_final:,.1f}B/year by {int(_x_labels[-1])}"
+        ),
         mo.as_html(_fig),
         mo.md(
             f"**Cumulative socialized cost over {_years} years: "

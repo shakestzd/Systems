@@ -28,10 +28,10 @@ def _():
     import matplotlib.patches as mpatches
 
     from src.notebook import setup, save_fig
-    from src.plotting import multi_panel
+    from src.plotting import FONTS, legend_below, multi_panel
 
     cfg = setup()
-    return cfg, mo, mpatches, multi_panel, np, pd, plt, save_fig
+    return FONTS, cfg, legend_below, mo, mpatches, multi_panel, np, pd, plt, save_fig
 
 
 # ── Section 1: Context ─────────────────────────────────────────────────
@@ -133,12 +133,12 @@ def _(mo):
 
 
 @app.cell
-def _(cfg, mpatches, np, plt, save_fig):
+def _(FONTS, cfg, legend_below, mpatches, np, plt, save_fig):
     def draw_cld():
         """Draw the causal loop diagram using matplotlib."""
-        fig, ax = plt.subplots(figsize=(16, 11))
-        ax.set_xlim(-1.1, 1.1)
-        ax.set_ylim(-1.1, 1.1)
+        fig, ax = plt.subplots(figsize=(20, 14))
+        ax.set_xlim(-1.25, 1.25)
+        ax.set_ylim(-1.2, 1.2)
         ax.set_aspect("equal")
         ax.axis("off")
 
@@ -155,8 +155,8 @@ def _(cfg, mpatches, np, plt, save_fig):
             "Standardization": (-0.7, 0.65),
             "Manufacturing\nCapacity": (0.5, -0.1),
             "Regulatory\nStringency": (-0.95, 0.35),
-            "Material\nCosts": (-0.6, 0.1),
-            "Labor\nPool": (-0.3, -0.25),
+            "Material\nCosts": (-0.55, 0.15),
+            "Labor\nPool": (-0.25, -0.35),
             "Trade\nPolicy": (0.3, 0.85),
         }
 
@@ -171,7 +171,7 @@ def _(cfg, mpatches, np, plt, save_fig):
             ax.text(
                 x, y, label,
                 ha="center", va="center",
-                fontsize=9, fontweight="bold",
+                fontsize=FONTS["annotation"], fontweight="bold",
                 bbox=bbox, zorder=5,
             )
 
@@ -239,7 +239,7 @@ def _(cfg, mpatches, np, plt, save_fig):
             ax.text(
                 mx, my, polarity,
                 ha="center", va="center",
-                fontsize=11, fontweight="bold",
+                fontsize=FONTS["annotation"], fontweight="bold",
                 color=color,
                 bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="none", alpha=0.85),
                 zorder=6,
@@ -250,18 +250,19 @@ def _(cfg, mpatches, np, plt, save_fig):
             (0.25, -0.15, "R1\nVolume\u2013\nLearning", "#2ca02c"),
             (-0.35, 0.82, "R2\nStandardization", "#1f77b4"),
             (0.85, -0.05, "B1\nLead Time", "#d62728"),
-            (-0.2, 0.3, "B3\nCommodity", "#ff7f0e"),
+            (-0.15, 0.35, "B3\nCommodity", "#ff7f0e"),
             (-0.85, 0.65, "B2\nRegulatory", "#9467bd"),
             (0.75, -0.35, "B4\nCapacity\nDelay", "#8c564b"),
-            (-0.05, -0.45, "B6\nLabor", "#17becf"),
+            (-0.05, -0.55, "B6\nLabor", "#17becf"),
             (0.55, 0.85, "B7\nTrade\nPolicy", "#e377c2"),
         ]
         for x, y, label, color in loop_labels:
             ax.text(
                 x, y, label,
                 ha="center", va="center",
-                fontsize=8, fontstyle="italic",
-                color=color, alpha=0.85,
+                fontsize=FONTS["annotation"], fontweight="bold",
+                color=color,
+                bbox=dict(boxstyle="round,pad=0.2", fc="white", ec=color, alpha=0.7),
             )
 
         # Legend
@@ -275,19 +276,12 @@ def _(cfg, mpatches, np, plt, save_fig):
             mpatches.Patch(facecolor="#17becf", label="B6: Labor"),
             mpatches.Patch(facecolor="#e377c2", label="B7: Trade Policy"),
         ]
-        ax.legend(
-            handles=legend_elements, loc="lower left",
-            fontsize=8, framealpha=0.9, ncol=2,
-        )
-        fig.suptitle(
-            "Causal Loop Diagram: Transformer Market Dynamics",
-            fontsize=14, fontweight="bold", y=0.98,
-        )
+        legend_below(ax, handles=legend_elements, ncol=4)
         plt.tight_layout()
         return fig
 
     _cld_fig = draw_cld()
-    save_fig(_cld_fig, cfg.img_dir / "dd001_cld.png")
+    _cld_path=save_fig(_cld_fig, cfg.img_dir / "dd001_cld.png")
     return (draw_cld,)
 
 
@@ -297,6 +291,8 @@ def _(cfg, mo):
         src=(cfg.img_dir / "dd001_cld.png").read_bytes(), width=900
     )
     mo.md(f"""
+    # Causal Loop Diagram: Transformer Market Dynamics
+
     {_cld_img}
 
     The green arrows trace **R1 (Volume\u2013Learning)** — the reinforcing loop at the
@@ -429,7 +425,7 @@ def _(baseline, cfg, multi_panel, save_fig):
     ]
 
     _baseline_fig = multi_panel(baseline, _panels, "Baseline Simulation (2020\u20132040)")
-    save_fig(_baseline_fig, cfg.img_dir / "dd001_baseline_simulation.png")
+    _baseline_path=save_fig(_baseline_fig, cfg.img_dir / "dd001_baseline_simulation.png")
     return
 
 
@@ -439,6 +435,8 @@ def _(cfg, mo):
         src=(cfg.img_dir / "dd001_baseline_simulation.png").read_bytes(), width=900
     )
     mo.md(f"""
+    # Baseline Simulation (2020\u20132040)
+
     {_baseline_img}
 
     Under baseline parameters, cumulative production grows steadily as AI demand
@@ -508,9 +506,11 @@ def _(mo):
 
 @app.cell
 def _(
+    FONTS,
     baseline,
     demand_slider,
     learning_slider,
+    legend_below,
     model_path,
     plt,
     pysd,
@@ -534,9 +534,8 @@ def _(
     ax = axes_s[0]
     ax.plot(baseline.index, baseline["unit cost"], color="#aaaaaa", linestyle="--", label="Baseline")
     ax.plot(scenario.index, scenario["unit cost"], color="#d62728", label="Scenario")
-    ax.set_title("Unit Cost")
-    ax.set_ylabel("$/Unit (indexed)")
-    ax.legend(fontsize=8)
+    ax.set_ylabel("$/Unit (indexed)", fontsize=FONTS["axis_label"])
+    legend_below(ax)
 
     # Cumulative Production
     ax = axes_s[1]
@@ -548,9 +547,8 @@ def _(
         scenario.index, scenario["Cumulative Production"],
         color="#2ca02c", label="Scenario",
     )
-    ax.set_title("Cumulative Production")
-    ax.set_ylabel("Units")
-    ax.legend(fontsize=8)
+    ax.set_ylabel("Cumulative Production", fontsize=FONTS["axis_label"])
+    legend_below(ax)
 
     # Standardization
     ax = axes_s[2]
@@ -566,18 +564,10 @@ def _(
         y=threshold_slider.value, color="#9467bd",
         linestyle=":", alpha=0.5, label="Threshold",
     )
-    ax.set_title("Standardization")
-    ax.set_ylabel("Fraction (0\u20131)")
+    ax.set_ylabel("Standardization (0\u20131)", fontsize=FONTS["axis_label"])
     ax.set_ylim(0, 1)
-    ax.legend(fontsize=8)
+    legend_below(ax)
 
-    fig_scenario.suptitle(
-        f"Scenario: b={learning_slider.value:.2f}, "
-        f"threshold={threshold_slider.value:.2f}, "
-        f"demand growth={demand_slider.value:.0%}, "
-        f"reg step={regulatory_slider.value:.2f}",
-        fontsize=11, fontweight="bold",
-    )
     plt.tight_layout()
     fig_scenario
     return (scenario,)
@@ -631,7 +621,7 @@ def _(mo):
 
 
 @app.cell
-def _(cfg, model_path, np, plt, pysd, save_fig):
+def _(FONTS, cfg, legend_below, model_path, np, plt, pysd, save_fig):
     learning_range = np.arange(0.0, 0.36, 0.03)
     threshold_range = np.arange(0.15, 0.85, 0.05)
     cost_grid = np.zeros((len(threshold_range), len(learning_range)))
@@ -660,19 +650,15 @@ def _(cfg, model_path, np, plt, pysd, save_fig):
         levels=[90], colors=["black"], linewidths=[2], linestyles=["--"],
     )
     plt.colorbar(im, ax=ax_heat, label="Unit Cost at 2035 (indexed)")
-    ax_heat.set_xlabel("Learning Exponent (b)")
-    ax_heat.set_ylabel("Standardization Threshold")
-    ax_heat.set_title(
-        "Sensitivity: Unit Cost at 2035 by Learning Rate \u00d7 Standardization Threshold",
-        fontsize=12, fontweight="bold",
-    )
+    ax_heat.set_xlabel("Learning Exponent (b)", fontsize=FONTS["axis_label"])
+    ax_heat.set_ylabel("Standardization Threshold", fontsize=FONTS["axis_label"])
 
     # Mark current best estimates
     ax_heat.plot(0.18, 0.4, "ko", markersize=10, label="DD-001 estimate (b\u22480.18)")
-    ax_heat.legend(loc="upper right", fontsize=9)
+    legend_below(ax_heat)
 
     plt.tight_layout()
-    save_fig(fig_heat, cfg.img_dir / "dd001_sensitivity_heatmap.png")
+    _heat_path=save_fig(fig_heat, cfg.img_dir / "dd001_sensitivity_heatmap.png")
     return
 
 
@@ -686,6 +672,8 @@ def _(cfg, mo):
     )
     mo.md(f"""
     ## Loop Dominance: Which Forces Win?
+
+    # Unit Cost at 2035 by Learning Rate \u00d7 Standardization Threshold
 
     {_heatmap_img}
 

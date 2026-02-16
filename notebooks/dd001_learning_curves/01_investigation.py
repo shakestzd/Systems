@@ -27,10 +27,10 @@ def _():
 
     from src.notebook import setup, save_fig
     from src.data.fred import fetch_csv
-    from src.plotting import annotated_series
+    from src.plotting import FONTS, annotated_series, legend_below
 
     cfg = setup()
-    return annotated_series, cfg, fetch_csv, mo, np, pd, save_fig
+    return FONTS, annotated_series, cfg, fetch_csv, legend_below, mo, np, pd, save_fig
 
 
 @app.cell
@@ -249,6 +249,8 @@ def _(cfg, mo):
     fixed costs (NREL, 2024). Dividing the transformer PPI by a weighted material index
     isolates a proxy for the manufacturing efficiency trend.
 
+    # Transformer Prices: Nominal vs. Material-Adjusted
+
     {_nominal_chart}
 
     The red line is the nominal PPI — the headline number in industry reports. The
@@ -447,6 +449,8 @@ def _(cfg, mo):
     With Potter's framework as a filter, the pre-2020 FRED data warrants a closer look.
     Before the commodity shock, the material-adjusted price shows a visible downward
     trend. The next step is to fit a Wright's Law model to it.
+
+    # Pre-2020: The Signal Under the Noise
 
     {_pre2020_chart}
 

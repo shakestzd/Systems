@@ -43,10 +43,10 @@ def _():
     import pysd
 
     from src.notebook import setup, save_fig
-    from src.plotting import multi_panel
+    from src.plotting import FONTS, legend_below, multi_panel
 
     cfg = setup()
-    return cfg, mo, mpatches, multi_panel, np, plt, pysd, save_fig
+    return FONTS, cfg, legend_below, mo, mpatches, multi_panel, np, plt, pysd, save_fig
 
 
 @app.cell(hide_code=True)
@@ -123,11 +123,11 @@ def _(mo):
 
 
 @app.cell
-def _(cfg, mpatches, np, plt, save_fig):
+def _(FONTS, cfg, legend_below, mpatches, np, plt, save_fig):
     # Draw the Causal Loop Diagram
-    fig_cld, ax = plt.subplots(figsize=(16, 12))
-    ax.set_xlim(-1.2, 1.2)
-    ax.set_ylim(-1.2, 1.2)
+    fig_cld, ax = plt.subplots(figsize=(18, 14))
+    ax.set_xlim(-1.3, 1.3)
+    ax.set_ylim(-1.3, 1.3)
     ax.set_aspect("equal")
     ax.axis("off")
 
@@ -139,17 +139,17 @@ def _(cfg, mpatches, np, plt, save_fig):
         "Energy\nCosts": (-0.7, -0.6),
         "Renewable\nPPAs": (0.7, 0.5),
         "Renewable\nCost": (1.0, -0.1),
-        "BTM\nCapacity": (0.3, -0.3),
+        "BTM\nCapacity": (0.35, -0.3),
         "Queue\nBacklog": (-0.2, 0.2),
-        "Regulatory\nEnvironment": (0, -0.8),
-        "Ratepayer\nBurden": (-0.4, -1.0),
-        "Political\nSupport": (0.4, -1.0),
+        "Regulatory\nEnvironment": (0, -0.85),
+        "Ratepayer\nBurden": (-0.5, -1.1),
+        "Political\nSupport": (0.5, -1.1),
     }
 
     # Draw nodes — larger radius and font for readability
     for label, (x, y) in _nodes.items():
-        ax.add_patch(plt.Circle((x, y), 0.14, color="white", ec="black", lw=2, zorder=3))
-        ax.text(x, y, label, ha="center", va="center", fontsize=9, fontweight="bold", zorder=4)
+        ax.add_patch(plt.Circle((x, y), 0.16, color="white", ec="black", lw=2, zorder=3))
+        ax.text(x, y, label, ha="center", va="center", fontsize=FONTS["annotation"], fontweight="bold", zorder=4)
 
     # Edge drawing helper
     def _draw_edge(start, end, color, polarity, offset=0.15, curve=0.0, lw=1.8):
@@ -177,7 +177,7 @@ def _(cfg, mpatches, np, plt, save_fig):
         )
         mx = (x1 + x2) / 2 + curve * 0.3
         my = (y1 + y2) / 2 + curve * 0.3
-        ax.text(mx, my, polarity, fontsize=9, color=color, fontweight="bold",
+        ax.text(mx, my, polarity, fontsize=FONTS["annotation"], color=color, fontweight="bold",
                 ha="center", va="center",
                 bbox=dict(boxstyle="round,pad=0.15", fc="white", ec=color, alpha=0.9))
 
@@ -211,19 +211,19 @@ def _(cfg, mpatches, np, plt, save_fig):
     _draw_edge("Regulatory\nEnvironment", "Queue\nBacklog", _b3, "-", curve=-0.15)
 
     # Loop labels placed near center of each loop's path
-    ax.text(-0.45, 0.2, "R1", fontsize=14, fontweight="bold", color=_r1,
+    ax.text(-0.45, 0.2, "R1", fontsize=FONTS["annotation"], fontweight="bold", color=_r1,
             ha="center", va="center", alpha=0.7,
             bbox=dict(boxstyle="circle,pad=0.3", fc="white", ec=_r1, alpha=0.7))
-    ax.text(0.9, 0.25, "R2", fontsize=14, fontweight="bold", color=_r2,
+    ax.text(0.9, 0.25, "R2", fontsize=FONTS["annotation"], fontweight="bold", color=_r2,
             ha="center", va="center", alpha=0.7,
             bbox=dict(boxstyle="circle,pad=0.3", fc="white", ec=_r2, alpha=0.7))
-    ax.text(-0.35, -0.4, "B1", fontsize=12, fontweight="bold", color=_b1,
+    ax.text(-0.35, -0.4, "B1", fontsize=FONTS["annotation"], fontweight="bold", color=_b1,
             ha="center", va="center", alpha=0.7,
             bbox=dict(boxstyle="circle,pad=0.3", fc="white", ec=_b1, alpha=0.7))
-    ax.text(0.15, -0.65, "B2", fontsize=12, fontweight="bold", color=_b2,
+    ax.text(0.15, -0.65, "B2", fontsize=FONTS["annotation"], fontweight="bold", color=_b2,
             ha="center", va="center", alpha=0.7,
             bbox=dict(boxstyle="circle,pad=0.3", fc="white", ec=_b2, alpha=0.7))
-    ax.text(-0.15, -0.3, "B3", fontsize=12, fontweight="bold", color=_b3,
+    ax.text(-0.15, -0.3, "B3", fontsize=FONTS["annotation"], fontweight="bold", color=_b3,
             ha="center", va="center", alpha=0.7,
             bbox=dict(boxstyle="circle,pad=0.3", fc="white", ec=_b3, alpha=0.7))
 
@@ -235,13 +235,8 @@ def _(cfg, mpatches, np, plt, save_fig):
         mpatches.Patch(color=_b2, label="B2: Behind-the-Meter Bypass"),
         mpatches.Patch(color=_b3, label="B3: Stranded Asset / Queue Dynamics"),
     ]
-    ax.legend(handles=_legend_items, loc="lower left", fontsize=9, framealpha=0.9)
-
-    ax.set_title(
-        "Five feedback loops determine whether AI capital modernizes the grid or bypasses it",
-        fontsize=14, fontweight="bold", pad=20,
-    )
-    save_fig(fig_cld, cfg.img_dir / "dd002_cld.png")
+    legend_below(ax, handles=_legend_items, ncol=3)
+    _cld_path=save_fig(fig_cld, cfg.img_dir / "dd002_cld.png")
     return
 
 
@@ -252,6 +247,8 @@ def _(cfg, mo):
     )
     mo.md(
         f"""
+    # Five feedback loops determine whether AI capital modernizes the grid or bypasses it
+
     {_cld}
 
     The CLD captures the central tension. The reinforcing loops (R1 and R2)
@@ -304,7 +301,7 @@ def _(cfg, pysd):
 
 
 @app.cell
-def _(baseline, cfg, multi_panel, save_fig):
+def _(FONTS, baseline, cfg, multi_panel, save_fig):
     _panels = [
         {
             "columns": {
@@ -313,6 +310,7 @@ def _(baseline, cfg, multi_panel, save_fig):
             },
             "title": "Capacity Growth (GW)",
             "ylabel": "GW",
+            "ylim": (0, None),
         },
         {
             "columns": {
@@ -347,28 +345,34 @@ def _(baseline, cfg, multi_panel, save_fig):
     # Panel 0: Capacity — annotate Grid and BTM end values
     _grid_end = baseline["Grid Capacity"].iloc[-1]
     _btm_end = baseline["Behind the Meter Capacity"].iloc[-1]
-    _axes[0].annotate(f"{_grid_end:.0f}", xy=(_tf, _grid_end), fontsize=8, color="#1f77b4",
+    _axes[0].annotate(f"{_grid_end:.0f}", xy=(_tf, _grid_end), fontsize=FONTS["value_label"], color="#1f77b4",
                       fontweight="bold", va="bottom", ha="right")
-    _axes[0].annotate(f"{_btm_end:.0f}", xy=(_tf, _btm_end), fontsize=8, color="#d62728",
+    _axes[0].annotate(f"{_btm_end:.0f}", xy=(_tf, _btm_end), fontsize=FONTS["value_label"], color="#d62728",
                       fontweight="bold", va="bottom", ha="right")
 
     # Panel 3: Spillover — annotate start and end
     _spill_start = baseline["grid spillover index"].iloc[0]
     _spill_end = baseline["grid spillover index"].iloc[-1]
-    _axes[3].annotate(f"{_spill_start:.2f}", xy=(_t0, _spill_start), fontsize=9, color="#9467bd",
+    _axes[3].annotate(f"{_spill_start:.2f}", xy=(_t0, _spill_start), fontsize=FONTS["value_label"], color="#9467bd",
                       fontweight="bold", va="bottom", ha="left")
-    _axes[3].annotate(f"{_spill_end:.2f}", xy=(_tf, _spill_end), fontsize=9, color="#9467bd",
+    _axes[3].annotate(f"{_spill_end:.2f}", xy=(_tf, _spill_end), fontsize=FONTS["value_label"], color="#9467bd",
                       fontweight="bold", va="top", ha="right")
 
-    # Panel 2: Renewable cost — annotate start and end
+    # Panel 2: Renewable cost — annotate start and end (well clear of line)
     _cost_start = baseline["Renewable Cost Index"].iloc[0]
     _cost_end = baseline["Renewable Cost Index"].iloc[-1]
-    _axes[2].annotate(f"${_cost_start:.0f}", xy=(_t0, _cost_start), fontsize=9, color="#2ca02c",
-                      fontweight="bold", va="bottom", ha="left")
-    _axes[2].annotate(f"${_cost_end:.0f}", xy=(_tf, _cost_end), fontsize=9, color="#2ca02c",
-                      fontweight="bold", va="top", ha="right")
+    _axes[2].annotate(f"${_cost_start:.0f}", xy=(_t0, _cost_start),
+                      xytext=(8, 18), textcoords="offset points",
+                      fontsize=FONTS["value_label"], color="#2ca02c",
+                      fontweight="bold", ha="left",
+                      arrowprops=dict(arrowstyle="->", color="#2ca02c", lw=0.8))
+    _axes[2].annotate(f"${_cost_end:.0f}", xy=(_tf, _cost_end),
+                      xytext=(-8, -20), textcoords="offset points",
+                      fontsize=FONTS["value_label"], color="#2ca02c",
+                      fontweight="bold", ha="right",
+                      arrowprops=dict(arrowstyle="->", color="#2ca02c", lw=0.8))
 
-    save_fig(fig_baseline, cfg.img_dir / "dd002_baseline_simulation.png")
+    _baseline_path=save_fig(fig_baseline, cfg.img_dir / "dd002_baseline_simulation.png")
     return
 
 
@@ -379,6 +383,8 @@ def _(cfg, mo):
     )
     mo.md(
         f"""
+    # Baseline: Grid vs. Behind-the-Meter Dynamics
+
     {_baseline_chart}
 
     Under baseline parameters, three dynamics emerge:
@@ -431,7 +437,7 @@ def _(mo):
 
 
 @app.cell
-def _(baseline, btm_cost_slider, grid_inv_slider, mo, model, plt, reg_slider):
+def _(FONTS, baseline, btm_cost_slider, grid_inv_slider, legend_below, mo, model, plt, reg_slider):
     # Run scenario with slider values
     _scenario = model.run(params={
         "expansion aggressiveness": grid_inv_slider.value,
@@ -447,27 +453,27 @@ def _(baseline, btm_cost_slider, grid_inv_slider, mo, model, plt, reg_slider):
     _axes[0].plot(baseline.index, baseline["Behind the Meter Capacity"], "#d62728", linestyle="--", alpha=0.4, label="BTM (baseline)")
     _axes[0].plot(_scenario.index, _scenario["Grid Capacity"], "#1f77b4", linewidth=2.5, label="Grid (scenario)")
     _axes[0].plot(_scenario.index, _scenario["Behind the Meter Capacity"], "#d62728", linestyle="--", linewidth=2.5, label="BTM (scenario)")
-    _axes[0].set_title("Capacity (GW)", fontweight="bold")
-    _axes[0].set_ylabel("GW")
-    _axes[0].legend(fontsize=7, loc="upper left")
+    _axes[0].set_title("Capacity (GW)", fontsize=FONTS["panel_title"], fontweight="bold")
+    _axes[0].set_ylabel("GW", fontsize=FONTS["axis_label"])
+    legend_below(_axes[0], ncol=2)
     _axes[0].grid(True, linestyle=":", alpha=0.4)
 
     # Panel 2: Spillover index
     _axes[1].plot(baseline.index, baseline["grid spillover index"], "k--", label="Baseline", alpha=0.4)
     _axes[1].plot(_scenario.index, _scenario["grid spillover index"], "#9467bd", linewidth=2.5, label="Scenario")
-    _axes[1].set_title("Grid Spillover Index", fontweight="bold")
-    _axes[1].set_ylabel("Fraction (0-1)")
+    _axes[1].set_title("Grid Spillover Index", fontsize=FONTS["panel_title"], fontweight="bold")
+    _axes[1].set_ylabel("Fraction (0-1)", fontsize=FONTS["axis_label"])
     _axes[1].set_ylim(0, 1)
     _axes[1].axhline(0.5, color="#e74c3c", linestyle="--", linewidth=1.2, alpha=0.6, label="50% threshold")
-    _axes[1].legend(fontsize=8)
+    legend_below(_axes[1])
     _axes[1].grid(True, linestyle=":", alpha=0.4)
 
     # Panel 3: Socialized cost
     _axes[2].plot(baseline.index, baseline["cost allocation to ratepayers"], "k--", label="Baseline", alpha=0.4)
     _axes[2].plot(_scenario.index, _scenario["cost allocation to ratepayers"], "#e74c3c", linewidth=2.5, label="Scenario")
-    _axes[2].set_title("Socialized Cost ($B/year)", fontweight="bold")
-    _axes[2].set_ylabel("$B/year")
-    _axes[2].legend(fontsize=8)
+    _axes[2].set_title("Socialized Cost ($B/year)", fontsize=FONTS["panel_title"], fontweight="bold")
+    _axes[2].set_ylabel("$B/year", fontsize=FONTS["axis_label"])
+    legend_below(_axes[2])
     _axes[2].grid(True, linestyle=":", alpha=0.4)
 
     # Extract scenario 2035 spillover for reactive interpretation
@@ -517,7 +523,7 @@ def _(mo):
 
 
 @app.cell
-def _(cfg, model, np, plt, save_fig):
+def _(FONTS, cfg, model, np, plt, save_fig):
     # Sensitivity analysis: BTM cost advantage × Regulatory favorability → spillover index
     _btm_range = np.arange(0.5, 2.1, 0.1)
     _reg_range = np.arange(0.1, 1.0, 0.05)
@@ -556,26 +562,20 @@ def _(cfg, model, np, plt, save_fig):
         "Current\nestimate",
         xy=(1.2, 0.5),
         xytext=(1.5, 0.35),
-        fontsize=10,
+        fontsize=FONTS["annotation"],
         arrowprops=dict(arrowstyle="->", color="black"),
         bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="black"),
     )
 
     # Regime labels
-    _ax.text(0.7, 0.85, "GRID\nMODERNIZATION", fontsize=10, fontweight="bold",
+    _ax.text(0.7, 0.85, "GRID\nMODERNIZATION", fontsize=FONTS["annotation"], fontweight="bold",
              color="white", ha="center", va="center", alpha=0.8)
-    _ax.text(1.8, 0.2, "PRIVATE\nINFRASTRUCTURE", fontsize=10, fontweight="bold",
+    _ax.text(1.7, 0.2, "PRIVATE\nINFRASTRUCTURE", fontsize=FONTS["annotation"], fontweight="bold",
              color="white", ha="center", va="center", alpha=0.8)
 
-    _ax.set_xlabel("BTM Cost Advantage", fontsize=12)
-    _ax.set_ylabel("Regulatory Favorability", fontsize=12)
-    _ax.set_title(
-        "Regulatory environment determines whether AI capital modernizes the grid or bypasses it",
-        fontsize=12,
-        fontweight="bold",
-    )
-
-    save_fig(fig_sensitivity, cfg.img_dir / "dd002_sensitivity.png")
+    _ax.set_xlabel("BTM Cost Advantage", fontsize=FONTS["axis_label"])
+    _ax.set_ylabel("Regulatory Favorability", fontsize=FONTS["axis_label"])
+    _sensitivity_path=save_fig(fig_sensitivity, cfg.img_dir / "dd002_sensitivity.png")
     return
 
 
@@ -586,7 +586,7 @@ def _(cfg, mo):
     )
     mo.md(
         f"""
-    ## Where Are We Now?
+    # Regulatory environment determines whether AI capital modernizes the grid or bypasses it
 
     {_heatmap}
 

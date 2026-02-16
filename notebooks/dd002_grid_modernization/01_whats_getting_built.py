@@ -26,7 +26,7 @@ def _(mo):
 
 
 @app.cell
-def _(cfg, np, plt, save_fig):
+def _(FONTS, cfg, np, plt, save_fig):
     # Asset lifetime vs AI forecast horizon — the fundamental mismatch
     _techs = [
         "AI demand forecast",
@@ -40,36 +40,56 @@ def _(cfg, np, plt, save_fig):
     ]
     _lifetimes = [3, 25, 25, 30, 30, 35, 50, 50]
     _colors = [
-        "#333333", "#e74c3c", "#7b68ee", "#f0b429",
-        "#4ecdc4", "#ff8c69", "#3498db", "#2ca02c",
+        "#333333",
+        "#e74c3c",
+        "#7b68ee",
+        "#f0b429",
+        "#4ecdc4",
+        "#ff8c69",
+        "#3498db",
+        "#2ca02c",
     ]
 
     fig_timeline, _ax = plt.subplots(figsize=(11, 4.5))
     _y = np.arange(len(_techs))
 
     for i, (life, c) in enumerate(zip(_lifetimes, _colors)):
-        _ax.barh(i, life, left=2024, height=0.55, color=c, alpha=0.85, edgecolor="white")
-        _ax.text(2024 + life + 0.5, i, f"{life} yrs", va="center", fontsize=9, fontweight="bold")
+        _ax.barh(
+            i, life, left=2024, height=0.55, color=c, alpha=0.85, edgecolor="white"
+        )
+        _ax.text(
+            2024 + life + 0.5,
+            i,
+            f"{life} yrs",
+            va="center",
+            fontsize=FONTS["value_label"],
+            fontweight="bold",
+        )
 
     # AI forecast horizon band
     _ax.axvspan(2024, 2027, alpha=0.12, color="#333333", zorder=0)
     _ax.axvline(2027, color="#333333", linestyle="--", linewidth=1.5, alpha=0.7)
-    _ax.text(2025.5, -0.8, "AI forecast\nhorizon", fontsize=9, color="#555555",
-             ha="center", fontweight="bold")
+    _ax.text(
+        2025.5,
+        -0.8,
+        "AI forecast\nhorizon",
+        fontsize=FONTS["annotation"],
+        color="#555555",
+        ha="center",
+        fontweight="bold",
+    )
 
     _ax.set_yticks(_y)
-    _ax.set_yticklabels(_techs, fontsize=10)
-    _ax.set_xlabel("Year")
-    _ax.set_title(
-        "AI demand forecasts span 3 years — the infrastructure lasts 25-60",
-        fontsize=12, fontweight="bold",
-    )
+    _ax.set_yticklabels(_techs, fontsize=FONTS["tick_label"])
+    _ax.set_xlabel("Year", fontsize=FONTS["axis_label"])
     _ax.set_xlim(2022, 2080)
     _ax.invert_yaxis()
     _ax.grid(True, axis="x", linestyle=":", alpha=0.4)
     plt.tight_layout()
 
-    asset_timeline=save_fig(fig_timeline, cfg.img_dir / "dd002_asset_timeline.png")
+    asset_timeline = save_fig(
+        fig_timeline, cfg.img_dir / "dd002_asset_timeline.png"
+    )
     return
 
 
@@ -80,6 +100,8 @@ def _(cfg, mo):
     )
     mo.md(
         f"""
+    # AI demand forecasts span 3 years — the infrastructure lasts 25-60
+
     {_chart}
 
     *Every bar represents a capital decision being made today. The dark band shows
@@ -106,7 +128,9 @@ def _():
     from src.data.db import query
     from src.data.fred import fetch_csv
     from src.plotting import (
+        FONTS,
         annotated_series,
+        legend_below,
         stacked_bar,
         horizontal_bar_ranking,
         us_scatter_map,
@@ -114,8 +138,10 @@ def _():
 
     cfg = setup()
     return (
+        FONTS,
         cfg,
         horizontal_bar_ranking,
+        legend_below,
         mo,
         np,
         pd,
@@ -185,7 +211,9 @@ def _(eia):
 
     # Group and pivot for stacked bar
     _agg = (
-        _recent.groupby(["operating_year", "fuel_category"])["nameplate_capacity_mw"]
+        _recent.groupby(["operating_year", "fuel_category"])[
+            "nameplate_capacity_mw"
+        ]
         .sum()
         .reset_index()
     )
@@ -198,7 +226,16 @@ def _(eia):
     ).reset_index()
 
     # Keep major categories, order by total
-    major_fuels = ["solar", "wind", "battery", "gas_cc", "gas_ct", "nuclear", "hydro", "coal"]
+    major_fuels = [
+        "solar",
+        "wind",
+        "battery",
+        "gas_cc",
+        "gas_ct",
+        "nuclear",
+        "hydro",
+        "coal",
+    ]
     gen_pivot["year"] = gen_pivot["operating_year"].astype(int)
     for col in major_fuels:
         if col not in gen_pivot.columns:
@@ -211,7 +248,7 @@ def _(eia):
 
 
 @app.cell
-def _(cfg, gen_pivot, major_fuels, save_fig, stacked_bar):
+def _(FONTS, cfg, gen_pivot, major_fuels, save_fig, stacked_bar):
     # Define colors and labels for each fuel category
     _colors = {
         "solar": {"color": "#f0b429", "label": "Solar"},
@@ -232,20 +269,28 @@ def _(cfg, gen_pivot, major_fuels, save_fig, stacked_bar):
         ylabel="New Capacity (GW)",
     )
 
-    # Add IRA annotation — the policy catalyst for clean energy acceleration
     _ax = fig_mix.axes[0]
     _years_list = gen_pivot["year"].tolist()
     if 2022 in _years_list:
         _ira_idx = _years_list.index(2022)
-        _ax.axvline(x=_ira_idx + 0.4, color="#333333", linestyle="--", linewidth=1, alpha=0.6)
+        _ax.axvline(
+            x=_ira_idx + 0.4,
+            color="#333333",
+            linestyle="--",
+            linewidth=1,
+            alpha=0.6,
+        )
         _ax.annotate(
             "IRA signed\nAug 2022",
             xy=(_ira_idx + 0.4, _ax.get_ylim()[1] * 0.9),
-            fontsize=8, ha="center",
-            bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="#333333", alpha=0.8),
+            fontsize=FONTS["annotation"],
+            ha="center",
+            bbox=dict(
+                boxstyle="round,pad=0.3", fc="white", ec="#333333", alpha=0.8
+            ),
         )
 
-    generation_mix=save_fig(fig_mix, cfg.img_dir / "dd002_generation_mix.png")
+    generation_mix = save_fig(fig_mix, cfg.img_dir / "dd002_generation_mix.png")
     return
 
 
@@ -256,6 +301,8 @@ def _(cfg, mo):
     )
     mo.md(
         f"""
+    # Solar and battery storage dominate new U.S. generation since 2020
+
     {_mix_chart}
 
     The chart tells a story that contradicts the dominant narrative. Solar is the
@@ -283,15 +330,20 @@ def _(cfg, mo):
 
 
 @app.cell
-def _(cfg, eia, np, plt, save_fig):
+def _(FONTS, cfg, eia, legend_below, np, plt, save_fig):
     # Compare nameplate vs energy-equivalent capacity by fuel type since 2020
     _recent = eia[eia["operating_year"] >= 2020].copy()
-    _by_fuel = _recent.groupby("fuel_category")["nameplate_capacity_mw"].sum() / 1000
+    _by_fuel = (
+        _recent.groupby("fuel_category")["nameplate_capacity_mw"].sum() / 1000
+    )
 
     # Reference capacity factors (EIA national averages)
     _cap_factors = {
-        "solar": 0.25, "wind": 0.35, "gas_cc": 0.57,
-        "gas_ct": 0.12, "nuclear": 0.93,
+        "solar": 0.25,
+        "wind": 0.35,
+        "gas_cc": 0.57,
+        "gas_ct": 0.12,
+        "nuclear": 0.93,
     }
 
     _fuels = ["solar", "wind", "gas_cc", "gas_ct", "nuclear"]
@@ -302,35 +354,51 @@ def _(cfg, eia, np, plt, save_fig):
     fig_capfactor, _ax = plt.subplots(figsize=(10, 5))
     _x = np.arange(len(_fuels))
     _w = 0.35
-    _bars1 = _ax.bar(_x - _w / 2, _nameplate, _w, color="#4ecdc4", label="Nameplate Capacity")
-    _bars2 = _ax.bar(_x + _w / 2, _effective, _w, color="#e74c3c", label="Energy-Equivalent Capacity")
+    _bars1 = _ax.bar(
+        _x - _w / 2, _nameplate, _w, color="#4ecdc4", label="Nameplate Capacity"
+    )
+    _bars2 = _ax.bar(
+        _x + _w / 2,
+        _effective,
+        _w,
+        color="#e74c3c",
+        label="Energy-Equivalent Capacity",
+    )
 
     for _bar in _bars1:
         _h = _bar.get_height()
         if _h > 0.5:
             _ax.text(
-                _bar.get_x() + _bar.get_width() / 2, _h + 0.3, f"{_h:.1f}",
-                ha="center", va="bottom", fontsize=8, color="#333333",
+                _bar.get_x() + _bar.get_width() / 2,
+                _h + 0.3,
+                f"{_h:.1f}",
+                ha="center",
+                va="bottom",
+                fontsize=FONTS["value_label"],
+                color="#333333",
             )
     for _bar in _bars2:
         _h = _bar.get_height()
         if _h > 0.5:
             _ax.text(
-                _bar.get_x() + _bar.get_width() / 2, _h + 0.3, f"{_h:.1f}",
-                ha="center", va="bottom", fontsize=8, color="#333333",
+                _bar.get_x() + _bar.get_width() / 2,
+                _h + 0.3,
+                f"{_h:.1f}",
+                ha="center",
+                va="bottom",
+                fontsize=FONTS["value_label"],
+                color="#333333",
             )
 
     _ax.set_xticks(_x)
     _ax.set_xticklabels(_labels)
-    _ax.set_ylabel("GW Added Since 2020")
-    _ax.set_title(
-        "Solar leads in nameplate, but gas CC closes the gap when adjusted for capacity factor",
-        fontsize=11, fontweight="bold",
-    )
-    _ax.legend(fontsize=9)
+    _ax.set_ylabel("GW Added Since 2020", fontsize=FONTS["axis_label"])
+    legend_below(_ax)
     plt.tight_layout()
 
-    capacity_factor=save_fig(fig_capfactor, cfg.img_dir / "dd002_capacity_factor.png")
+    capacity_factor = save_fig(
+        fig_capfactor, cfg.img_dir / "dd002_capacity_factor.png"
+    )
     return
 
 
@@ -341,6 +409,8 @@ def _(cfg, mo):
     )
     mo.md(
         f"""
+    # Solar leads in nameplate, but gas CC closes the gap when adjusted for capacity factor
+
     {_cf_chart}
 
     The comparison makes the caveat concrete. Solar dominates nameplate additions,
@@ -387,65 +457,136 @@ def _(mo):
 
 
 @app.cell
-def _(cfg, plt, save_fig):
+def _(FONTS, cfg, plt, save_fig):
     # Generation spectrum: 2D positioning by asset life and grid benefit
     _strategies = [
-        {"name": "Gas peaker\n(BTM)", "life": 25, "grid": 0.05, "size": 300,
-         "color": "#e74c3c"},
-        {"name": "BTM\nrenewables", "life": 27, "grid": 0.1, "size": 250,
-         "color": "#7b68ee"},
-        {"name": "Corporate\nrenewable PPA", "life": 20, "grid": 0.5, "size": 500,
-         "color": "#2ca02c"},
-        {"name": "Grid\ngas CC", "life": 35, "grid": 0.7, "size": 400,
-         "color": "#ff8c69"},
-        {"name": "Solar+storage\nPPA", "life": 30, "grid": 0.8, "size": 550,
-         "color": "#f0b429"},
-        {"name": "Nuclear\nrestart / SMR", "life": 50, "grid": 0.9, "size": 200,
-         "color": "#3498db"},
+        {
+            "name": "Gas peaker\n(BTM)",
+            "life": 25,
+            "grid": 0.03,
+            "size": 300,
+            "color": "#e74c3c",
+        },
+        {
+            "name": "BTM\nrenewables",
+            "life": 27,
+            "grid": 0.15,
+            "size": 250,
+            "color": "#7b68ee",
+        },
+        {
+            "name": "Corporate\nrenewable PPA",
+            "life": 20,
+            "grid": 0.5,
+            "size": 500,
+            "color": "#2ca02c",
+        },
+        {
+            "name": "Grid\ngas CC",
+            "life": 35,
+            "grid": 0.7,
+            "size": 400,
+            "color": "#ff8c69",
+        },
+        {
+            "name": "Solar+storage\nPPA",
+            "life": 30,
+            "grid": 0.8,
+            "size": 550,
+            "color": "#f0b429",
+        },
+        {
+            "name": "Nuclear\nrestart / SMR",
+            "life": 50,
+            "grid": 0.85,
+            "size": 200,
+            "color": "#3498db",
+        },
     ]
 
     fig_spectrum, _ax = plt.subplots(figsize=(10, 6))
 
     for s in _strategies:
         _ax.scatter(
-            s["life"], s["grid"], s=s["size"], c=s["color"],
-            alpha=0.7, edgecolors="white", linewidth=1.5, zorder=3,
+            s["life"],
+            s["grid"],
+            s=s["size"],
+            c=s["color"],
+            alpha=0.7,
+            edgecolors="white",
+            linewidth=1.5,
+            zorder=3,
         )
         _offset = (12, 0) if s["life"] < 45 else (-12, 0)
         _ha = "left" if s["life"] < 45 else "right"
         _ax.annotate(
-            s["name"], (s["life"], s["grid"]),
-            textcoords="offset points", xytext=_offset,
-            fontsize=9, va="center", ha=_ha,
+            s["name"],
+            (s["life"], s["grid"]),
+            textcoords="offset points",
+            xytext=_offset,
+            fontsize=FONTS["annotation"],
+            va="center",
+            ha=_ha,
         )
 
     # Quadrant shading — upper right is the policy target
-    _ax.axhspan(0.5, 1.05, xmin=0.4, xmax=1.0, alpha=0.06, color="#2ca02c", zorder=0)
+    _ax.axhspan(
+        0.5, 1.05, xmin=0.4, xmax=1.0, alpha=0.06, color="#2ca02c", zorder=0
+    )
     _ax.axhline(0.5, color="#cccccc", linestyle="--", linewidth=1, alpha=0.6)
     _ax.axvline(30, color="#cccccc", linestyle="--", linewidth=1, alpha=0.6)
 
     # Quadrant labels
-    _ax.text(22, 0.97, "Short-lived\nhigh grid benefit", fontsize=8,
-             color="#aaaaaa", ha="center", va="top")
-    _ax.text(45, 0.97, "Long-lived\nhigh grid benefit", fontsize=8,
-             color="#2ca02c", ha="center", va="top", fontweight="bold")
-    _ax.text(22, 0.03, "Short-lived\nno grid benefit", fontsize=8,
-             color="#aaaaaa", ha="center", va="bottom")
-    _ax.text(45, 0.03, "Long-lived\nno grid benefit", fontsize=8,
-             color="#e74c3c", ha="center", va="bottom")
+    _ax.text(
+        17,
+        0.97,
+        "Short-lived\nhigh grid benefit",
+        fontsize=FONTS["annotation"],
+        color="#aaaaaa",
+        ha="left",
+        va="top",
+    )
+    _ax.text(
+        56,
+        0.97,
+        "Long-lived\nhigh grid benefit",
+        fontsize=FONTS["annotation"],
+        color="#2ca02c",
+        ha="right",
+        va="top",
+        fontweight="bold",
+    )
+    _ax.text(
+        17,
+        0.03,
+        "Short-lived\nno grid benefit",
+        fontsize=FONTS["annotation"],
+        color="#aaaaaa",
+        ha="left",
+        va="bottom",
+    )
+    _ax.text(
+        56,
+        0.03,
+        "Long-lived\nno grid benefit",
+        fontsize=FONTS["annotation"],
+        color="#e74c3c",
+        ha="right",
+        va="bottom",
+    )
 
-    _ax.set_xlabel("Asset Lifetime (years)", fontsize=11)
-    _ax.set_ylabel("Grid Benefit (shared infrastructure value)", fontsize=11)
-    _ax.set_title(
-        "Not all AI-driven generation is equal — long-lived grid assets create the most spillover",
-        fontsize=11, fontweight="bold",
+    _ax.set_xlabel("Asset Lifetime (years)", fontsize=FONTS["axis_label"])
+    _ax.set_ylabel(
+        "Grid Benefit (shared infrastructure value)", fontsize=FONTS["axis_label"]
     )
     _ax.set_xlim(15, 58)
     _ax.set_ylim(-0.05, 1.05)
     _ax.grid(True, linestyle=":", alpha=0.3)
     plt.tight_layout()
 
-    generation_spectrum=save_fig(fig_spectrum, cfg.img_dir / "dd002_generation_spectrum.png")
+    generation_spectrum = save_fig(
+        fig_spectrum, cfg.img_dir / "dd002_generation_spectrum.png"
+    )
     return
 
 
@@ -456,6 +597,8 @@ def _(cfg, mo):
     )
     mo.md(
         f"""
+    # Not all AI-driven generation is equal — long-lived grid assets create the most spillover
+
     {_chart}
 
     *Bubble size reflects approximate relative new capacity. The green-shaded
@@ -468,7 +611,7 @@ def _(cfg, mo):
 
 
 @app.cell
-def _(cfg, eia, horizontal_bar_ranking, save_fig):
+def _(cfg, eia, horizontal_bar_ranking, legend_below, plt, save_fig):
     # Top states by new capacity since 2020
     _state_agg = (
         eia[eia["operating_year"] >= 2020]
@@ -492,7 +635,18 @@ def _(cfg, eia, horizontal_bar_ranking, save_fig):
         xlabel="New Capacity Since 2020 (GW)",
         highlight_indices=_highlight,
     )
-    state_generation=save_fig(fig_states, cfg.img_dir / "dd002_state_generation.png")
+    # Add legend for highlight colors
+    _ax_st = fig_states.axes[0]
+    _legend_handles = [
+        plt.Line2D([0], [0], marker="s", color="w", markerfacecolor="#d62728",
+                   markersize=14, label="Data center corridor state"),
+        plt.Line2D([0], [0], marker="s", color="w", markerfacecolor="#1f77b4",
+                   markersize=14, label="Other state"),
+    ]
+    legend_below(_ax_st, handles=_legend_handles, ncol=2)
+    state_generation = save_fig(
+        fig_states, cfg.img_dir / "dd002_state_generation.png"
+    )
     return
 
 
@@ -504,23 +658,39 @@ def _(cfg, eia, np, plt, save_fig, us_scatter_map):
         & eia["latitude"].notna()
         & eia["longitude"].notna()
         # Filter to continental US bounds
-        & (eia["longitude"] > -130) & (eia["longitude"] < -60)
-        & (eia["latitude"] > 23) & (eia["latitude"] < 51)
+        & (eia["longitude"] > -130)
+        & (eia["longitude"] < -60)
+        & (eia["latitude"] > 23)
+        & (eia["latitude"] < 51)
     ].copy()
 
     _fuel_colors = {
-        "solar": "#f0b429", "wind": "#4ecdc4", "gas_cc": "#e74c3c",
-        "gas_ct": "#ff8c69", "battery": "#7b68ee", "nuclear": "#3498db",
-        "hydro": "#2ecc71", "coal": "#555555",
+        "solar": "#f0b429",
+        "wind": "#4ecdc4",
+        "gas_cc": "#e74c3c",
+        "gas_ct": "#ff8c69",
+        "battery": "#7b68ee",
+        "nuclear": "#3498db",
+        "hydro": "#2ecc71",
+        "coal": "#555555",
     }
 
-    _colors = [_fuel_colors.get(f, "#aaaaaa") for f in _recent_geo["fuel_category"]]
+    _colors = [
+        _fuel_colors.get(f, "#aaaaaa") for f in _recent_geo["fuel_category"]
+    ]
     _sizes = np.clip(_recent_geo["nameplate_capacity_mw"].values / 5, 3, 120)
 
     # Build legend
     _legend_handles = [
-        plt.Line2D([0], [0], marker="o", color="w", markerfacecolor=c,
-                   markersize=8, label=label.replace("_", " ").title())
+        plt.Line2D(
+            [0],
+            [0],
+            marker="o",
+            color="w",
+            markerfacecolor=c,
+            markersize=18,
+            label=label.replace("_", " ").title(),
+        )
         for label, c in _fuel_colors.items()
         if label in _recent_geo["fuel_category"].values
     ]
@@ -532,10 +702,26 @@ def _(cfg, eia, np, plt, save_fig, us_scatter_map):
         _sizes,
         "New power plants since 2020 cluster in data center corridors and renewable-rich regions",
         legend_handles=_legend_handles,
+        figsize=(16, 9),
         alpha=0.5,
     )
 
-    plant_map=save_fig(fig_plant_map, cfg.img_dir / "dd002_plant_map.png")
+    # Override legend with larger font and markers for readability
+    _map_ax = fig_plant_map.axes[0]
+    _map_ax.get_legend().remove()
+    _map_ax.legend(
+        handles=_legend_handles,
+        labels=[h.get_label() for h in _legend_handles],
+        loc="upper center",
+        bbox_to_anchor=(0.5, -0.02),
+        ncol=4,
+        fontsize=16,
+        frameon=False,
+        markerscale=1.5,
+        columnspacing=1.5,
+    )
+
+    plant_map = save_fig(fig_plant_map, cfg.img_dir / "dd002_plant_map.png")
     return
 
 
@@ -547,6 +733,8 @@ def _(cfg, mo):
     mo.md(
         f"""
     ## Geographic Concentration
+
+    # New power plants since 2020 cluster in data center corridors and renewable-rich regions
 
     {_plant_map}
 
@@ -562,27 +750,103 @@ def _(cfg, mo):
 
 
 @app.cell
-def _(cfg, np, plt, save_fig, us_scatter_map):
+def _(FONTS, cfg, np, plt, save_fig, us_scatter_map):
     # Frontier AI data center locations (Epoch AI, February 2025)
     # Filtered to US-based facilities with confirmed power capacity
     _datacenters = [
-        {"name": "Amazon Canton MS", "lat": 32.59, "lon": -90.09, "mw": 341, "owner": "Amazon"},
-        {"name": "Anthropic-Amazon New Carlisle IN", "lat": 41.69, "lon": -86.46, "mw": 751, "owner": "Amazon"},
-        {"name": "Google Pryor OK", "lat": 36.24, "lon": -95.33, "mw": 195, "owner": "Google"},
-        {"name": "Google New Albany OH", "lat": 40.06, "lon": -82.76, "mw": 543, "owner": "Google"},
-        {"name": "Google Omaha NE", "lat": 41.34, "lon": -96.09, "mw": 189, "owner": "Google"},
-        {"name": "Google Council Bluffs IA", "lat": 41.17, "lon": -95.79, "mw": 190, "owner": "Google"},
-        {"name": "Meta Prometheus OH", "lat": 40.07, "lon": -82.75, "mw": 814, "owner": "Meta"},
-        {"name": "Meta Temple TX", "lat": 31.13, "lon": -97.37, "mw": 198, "owner": "Meta"},
-        {"name": "OpenAI-Oracle Stargate TX", "lat": 32.50, "lon": -99.78, "mw": 295, "owner": "Oracle"},
-        {"name": "Microsoft Goodyear AZ", "lat": 33.41, "lon": -112.37, "mw": 316, "owner": "Microsoft"},
-        {"name": "xAI Colossus 1 TN", "lat": 35.06, "lon": -90.16, "mw": 498, "owner": "xAI"},
-        {"name": "xAI Colossus 2 TN", "lat": 35.00, "lon": -90.03, "mw": 302, "owner": "xAI"},
+        {
+            "name": "Amazon Canton MS",
+            "lat": 32.59,
+            "lon": -90.09,
+            "mw": 341,
+            "owner": "Amazon",
+        },
+        {
+            "name": "Anthropic-Amazon New Carlisle IN",
+            "lat": 41.69,
+            "lon": -86.46,
+            "mw": 751,
+            "owner": "Amazon",
+        },
+        {
+            "name": "Google Pryor OK",
+            "lat": 36.24,
+            "lon": -95.33,
+            "mw": 195,
+            "owner": "Google",
+        },
+        {
+            "name": "Google New Albany OH",
+            "lat": 40.06,
+            "lon": -82.76,
+            "mw": 543,
+            "owner": "Google",
+        },
+        {
+            "name": "Google Omaha NE",
+            "lat": 41.34,
+            "lon": -96.09,
+            "mw": 189,
+            "owner": "Google",
+        },
+        {
+            "name": "Google Council Bluffs IA",
+            "lat": 41.17,
+            "lon": -95.79,
+            "mw": 190,
+            "owner": "Google",
+        },
+        {
+            "name": "Meta Prometheus OH",
+            "lat": 40.07,
+            "lon": -82.75,
+            "mw": 814,
+            "owner": "Meta",
+        },
+        {
+            "name": "Meta Temple TX",
+            "lat": 31.13,
+            "lon": -97.37,
+            "mw": 198,
+            "owner": "Meta",
+        },
+        {
+            "name": "OpenAI-Oracle Stargate TX",
+            "lat": 32.50,
+            "lon": -99.78,
+            "mw": 295,
+            "owner": "Oracle",
+        },
+        {
+            "name": "Microsoft Goodyear AZ",
+            "lat": 33.41,
+            "lon": -112.37,
+            "mw": 316,
+            "owner": "Microsoft",
+        },
+        {
+            "name": "xAI Colossus 1 TN",
+            "lat": 35.06,
+            "lon": -90.16,
+            "mw": 498,
+            "owner": "xAI",
+        },
+        {
+            "name": "xAI Colossus 2 TN",
+            "lat": 35.00,
+            "lon": -90.03,
+            "mw": 302,
+            "owner": "xAI",
+        },
     ]
 
     _owner_colors = {
-        "Amazon": "#ff9900", "Google": "#4285f4", "Meta": "#1877f2",
-        "Microsoft": "#00a4ef", "xAI": "#333333", "Oracle": "#f80000",
+        "Amazon": "#ff9900",
+        "Google": "#4285f4",
+        "Meta": "#1877f2",
+        "Microsoft": "#00a4ef",
+        "xAI": "#333333",
+        "Oracle": "#f80000",
     }
 
     _lats = [d["lat"] for d in _datacenters]
@@ -591,40 +855,78 @@ def _(cfg, np, plt, save_fig, us_scatter_map):
     _sizes = np.array([d["mw"] for d in _datacenters]) / 2
 
     _legend_handles = [
-        plt.Line2D([0], [0], marker="o", color="w", markerfacecolor=c,
-                   markersize=8, label=owner)
+        plt.Line2D(
+            [0],
+            [0],
+            marker="o",
+            color="w",
+            markerfacecolor=c,
+            markersize=14,
+            label=owner,
+        )
         for owner, c in _owner_colors.items()
         if owner in {d["owner"] for d in _datacenters}
     ]
 
     fig_dc_map = us_scatter_map(
-        _lats, _lons, _colors, _sizes,
+        _lats,
+        _lons,
+        _colors,
+        _sizes,
         "Frontier AI data centers concentrate in a few states — the same ones building generation",
         legend_handles=_legend_handles,
+        figsize=(14, 8),
         alpha=0.8,
         edgecolors="#333333",
         linewidth=1.0,
     )
 
-    # Add labels for largest facilities
-    _ax = fig_dc_map.axes[0]
-    _labels = {
-        "Meta Prometheus OH": "Meta Prometheus\n814 MW",
-        "Anthropic-Amazon New Carlisle IN": "Anthropic-Amazon\n751 MW",
-        "Google New Albany OH": "Google New Albany\n543 MW",
-        "xAI Colossus 1 TN": "xAI Colossus\n498 MW",
+    # Enlarge legend markers and font for readability
+    _dc_ax = fig_dc_map.axes[0]
+    _dc_legend = _dc_ax.get_legend()
+    if _dc_legend:
+        _dc_legend.remove()
+    _dc_ax.legend(
+        handles=_legend_handles,
+        labels=[h.get_label() for h in _legend_handles],
+        loc="upper center",
+        bbox_to_anchor=(0.5, -0.03),
+        ncol=min(len(_legend_handles), 6),
+        fontsize=16,
+        frameon=False,
+        markerscale=1.5,
+        columnspacing=1.5,
+    )
+
+    # Add labels for largest facilities — placed at specific map coordinates
+    # to guarantee no overlap (using data coords for xytext)
+    _ax = _dc_ax
+    _label_positions = {
+        "Meta Prometheus OH": ("Meta Prometheus\n814 MW", (-72, 46)),
+        "Anthropic-Amazon New Carlisle IN": (
+            "Anthropic-Amazon\n751 MW",
+            (-96, 46),
+        ),
+        "Google New Albany OH": ("Google New Albany\n543 MW", (-72, 35)),
+        "xAI Colossus 1 TN": ("xAI Colossus\n498 MW", (-82, 31)),
     }
     for d in _datacenters:
-        if d["name"] in _labels:
+        if d["name"] in _label_positions:
+            _text, (_lx, _ly) = _label_positions[d["name"]]
             _ax.annotate(
-                _labels[d["name"]],
+                _text,
                 (d["lon"], d["lat"]),
-                textcoords="offset points", xytext=(10, 5),
-                fontsize=7, color="#333333",
-                bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="#cccccc", alpha=0.8),
+                xytext=(_lx, _ly),
+                fontsize=FONTS["annotation"],
+                color="#333333",
+                arrowprops=dict(arrowstyle="->", color="#666666", lw=1.2,
+                                connectionstyle="arc3,rad=0.1"),
+                bbox=dict(
+                    boxstyle="round,pad=0.3", fc="white", ec="#cccccc", alpha=0.95
+                ),
             )
 
-    dc_map=save_fig(fig_dc_map, cfg.img_dir / "dd002_datacenter_map.png")
+    dc_map = save_fig(fig_dc_map, cfg.img_dir / "dd002_datacenter_map.png")
     return
 
 
@@ -638,6 +940,8 @@ def _(cfg, mo):
     )
     mo.md(
         f"""
+    # Frontier AI data centers concentrate in a few states — the same ones building generation
+
     {_dc_map}
 
     *Source: Epoch AI Frontier Data Centers dataset (February 2025). Only facilities
@@ -646,6 +950,8 @@ def _(cfg, mo):
     The overlap between these two maps is the core geographic story: AI data
     centers are landing in the same states that are adding the most generation
     capacity. Ohio, Texas, and the Southeast corridor dominate both.
+
+    # Texas, California, and Virginia lead new generation — all major data center corridors
 
     {_state_chart}
 
@@ -659,50 +965,68 @@ def _(cfg, mo):
 
 
 @app.cell
-def _(cfg, elec_ppi, natgas, pd, plt, save_fig):
+def _(FONTS, cfg, elec_ppi, legend_below, natgas, pd, plt, save_fig):
     # Natural gas price + electricity PPI with AI milestone annotations
     _gas = natgas["2015":].copy()
     _elec = elec_ppi["2015":].copy()
 
-    fig_gas, _ax1 = plt.subplots(figsize=(10, 4.5))
+    fig_gas, _ax1 = plt.subplots(figsize=(14, 6.5))
 
     # Primary axis: natural gas price
-    _ax1.plot(_gas.index, _gas["price"], color="#e74c3c", linewidth=2, label="Henry Hub Spot Price")
-    _ax1.set_ylabel("Natural Gas ($/MMBtu)", color="#e74c3c", fontsize=11)
+    _ax1.plot(
+        _gas.index,
+        _gas["price"],
+        color="#e74c3c",
+        linewidth=2,
+        label="Henry Hub Spot Price",
+    )
+    _ax1.set_ylabel(
+        "Natural Gas ($/MMBtu)", color="#e74c3c", fontsize=FONTS["axis_label"]
+    )
     _ax1.tick_params(axis="y", labelcolor="#e74c3c")
     _ax1.set_ylim(0, 10)
 
     # Secondary axis: electricity PPI (indexed)
     _ax2 = _ax1.twinx()
-    _ax2.plot(_elec.index, _elec["price"], color="#1f77b4", linewidth=1.5, alpha=0.7, label="Electricity PPI")
-    _ax2.set_ylabel("Electricity PPI (Index)", color="#1f77b4", fontsize=11)
+    _ax2.plot(
+        _elec.index,
+        _elec["price"],
+        color="#1f77b4",
+        linewidth=1.5,
+        alpha=0.7,
+        label="Electricity PPI",
+    )
+    _ax2.set_ylabel(
+        "Electricity PPI (Index)", color="#1f77b4", fontsize=FONTS["axis_label"]
+    )
     _ax2.tick_params(axis="y", labelcolor="#1f77b4")
 
-    # AI milestone annotations
-    for _text, _date, _y, _xytext in [
-        ("ChatGPT\nlaunch", pd.Timestamp("2022-11-30"), 7.0, (pd.Timestamp("2021-06-01"), 8.5)),
-        ("GPT-4", pd.Timestamp("2023-03-14"), 2.5, (pd.Timestamp("2021-01-01"), 3.5)),
-    ]:
-        _ax1.annotate(
-            _text, xy=(_date, _y), xytext=_xytext,
-            arrowprops=dict(facecolor="black", shrink=0.05, width=1, headwidth=5),
-            fontsize=9, fontweight="bold",
-            bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="black", alpha=0.8),
-        )
-
-    _ax1.set_title(
-        "Gas prices spiked with the energy crisis — electricity prices followed and stayed elevated",
-        fontsize=11, fontweight="bold",
+    # AI milestone annotations — compact placement to avoid obstructing data
+    _ax1.annotate(
+        "ChatGPT launch",
+        xy=(pd.Timestamp("2022-11-30"), 7.0),
+        xytext=(pd.Timestamp("2021-09-01"), 9.0),
+        arrowprops=dict(arrowstyle="->", color="black", lw=1.2),
+        fontsize=FONTS["annotation"] - 1,
+        bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="#666666", alpha=0.85),
+    )
+    _ax1.annotate(
+        "GPT-4",
+        xy=(pd.Timestamp("2023-03-14"), 2.5),
+        xytext=(pd.Timestamp("2021-06-01"), 1.0),
+        arrowprops=dict(arrowstyle="->", color="black", lw=1.2),
+        fontsize=FONTS["annotation"] - 1,
+        bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="#666666", alpha=0.85),
     )
     _ax1.grid(True, linestyle=":", alpha=0.4)
 
     # Combined legend
     _lines1, _labels1 = _ax1.get_legend_handles_labels()
     _lines2, _labels2 = _ax2.get_legend_handles_labels()
-    _ax1.legend(_lines1 + _lines2, _labels1 + _labels2, loc="upper left", fontsize=8)
+    legend_below(_ax1, handles=_lines1 + _lines2, labels=_labels1 + _labels2)
 
     plt.tight_layout()
-    energy_prices=save_fig(fig_gas, cfg.img_dir / "dd002_energy_prices.png")
+    energy_prices = save_fig(fig_gas, cfg.img_dir / "dd002_energy_prices.png")
     return
 
 
@@ -714,6 +1038,8 @@ def _(cfg, mo):
     mo.md(
         f"""
     ## Price Signals
+
+    # Gas prices spiked with the energy crisis — electricity prices followed and stayed elevated
 
     {_price_chart}
 
@@ -756,7 +1082,7 @@ def _(cfg, horizontal_bar_ranking, save_fig):
         highlight_color="#2ca02c",
         color="#4ecdc4",
     )
-    hyperscaler_ppa=save_fig(fig_ppa, cfg.img_dir / "dd002_hyperscaler_ppa.png")
+    hyperscaler_ppa = save_fig(fig_ppa, cfg.img_dir / "dd002_hyperscaler_ppa.png")
     return
 
 
@@ -768,6 +1094,8 @@ def _(cfg, mo):
     mo.md(
         f"""
     ## The Hyperscaler PPA Landscape
+
+    # Microsoft and Amazon have contracted more renewable energy than most countries generate
 
     {_ppa_chart}
 

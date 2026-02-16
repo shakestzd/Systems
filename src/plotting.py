@@ -2,6 +2,13 @@
 
 All functions return matplotlib Figure objects (never call plt.show()).
 Style is expected to be applied via src.notebook.setup() before use.
+
+Titles are NOT rendered on charts — use Marimo markdown H1 headings
+above the chart instead. The `title` parameter is retained in function
+signatures for identification but is not displayed.
+
+Legends are placed below the plot in a horizontal column layout for
+consistency. Use `legend_below()` in inline notebook charts to match.
 """
 
 from __future__ import annotations
@@ -18,6 +25,76 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     import pandas as pd
+
+
+# ---------------------------------------------------------------------------
+# Font size configuration — single source of truth for all charts.
+# Import FONTS in notebooks for inline charts to stay consistent.
+# ---------------------------------------------------------------------------
+
+FONTS: dict[str, int] = {
+    "annotation": 14,     # arrow annotations, callout text
+    "axis_label": 15,     # xlabel, ylabel
+    "tick_label": 14,     # xticklabels, yticklabels
+    "legend": 14,         # legend entries
+    "value_label": 14,    # value labels on bars / scatter points
+    "panel_title": 14,    # subplot panel titles (multi_panel)
+}
+
+
+# ---------------------------------------------------------------------------
+# Legend placement — single pattern for all charts.
+# ---------------------------------------------------------------------------
+
+def legend_below(
+    ax: plt.Axes,
+    *,
+    ncol: int | None = None,
+    handles: list | None = None,
+    labels: list[str] | None = None,
+    **kwargs,
+) -> None:
+    """Place legend below the axes in a horizontal column layout.
+
+    Works with save_fig's ``bbox_inches='tight'`` to auto-expand the
+    saved figure so the legend is never clipped.
+
+    Parameters
+    ----------
+    ax : Axes
+        The axes whose legend to relocate.
+    ncol : int, optional
+        Number of columns.  Defaults to ``min(len(handles), 5)``.
+    handles, labels : optional
+        Explicit legend handles/labels.  When *None*, pulled from *ax*.
+    **kwargs
+        Forwarded to ``ax.legend()``.
+    """
+    if handles is None:
+        h, l = ax.get_legend_handles_labels()
+        handles = h
+        if labels is None:
+            labels = l
+    elif labels is None:
+        labels = [h.get_label() for h in handles]
+    if not handles:
+        return
+    if ncol is None:
+        ncol = min(len(handles), 5)
+    # Remove existing legend so it doesn't stack
+    old = ax.get_legend()
+    if old:
+        old.remove()
+    _anchor = kwargs.pop("bbox_to_anchor", (0.5, -0.15))
+    ax.legend(
+        handles, labels,
+        loc="upper center",
+        bbox_to_anchor=_anchor,
+        ncol=ncol,
+        fontsize=FONTS["legend"],
+        frameon=False,
+        **kwargs,
+    )
 
 
 def annotated_series(
@@ -72,18 +149,17 @@ def annotated_series(
                 arrowprops=dict(
                     facecolor="black", shrink=0.05, width=1, headwidth=5
                 ),
-                fontsize=9,
+                fontsize=FONTS["annotation"],
                 fontweight="bold",
                 bbox=dict(
                     boxstyle="round,pad=0.3", fc="white", ec="black", alpha=0.8
                 ),
             )
 
-    ax.set_title(title, fontsize=12, fontweight="bold")
-    ax.set_ylabel(ylabel)
-    ax.legend(loc="upper left", fontsize=8)
+    ax.set_ylabel(ylabel, fontsize=FONTS["axis_label"])
     ax.grid(True, linestyle=":", alpha=0.6)
     plt.tight_layout()
+    legend_below(ax)
     return fig
 
 
@@ -132,19 +208,17 @@ def multi_panel(
         for column, style in panel["columns"].items():
             ax.plot(df.index, df[column], **style)
 
-        ax.set_title(panel.get("title", ""))
-        ax.set_ylabel(panel.get("ylabel", ""))
+        ax.set_title(panel.get("title", ""), fontsize=FONTS["panel_title"])
+        ax.set_ylabel(panel.get("ylabel", ""), fontsize=FONTS["axis_label"])
         if "ylim" in panel:
             ax.set_ylim(panel["ylim"])
         if any("label" in s for s in panel["columns"].values()):
-            ax.legend(fontsize=8)
+            ax.legend(fontsize=FONTS["legend"])
 
     # Hide unused axes
     for idx in range(len(panels), nrows * ncols):
         row, col = divmod(idx, ncols)
         axes[row, col].set_visible(False)
-
-    fig.suptitle(suptitle, fontsize=14, fontweight="bold")
     plt.tight_layout()
     return fig
 
@@ -157,6 +231,7 @@ def stacked_bar(
     *,
     ylabel: str = "",
     figsize: tuple[float, float] = (10, 5),
+    rotation: int = 0,
 ) -> plt.Figure:
     """Stacked bar chart for categorical breakdowns.
 
@@ -192,11 +267,11 @@ def stacked_bar(
         bottom += values
 
     ax.set_xticks(x)
-    ax.set_xticklabels(df[x_col], rotation=45, ha="right")
-    ax.set_title(title, fontsize=12, fontweight="bold")
-    ax.set_ylabel(ylabel)
-    ax.legend(fontsize=8, loc="upper left")
+    _ha = "right" if rotation else "center"
+    ax.set_xticklabels(df[x_col], rotation=rotation, ha=_ha)
+    ax.set_ylabel(ylabel, fontsize=FONTS["axis_label"])
     plt.tight_layout()
+    legend_below(ax)
     return fig
 
 
@@ -264,7 +339,8 @@ def waterfall_chart(
     for i, (b, h) in enumerate(zip(bottoms, heights)):
         val = values[i] if i < len(values) else total
         label = f"${val:,.1f}B" if abs(val) >= 1 else f"${val * 1000:,.0f}M"
-        ax.text(i, b + h + total * 0.01, label, ha="center", va="bottom", fontsize=9)
+        ax.text(i, b + h + total * 0.01, label, ha="center", va="bottom",
+                fontsize=FONTS["value_label"])
 
     # Connector lines between bars
     for i in range(len(values)):
@@ -277,9 +353,9 @@ def waterfall_chart(
         )
 
     ax.set_xticks(x)
-    ax.set_xticklabels(labels, rotation=30, ha="right")
-    ax.set_title(title, fontsize=12, fontweight="bold")
-    ax.set_ylabel("$ Billions")
+    ax.set_xticklabels(labels, rotation=30, ha="right",
+                       fontsize=FONTS["tick_label"])
+    ax.set_ylabel("$ Billions", fontsize=FONTS["axis_label"])
     plt.tight_layout()
     return fig
 
@@ -336,13 +412,13 @@ def horizontal_bar_ranking(
     ax.barh(y, values, color=colors, height=0.6)
     ax.set_yticks(y)
     ax.set_yticklabels(labels)
-    ax.set_xlabel(xlabel)
-    ax.set_title(title, fontsize=12, fontweight="bold")
+    ax.set_xlabel(xlabel, fontsize=FONTS["axis_label"])
     ax.invert_yaxis()
 
     # Value labels at end of bars
     for i, v in enumerate(values):
-        ax.text(v + max(values) * 0.01, i, f"{v:,.0f}", va="center", fontsize=9)
+        ax.text(v + max(values) * 0.01, i, f"{v:,.0f}", va="center",
+                fontsize=FONTS["value_label"])
 
     plt.tight_layout()
     return fig
@@ -429,7 +505,7 @@ def us_scatter_map(
     states = _get_states_gdf()
 
     fig, ax = plt.subplots(figsize=figsize)
-    states.plot(ax=ax, color="#f0f0f0", edgecolor="#cccccc", linewidth=0.5)
+    states.plot(ax=ax, color="#f5f5f5", edgecolor="#bbbbbb", linewidth=0.7)
 
     ax.scatter(
         lons, lats, c=colors, s=sizes, alpha=alpha,
@@ -439,11 +515,20 @@ def us_scatter_map(
     # Continental US bounds
     ax.set_xlim(-125, -66)
     ax.set_ylim(24, 50)
-    ax.set_title(title, fontsize=11, fontweight="bold")
     ax.set_axis_off()
 
     if legend_handles:
-        ax.legend(handles=legend_handles, loc="lower left", fontsize=8, framealpha=0.9)
+        labels = [h.get_label() for h in legend_handles]
+        ncol = min(len(legend_handles), 5)
+        ax.legend(
+            handles=legend_handles, labels=labels,
+            loc="upper center",
+            bbox_to_anchor=(0.5, -0.03),
+            ncol=ncol,
+            fontsize=FONTS["legend"],
+            frameon=False,
+            markerscale=1.3,
+        )
 
     plt.tight_layout()
     return fig
