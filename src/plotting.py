@@ -1,14 +1,21 @@
-"""Reusable plotting functions for research notebooks.
+"""Data visualization design system and reusable plotting functions.
+
+This module is the single source of truth for all visual decisions:
+colors, typography, figure sizing, and chart helpers. Notebooks import
+constants and functions from here — no hex colors, font sizes, or
+figure dimensions should appear as magic numbers in notebooks.
+
+Design principles (inspired by Cara Thompson's dataviz design system):
+- Parametrize everything through named constants
+- Semantic color mapping: colors encode meaning, not just aesthetics
+- Text hierarchy: clear visual levels from title to caption
+- Accessibility: colorblind-safe palettes, sufficient contrast
+- Consistency: same visual language across all notebooks
 
 All functions return matplotlib Figure objects (never call plt.show()).
-Style is expected to be applied via src.notebook.setup() before use.
-
+Style is applied via src.notebook.setup() which loads shakes.mplstyle.
 Titles are NOT rendered on charts — use Marimo markdown H1 headings
-above the chart instead. The `title` parameter is retained in function
-signatures for identification but is not displayed.
-
-Legends are placed below the plot in a horizontal column layout for
-consistency. Use `legend_below()` in inline notebook charts to match.
+above the chart instead.
 """
 
 from __future__ import annotations
@@ -27,19 +34,280 @@ if TYPE_CHECKING:
     import pandas as pd
 
 
+# ═══════════════════════════════════════════════════════════════════════════
+# DESIGN SYSTEM — Colors, Typography, Sizing
+# ═══════════════════════════════════════════════════════════════════════════
+
+
 # ---------------------------------------------------------------------------
-# Font size configuration — single source of truth for all charts.
-# Import FONTS in notebooks for inline charts to stay consistent.
+# Semantic role colors — use these for directional meaning
+# ---------------------------------------------------------------------------
+
+COLORS: dict[str, str] = {
+    "positive": "#2ca02c",      # growth, increase, good
+    "negative": "#d62728",      # decline, decrease, bad
+    "neutral": "#888888",       # neither good nor bad
+    "accent": "#e74c3c",        # highlight, call attention
+    "muted": "#cccccc",         # de-emphasized, fallback
+    "reference": "#999999",     # reference lines, thresholds
+    "text_dark": "#323034",     # primary text on white bg
+    "text_light": "#666666",    # secondary text, annotations
+    "background": "#f5f5f5",    # map fills, chart backgrounds
+    "grid": "#e0e0e0",          # gridlines
+}
+
+
+# ---------------------------------------------------------------------------
+# Domain colors — energy infrastructure
+# ---------------------------------------------------------------------------
+
+FUEL_COLORS: dict[str, str] = {
+    "solar": "#f0b429",
+    "wind": "#4ecdc4",
+    "battery": "#7b68ee",
+    "gas_cc": "#e74c3c",
+    "gas_ct": "#ff8c69",
+    "nuclear": "#3498db",
+    "hydro": "#2ecc71",
+    "coal": "#555555",
+    "biomass": "#8c564b",
+    "geothermal": "#d4a574",
+    "other": "#bbbbbb",
+}
+
+
+# ---------------------------------------------------------------------------
+# Company colors — hyperscaler brand identity
+# ---------------------------------------------------------------------------
+
+COMPANY_COLORS: dict[str, str] = {
+    "MSFT": "#00a4ef",
+    "AMZN": "#ff9900",
+    "GOOGL": "#4285f4",
+    "META": "#0668e1",
+    "NVDA": "#76b900",
+    "ORCL": "#f80000",
+    "AAPL": "#a2aaad",
+}
+
+COMPANY_LABELS: dict[str, str] = {
+    "MSFT": "Microsoft",
+    "AMZN": "Amazon",
+    "GOOGL": "Alphabet",
+    "META": "Meta",
+    "NVDA": "Nvidia",
+    "ORCL": "Oracle",
+    "AAPL": "Apple",
+}
+
+
+# ---------------------------------------------------------------------------
+# Categorical palette — colorblind-safe (Paul Tol qualitative scheme)
+# Use for arbitrary series when no semantic mapping applies.
+# ---------------------------------------------------------------------------
+
+CATEGORICAL: list[str] = [
+    "#4477AA",  # blue
+    "#EE6677",  # red
+    "#228833",  # green
+    "#CCBB44",  # yellow
+    "#66CCEE",  # cyan
+    "#AA3377",  # purple
+    "#BBBBBB",  # grey
+    "#EE8866",  # orange
+]
+
+
+# ---------------------------------------------------------------------------
+# Typography — font sizes by role
 # ---------------------------------------------------------------------------
 
 FONTS: dict[str, int] = {
-    "annotation": 14,     # arrow annotations, callout text
-    "axis_label": 15,     # xlabel, ylabel
-    "tick_label": 14,     # xticklabels, yticklabels
-    "legend": 14,         # legend entries
-    "value_label": 14,    # value labels on bars / scatter points
-    "panel_title": 14,    # subplot panel titles (multi_panel)
+    "axis_label": 15,       # xlabel, ylabel
+    "tick_label": 14,       # xticklabels, yticklabels
+    "annotation": 14,       # arrow annotations, callout text
+    "value_label": 14,      # value labels on bars / scatter points
+    "legend": 13,           # legend entries
+    "panel_title": 14,      # subplot panel titles (multi_panel)
+    "suptitle": 16,         # figure suptitle
+    "caption": 11,          # figure captions, source notes
+    "small": 11,            # small annotations, dense charts
 }
+
+
+# ---------------------------------------------------------------------------
+# Figure size presets — named dimensions for consistency
+# ---------------------------------------------------------------------------
+
+FIGSIZE: dict[str, tuple[float, float]] = {
+    "single": (10, 5),      # default for most charts
+    "wide": (12, 5),        # time series, many categories
+    "tall": (10, 7),        # vertical bar rankings
+    "square": (8, 7),       # scatter, pie
+    "double": (13, 5),      # side-by-side panels (1x2)
+    "dashboard": (14, 8),   # 2x2 panel grids
+    "map": (12, 7),         # US scatter maps
+    "large": (16, 9),       # complex multi-panel
+}
+
+
+# ---------------------------------------------------------------------------
+# Element defaults — consistent bar/scatter styling
+# ---------------------------------------------------------------------------
+
+BAR_DEFAULTS: dict[str, object] = {
+    "alpha": 0.85,
+    "edgecolor": "white",
+    "linewidth": 0.5,
+}
+
+SCATTER_DEFAULTS: dict[str, object] = {
+    "alpha": 0.6,
+    "edgecolors": "white",
+    "linewidth": 0.5,
+}
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# HELPER FUNCTIONS — Color lookups, annotations, reference lines
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+def fuel_color(fuel_type: str) -> str:
+    """Look up color for a fuel/generation type, with graceful fallback."""
+    return FUEL_COLORS.get(fuel_type, COLORS["muted"])
+
+
+def company_color(ticker: str) -> str:
+    """Look up brand color for a company ticker, with graceful fallback."""
+    return COMPANY_COLORS.get(ticker, COLORS["muted"])
+
+
+def company_label(ticker: str) -> str:
+    """Look up display name for a company ticker."""
+    return COMPANY_LABELS.get(ticker, ticker)
+
+
+def annotate_point(
+    ax: plt.Axes,
+    text: str,
+    xy: tuple[float, float],
+    xytext: tuple[float, float],
+    *,
+    color: str | None = None,
+    fontsize: int | None = None,
+    arrowstyle: str = "->",
+    arrow_lw: float = 1.5,
+    bbox: bool = True,
+    ha: str = "center",
+    **kwargs: object,
+) -> None:
+    """Annotate a data point with consistent arrow + text styling.
+
+    Parameters
+    ----------
+    ax : Axes
+        Target axes.
+    text : str
+        Annotation text.
+    xy : (x, y)
+        Point to annotate (data coordinates).
+    xytext : (x, y)
+        Text position (data coordinates).
+    color : str, optional
+        Text and arrow color.  Defaults to COLORS["text_light"].
+    fontsize : int, optional
+        Font size.  Defaults to FONTS["annotation"].
+    arrowstyle : str
+        Matplotlib arrow style string.
+    arrow_lw : float
+        Arrow line width.
+    bbox : bool
+        Whether to draw a rounded box behind the text.
+    ha : str
+        Horizontal alignment.
+    **kwargs
+        Forwarded to ax.annotate().
+    """
+    color = color or COLORS["text_light"]
+    fontsize = fontsize or FONTS["annotation"]
+
+    bbox_props = (
+        {"boxstyle": "round,pad=0.3", "fc": "white", "ec": color, "alpha": 0.8}
+        if bbox
+        else None
+    )
+
+    ax.annotate(
+        text,
+        xy=xy,
+        xytext=xytext,
+        fontsize=fontsize,
+        fontweight="bold",
+        color=color,
+        ha=ha,
+        arrowprops={"arrowstyle": arrowstyle, "color": color, "lw": arrow_lw},
+        bbox=bbox_props,
+        **kwargs,
+    )
+
+
+def reference_line(
+    ax: plt.Axes,
+    value: float,
+    orientation: str = "h",
+    *,
+    label: str | None = None,
+    color: str | None = None,
+    linestyle: str = "--",
+    linewidth: float = 1.5,
+    alpha: float = 0.7,
+    label_pos: str = "right",
+) -> None:
+    """Add a labeled reference line (horizontal or vertical).
+
+    Parameters
+    ----------
+    ax : Axes
+        Target axes.
+    value : float
+        Position of the line.
+    orientation : "h" or "v"
+        Horizontal or vertical line.
+    label : str, optional
+        Text label placed near the line.
+    color : str, optional
+        Line and label color.  Defaults to COLORS["reference"].
+    linestyle : str
+        Line style.
+    linewidth : float
+        Line width.
+    alpha : float
+        Line transparency.
+    label_pos : "left" or "right" (for h) / "top" or "bottom" (for v)
+        Where to place the label text.
+    """
+    color = color or COLORS["reference"]
+    line_fn = ax.axhline if orientation == "h" else ax.axvline
+    line_fn(value, color=color, linestyle=linestyle, linewidth=linewidth, alpha=alpha)
+
+    if label:
+        if orientation == "h":
+            _x = ax.get_xlim()[1] if label_pos == "right" else ax.get_xlim()[0]
+            _ha = "right" if label_pos == "right" else "left"
+            ax.text(
+                _x, value, f" {label} ",
+                fontsize=FONTS["small"], color=color, fontweight="bold",
+                va="bottom", ha=_ha,
+            )
+        else:
+            _y = ax.get_ylim()[1] if label_pos == "top" else ax.get_ylim()[0]
+            _va = "top" if label_pos == "top" else "bottom"
+            ax.text(
+                value, _y, f" {label} ",
+                fontsize=FONTS["small"], color=color, fontweight="bold",
+                va=_va, ha="left",
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -71,10 +339,10 @@ def legend_below(
         Forwarded to ``ax.legend()``.
     """
     if handles is None:
-        h, l = ax.get_legend_handles_labels()
+        h, lab = ax.get_legend_handles_labels()
         handles = h
         if labels is None:
-            labels = l
+            labels = lab
     elif labels is None:
         labels = [h.get_label() for h in handles]
     if not handles:
@@ -281,9 +549,9 @@ def waterfall_chart(
     *,
     total_label: str = "Total",
     figsize: tuple[float, float] = (10, 5),
-    positive_color: str = "#2ca02c",
-    negative_color: str = "#d62728",
-    total_color: str = "#1f77b4",
+    positive_color: str = COLORS["positive"],
+    negative_color: str = COLORS["negative"],
+    total_color: str = CATEGORICAL[0],
 ) -> plt.Figure:
     """Waterfall chart for cost allocation or flow breakdowns.
 
@@ -366,10 +634,10 @@ def horizontal_bar_ranking(
     title: str,
     *,
     xlabel: str = "",
-    color: str | list[str] = "#1f77b4",
-    figsize: tuple[float, float] = (10, 6),
+    color: str | list[str] = CATEGORICAL[0],
+    figsize: tuple[float, float] = FIGSIZE["tall"],
     highlight_indices: list[int] | None = None,
-    highlight_color: str = "#d62728",
+    highlight_color: str = COLORS["accent"],
 ) -> plt.Figure:
     """Horizontal bar chart for ranking comparisons.
 
@@ -468,8 +736,8 @@ def us_scatter_map(
     title: str,
     *,
     legend_handles: list | None = None,
-    figsize: tuple[float, float] = (12, 7),
-    alpha: float = 0.6,
+    figsize: tuple[float, float] = FIGSIZE["map"],
+    alpha: float = SCATTER_DEFAULTS["alpha"],
     edgecolors: str = "white",
     linewidth: float = 0.5,
 ) -> plt.Figure:
@@ -505,7 +773,7 @@ def us_scatter_map(
     states = _get_states_gdf()
 
     fig, ax = plt.subplots(figsize=figsize)
-    states.plot(ax=ax, color="#f5f5f5", edgecolor="#bbbbbb", linewidth=0.7)
+    states.plot(ax=ax, color=COLORS["background"], edgecolor=COLORS["muted"], linewidth=0.7)
 
     ax.scatter(
         lons, lats, c=colors, s=sizes, alpha=alpha,

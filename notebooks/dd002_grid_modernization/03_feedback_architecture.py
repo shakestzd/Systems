@@ -39,14 +39,26 @@ def _():
     sys.path.insert(0, str(mo.notebook_dir().parent.parent))
 
     import numpy as np
-    import pandas as pd
     import pysd
 
-    from src.notebook import setup, save_fig
-    from src.plotting import FONTS, legend_below, multi_panel
+    from src.notebook import save_fig, setup
+    from src.plotting import CATEGORICAL, COLORS, FONTS, legend_below, multi_panel
 
     cfg = setup()
-    return FONTS, cfg, legend_below, mo, mpatches, multi_panel, np, plt, pysd, save_fig
+    return (
+        CATEGORICAL,
+        COLORS,
+        FONTS,
+        cfg,
+        legend_below,
+        mo,
+        mpatches,
+        multi_panel,
+        np,
+        plt,
+        pysd,
+        save_fig,
+    )
 
 
 @app.cell(hide_code=True)
@@ -182,32 +194,32 @@ def _(FONTS, cfg, legend_below, mpatches, np, plt, save_fig):
                 bbox=dict(boxstyle="round,pad=0.15", fc="white", ec=color, alpha=0.9))
 
     # R1: Grid Investment Virtuous Cycle (blue) — thicker for reinforcing
-    _r1 = "#1f77b4"
+    _r1 = CATEGORICAL[0]
     _draw_edge("AI\nDemand", "Grid\nInvestment", _r1, "+", curve=0.15, lw=2.5)
     _draw_edge("Grid\nInvestment", "Grid\nCapacity", _r1, "+", curve=0.1, lw=2.5)
     _draw_edge("Grid\nCapacity", "Energy\nCosts", _r1, "-", curve=0.1, lw=2.5)
     _draw_edge("Energy\nCosts", "AI\nDemand", _r1, "-", curve=-0.3, lw=2.5)
 
     # R2: Renewable Learning (green) — thicker for reinforcing
-    _r2 = "#2ca02c"
+    _r2 = COLORS["positive"]
     _draw_edge("AI\nDemand", "Renewable\nPPAs", _r2, "+", curve=-0.15, lw=2.5)
     _draw_edge("Renewable\nPPAs", "Renewable\nCost", _r2, "-", curve=0.1, lw=2.5)
     _draw_edge("Renewable\nCost", "Renewable\nPPAs", _r2, "-", curve=0.3, lw=2.5)
 
     # B1: Regulatory Uncertainty (orange)
-    _b1 = "#ff7f0e"
+    _b1 = CATEGORICAL[7]
     _draw_edge("Regulatory\nEnvironment", "Grid\nInvestment", _b1, "+", curve=-0.2)
     _draw_edge("Regulatory\nEnvironment", "BTM\nCapacity", _b1, "-", curve=0.2)
 
     # B2: BTM Bypass (red)
-    _b2 = "#d62728"
+    _b2 = COLORS["negative"]
     _draw_edge("Queue\nBacklog", "BTM\nCapacity", _b2, "+", curve=0.15)
     _draw_edge("BTM\nCapacity", "Ratepayer\nBurden", _b2, "+", curve=0.2)
     _draw_edge("Ratepayer\nBurden", "Political\nSupport", _b2, "-", curve=0.1)
     _draw_edge("Political\nSupport", "Regulatory\nEnvironment", _b2, "+", curve=0.2)
 
     # B3: Stranded Asset Risk (purple)
-    _b3 = "#9467bd"
+    _b3 = CATEGORICAL[5]
     _draw_edge("Regulatory\nEnvironment", "Queue\nBacklog", _b3, "-", curve=-0.15)
 
     # Loop labels placed near center of each loop's path
@@ -236,7 +248,7 @@ def _(FONTS, cfg, legend_below, mpatches, np, plt, save_fig):
         mpatches.Patch(color=_b3, label="B3: Stranded Asset / Queue Dynamics"),
     ]
     legend_below(ax, handles=_legend_items, ncol=3)
-    _cld_path=save_fig(fig_cld, cfg.img_dir / "dd002_cld.png")
+    save_fig(fig_cld, cfg.img_dir / "dd002_cld.png")
     return
 
 
@@ -305,8 +317,8 @@ def _(FONTS, baseline, cfg, multi_panel, save_fig):
     _panels = [
         {
             "columns": {
-                "Grid Capacity": {"color": "#1f77b4", "linewidth": 2, "label": "Grid Capacity"},
-                "Behind the Meter Capacity": {"color": "#d62728", "linewidth": 2, "linestyle": "--", "label": "Behind-the-Meter"},
+                "Grid Capacity": {"color": CATEGORICAL[0], "linewidth": 2, "label": "Grid Capacity"},
+                "Behind the Meter Capacity": {"color": COLORS["negative"], "linewidth": 2, "linestyle": "--", "label": "Behind-the-Meter"},
             },
             "title": "Capacity Growth (GW)",
             "ylabel": "GW",
@@ -314,21 +326,21 @@ def _(FONTS, baseline, cfg, multi_panel, save_fig):
         },
         {
             "columns": {
-                "Queue Backlog": {"color": "#ff7f0e", "linewidth": 2, "label": "Queue Backlog"},
+                "Queue Backlog": {"color": CATEGORICAL[7], "linewidth": 2, "label": "Queue Backlog"},
             },
             "title": "Interconnection Queue (GW)",
             "ylabel": "GW",
         },
         {
             "columns": {
-                "Renewable Cost Index": {"color": "#2ca02c", "linewidth": 2, "label": "Solar+Storage LCOE"},
+                "Renewable Cost Index": {"color": COLORS["positive"], "linewidth": 2, "label": "Solar+Storage LCOE"},
             },
             "title": "Renewable Cost ($/MWh)",
             "ylabel": "$/MWh",
         },
         {
             "columns": {
-                "grid spillover index": {"color": "#9467bd", "linewidth": 2, "label": "Spillover Index"},
+                "grid spillover index": {"color": CATEGORICAL[5], "linewidth": 2, "label": "Spillover Index"},
             },
             "title": "Grid Spillover Index",
             "ylabel": "Fraction (0-1)",
@@ -345,17 +357,17 @@ def _(FONTS, baseline, cfg, multi_panel, save_fig):
     # Panel 0: Capacity — annotate Grid and BTM end values
     _grid_end = baseline["Grid Capacity"].iloc[-1]
     _btm_end = baseline["Behind the Meter Capacity"].iloc[-1]
-    _axes[0].annotate(f"{_grid_end:.0f}", xy=(_tf, _grid_end), fontsize=FONTS["value_label"], color="#1f77b4",
+    _axes[0].annotate(f"{_grid_end:.0f}", xy=(_tf, _grid_end), fontsize=FONTS["value_label"], color=CATEGORICAL[0],
                       fontweight="bold", va="bottom", ha="right")
-    _axes[0].annotate(f"{_btm_end:.0f}", xy=(_tf, _btm_end), fontsize=FONTS["value_label"], color="#d62728",
+    _axes[0].annotate(f"{_btm_end:.0f}", xy=(_tf, _btm_end), fontsize=FONTS["value_label"], color=COLORS["negative"],
                       fontweight="bold", va="bottom", ha="right")
 
     # Panel 3: Spillover — annotate start and end
     _spill_start = baseline["grid spillover index"].iloc[0]
     _spill_end = baseline["grid spillover index"].iloc[-1]
-    _axes[3].annotate(f"{_spill_start:.2f}", xy=(_t0, _spill_start), fontsize=FONTS["value_label"], color="#9467bd",
+    _axes[3].annotate(f"{_spill_start:.2f}", xy=(_t0, _spill_start), fontsize=FONTS["value_label"], color=CATEGORICAL[5],
                       fontweight="bold", va="bottom", ha="left")
-    _axes[3].annotate(f"{_spill_end:.2f}", xy=(_tf, _spill_end), fontsize=FONTS["value_label"], color="#9467bd",
+    _axes[3].annotate(f"{_spill_end:.2f}", xy=(_tf, _spill_end), fontsize=FONTS["value_label"], color=CATEGORICAL[5],
                       fontweight="bold", va="top", ha="right")
 
     # Panel 2: Renewable cost — annotate start and end (well clear of line)
@@ -363,16 +375,16 @@ def _(FONTS, baseline, cfg, multi_panel, save_fig):
     _cost_end = baseline["Renewable Cost Index"].iloc[-1]
     _axes[2].annotate(f"${_cost_start:.0f}", xy=(_t0, _cost_start),
                       xytext=(8, 18), textcoords="offset points",
-                      fontsize=FONTS["value_label"], color="#2ca02c",
+                      fontsize=FONTS["value_label"], color=COLORS["positive"],
                       fontweight="bold", ha="left",
-                      arrowprops=dict(arrowstyle="->", color="#2ca02c", lw=0.8))
+                      arrowprops=dict(arrowstyle="->", color=COLORS["positive"], lw=0.8))
     _axes[2].annotate(f"${_cost_end:.0f}", xy=(_tf, _cost_end),
                       xytext=(-8, -20), textcoords="offset points",
-                      fontsize=FONTS["value_label"], color="#2ca02c",
+                      fontsize=FONTS["value_label"], color=COLORS["positive"],
                       fontweight="bold", ha="right",
-                      arrowprops=dict(arrowstyle="->", color="#2ca02c", lw=0.8))
+                      arrowprops=dict(arrowstyle="->", color=COLORS["positive"], lw=0.8))
 
-    _baseline_path=save_fig(fig_baseline, cfg.img_dir / "dd002_baseline_simulation.png")
+    save_fig(fig_baseline, cfg.img_dir / "dd002_baseline_simulation.png")
     return
 
 
@@ -449,10 +461,10 @@ def _(FONTS, baseline, btm_cost_slider, grid_inv_slider, legend_below, mo, model
     _fig, _axes = plt.subplots(1, 3, figsize=(15, 4.5))
 
     # Panel 1: Grid vs BTM capacity
-    _axes[0].plot(baseline.index, baseline["Grid Capacity"], "#1f77b4", alpha=0.4, label="Grid (baseline)")
-    _axes[0].plot(baseline.index, baseline["Behind the Meter Capacity"], "#d62728", linestyle="--", alpha=0.4, label="BTM (baseline)")
-    _axes[0].plot(_scenario.index, _scenario["Grid Capacity"], "#1f77b4", linewidth=2.5, label="Grid (scenario)")
-    _axes[0].plot(_scenario.index, _scenario["Behind the Meter Capacity"], "#d62728", linestyle="--", linewidth=2.5, label="BTM (scenario)")
+    _axes[0].plot(baseline.index, baseline["Grid Capacity"], CATEGORICAL[0], alpha=0.4, label="Grid (baseline)")
+    _axes[0].plot(baseline.index, baseline["Behind the Meter Capacity"], COLORS["negative"], linestyle="--", alpha=0.4, label="BTM (baseline)")
+    _axes[0].plot(_scenario.index, _scenario["Grid Capacity"], CATEGORICAL[0], linewidth=2.5, label="Grid (scenario)")
+    _axes[0].plot(_scenario.index, _scenario["Behind the Meter Capacity"], COLORS["negative"], linestyle="--", linewidth=2.5, label="BTM (scenario)")
     _axes[0].set_title("Capacity (GW)", fontsize=FONTS["panel_title"], fontweight="bold")
     _axes[0].set_ylabel("GW", fontsize=FONTS["axis_label"])
     legend_below(_axes[0], ncol=2)
@@ -460,17 +472,17 @@ def _(FONTS, baseline, btm_cost_slider, grid_inv_slider, legend_below, mo, model
 
     # Panel 2: Spillover index
     _axes[1].plot(baseline.index, baseline["grid spillover index"], "k--", label="Baseline", alpha=0.4)
-    _axes[1].plot(_scenario.index, _scenario["grid spillover index"], "#9467bd", linewidth=2.5, label="Scenario")
+    _axes[1].plot(_scenario.index, _scenario["grid spillover index"], CATEGORICAL[5], linewidth=2.5, label="Scenario")
     _axes[1].set_title("Grid Spillover Index", fontsize=FONTS["panel_title"], fontweight="bold")
     _axes[1].set_ylabel("Fraction (0-1)", fontsize=FONTS["axis_label"])
     _axes[1].set_ylim(0, 1)
-    _axes[1].axhline(0.5, color="#e74c3c", linestyle="--", linewidth=1.2, alpha=0.6, label="50% threshold")
+    _axes[1].axhline(0.5, color=COLORS["accent"], linestyle="--", linewidth=1.2, alpha=0.6, label="50% threshold")
     legend_below(_axes[1])
     _axes[1].grid(True, linestyle=":", alpha=0.4)
 
     # Panel 3: Socialized cost
     _axes[2].plot(baseline.index, baseline["cost allocation to ratepayers"], "k--", label="Baseline", alpha=0.4)
-    _axes[2].plot(_scenario.index, _scenario["cost allocation to ratepayers"], "#e74c3c", linewidth=2.5, label="Scenario")
+    _axes[2].plot(_scenario.index, _scenario["cost allocation to ratepayers"], COLORS["accent"], linewidth=2.5, label="Scenario")
     _axes[2].set_title("Socialized Cost ($B/year)", fontsize=FONTS["panel_title"], fontweight="bold")
     _axes[2].set_ylabel("$B/year", fontsize=FONTS["axis_label"])
     legend_below(_axes[2])
@@ -575,7 +587,7 @@ def _(FONTS, cfg, model, np, plt, save_fig):
 
     _ax.set_xlabel("BTM Cost Advantage", fontsize=FONTS["axis_label"])
     _ax.set_ylabel("Regulatory Favorability", fontsize=FONTS["axis_label"])
-    _sensitivity_path=save_fig(fig_sensitivity, cfg.img_dir / "dd002_sensitivity.png")
+    save_fig(fig_sensitivity, cfg.img_dir / "dd002_sensitivity.png")
     return
 
 

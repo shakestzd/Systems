@@ -58,6 +58,10 @@ line-length = 100
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "UP"]
 
+[tool.ruff.lint.per-file-ignores]
+# Marimo cell parameters must match UPPERCASE variable names from other cells
+"notebooks/**/*.py" = ["N803"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 

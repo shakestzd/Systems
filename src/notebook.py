@@ -26,7 +26,6 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 
-
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 
@@ -59,13 +58,22 @@ def setup() -> NotebookConfig:
     )
 
 
-def save_fig(fig: plt.Figure, path: Path, *, close: bool = True) -> Path:
-    """Save a matplotlib figure and optionally close it.
+def save_fig(fig: plt.Figure, path: Path, *, close: bool = True) -> None:
+    """Save a matplotlib figure to disk and close it.
 
-    Returns the path so you can chain: mo.image(src=save_fig(fig, p).read_bytes())
+    Intended to be the last call in a chart cell.  The corresponding
+    prose cell reads the file back independently::
+
+        # Chart cell
+        fig, ax = plt.subplots(figsize=FIGSIZE["wide"])
+        ...
+        save_fig(fig, cfg.img_dir / "my_chart.png")
+
+        # Prose cell
+        chart = mo.image(src=(cfg.img_dir / "my_chart.png").read_bytes())
+        mo.md(f"# Insight-driven title\\n\\n{chart}")
     """
     path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(path, dpi=150, bbox_inches="tight", facecolor="white")
     if close:
         plt.close(fig)
-    return path

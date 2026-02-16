@@ -38,22 +38,27 @@ def _():
     sys.path.insert(0, str(mo.notebook_dir().parent.parent))
 
     import matplotlib.pyplot as plt
-    import pandas as pd
     import numpy as np
+    import pandas as pd
 
-    from src.notebook import setup, save_fig
-    from src.data.db import query
+    from src.notebook import save_fig, setup
     from src.plotting import (
+        CATEGORICAL,
+        COLORS,
         FONTS,
+        FUEL_COLORS,
+        horizontal_bar_ranking,
         legend_below,
         stacked_bar,
         waterfall_chart,
-        horizontal_bar_ranking,
     )
 
     cfg = setup()
     return (
+        CATEGORICAL,
+        COLORS,
         FONTS,
+        FUEL_COLORS,
         cfg,
         horizontal_bar_ranking,
         legend_below,
@@ -165,17 +170,17 @@ def _(cfg, horizontal_bar_ranking, legend_below, plt, save_fig):
         "PJM and MISO carry the largest interconnection backlogs",
         xlabel="Queue Backlog (GW)",
         highlight_indices=[0, 4],  # PJM and ERCOT — major data center regions
-        highlight_color="#e74c3c",
+        highlight_color=COLORS["accent"],
     )
     _ax_q = fig_queue.axes[0]
     _legend_handles = [
-        plt.Line2D([0], [0], marker="s", color="w", markerfacecolor="#e74c3c",
+        plt.Line2D([0], [0], marker="s", color="w", markerfacecolor=COLORS["accent"],
                    markersize=14, label="Major data center region"),
-        plt.Line2D([0], [0], marker="s", color="w", markerfacecolor="#1f77b4",
+        plt.Line2D([0], [0], marker="s", color="w", markerfacecolor=CATEGORICAL[0],
                    markersize=14, label="Other region"),
     ]
     legend_below(_ax_q, handles=_legend_handles, ncol=2)
-    queue_by_region=save_fig(fig_queue, cfg.img_dir / "dd002_queue_by_region.png")
+    save_fig(fig_queue, cfg.img_dir / "dd002_queue_by_region.png")
     return
 
 
@@ -223,12 +228,12 @@ def _(cfg, pd, save_fig, stacked_bar):
     })
 
     _colors = {
-        "solar": {"color": "#f0b429", "label": "Solar"},
-        "battery": {"color": "#7b68ee", "label": "Battery Storage"},
-        "wind": {"color": "#4ecdc4", "label": "Wind"},
-        "gas": {"color": "#e74c3c", "label": "Gas"},
-        "hybrid": {"color": "#2ecc71", "label": "Hybrid (Solar+Storage)"},
-        "other": {"color": "#999999", "label": "Other"},
+        "solar": {"color": FUEL_COLORS["solar"], "label": "Solar"},
+        "battery": {"color": FUEL_COLORS["battery"], "label": "Battery Storage"},
+        "wind": {"color": FUEL_COLORS["wind"], "label": "Wind"},
+        "gas": {"color": COLORS["accent"], "label": "Gas"},
+        "hybrid": {"color": FUEL_COLORS["hydro"], "label": "Hybrid (Solar+Storage)"},
+        "other": {"color": COLORS["reference"], "label": "Other"},
     }
 
     fig_comp = stacked_bar(
@@ -238,7 +243,7 @@ def _(cfg, pd, save_fig, stacked_bar):
         "The queue is overwhelmingly clean energy — gas is a shrinking sliver",
         ylabel="Queue Capacity (GW)",
     )
-    _comp_path=save_fig(fig_comp, cfg.img_dir / "dd002_queue_composition.png")
+    save_fig(fig_comp, cfg.img_dir / "dd002_queue_composition.png")
     return
 
 
@@ -290,7 +295,7 @@ def _(cfg, save_fig, waterfall_chart):
         "$4.36B in PJM data center grid costs shifted to ratepayers in 2024 (estimated breakdown)",
         total_label="Total\nsocialized",
     )
-    _cost_path=save_fig(fig_cost, cfg.img_dir / "dd002_cost_allocation.png")
+    save_fig(fig_cost, cfg.img_dir / "dd002_cost_allocation.png")
     return
 
 
@@ -434,22 +439,22 @@ def _(FONTS, cfg, np, plt, save_fig):
     _monthly = _bill_increase / 12
 
     fig_virginia, _ax = plt.subplots(figsize=(10, 4))
-    _ax.fill_between(_years, _bill_increase, alpha=0.2, color="#e74c3c")
-    _ax.plot(_years, _bill_increase, color="#e74c3c", linewidth=2.5)
+    _ax.fill_between(_years, _bill_increase, alpha=0.2, color=COLORS["accent"])
+    _ax.plot(_years, _bill_increase, color=COLORS["accent"], linewidth=2.5)
 
     # Annotate endpoint — position above the line to avoid overlap
     _ax.annotate(
         "$444/yr ($37/mo)",
         xy=(2040, 444), xytext=(2034, 470),
-        fontsize=FONTS["annotation"], fontweight="bold", color="#e74c3c",
-        arrowprops=dict(arrowstyle="->", color="#e74c3c", lw=1.5),
+        fontsize=FONTS["annotation"], fontweight="bold", color=COLORS["accent"],
+        arrowprops=dict(arrowstyle="->", color=COLORS["accent"], lw=1.5),
     )
 
     # Reference: average U.S. residential bill ~$150/month = $1,800/year
-    _ax.axhline(y=1800 * 0.1, color="#999999", linestyle="--", linewidth=1, alpha=0.6)
+    _ax.axhline(y=1800 * 0.1, color=COLORS["reference"], linestyle="--", linewidth=1, alpha=0.6)
     _ax.annotate(
         "~10% of avg U.S. residential bill",
-        xy=(2025, 190), fontsize=FONTS["annotation"], color="#999999", va="bottom",
+        xy=(2025, 190), fontsize=FONTS["annotation"], color=COLORS["reference"], va="bottom",
     )
 
     _ax.set_xlabel("Year", fontsize=FONTS["axis_label"])
@@ -459,7 +464,7 @@ def _(FONTS, cfg, np, plt, save_fig):
     _ax.grid(True, linestyle=":", alpha=0.4)
     plt.tight_layout()
 
-    _virginia_path=save_fig(fig_virginia, cfg.img_dir / "dd002_virginia_bills.png")
+    save_fig(fig_virginia, cfg.img_dir / "dd002_virginia_bills.png")
     return
 
 
@@ -521,14 +526,14 @@ def _(FONTS, growth_slider, mo, np, plt, years_slider):
     _x_labels = 2024 + _year_range
 
     _fig, _ax = plt.subplots(figsize=(10, 5))
-    _ax.fill_between(_x_labels, _annual_costs, alpha=0.3, color="#e74c3c")
-    _ax.plot(_x_labels, _annual_costs, color="#e74c3c", linewidth=2.5)
-    _ax.axhline(y=_annual_base, color="#999999", linestyle="--", linewidth=1, alpha=0.7)
+    _ax.fill_between(_x_labels, _annual_costs, alpha=0.3, color=COLORS["accent"])
+    _ax.plot(_x_labels, _annual_costs, color=COLORS["accent"], linewidth=2.5)
+    _ax.axhline(y=_annual_base, color=COLORS["reference"], linestyle="--", linewidth=1, alpha=0.7)
     _ax.annotate(
         f"2024 baseline: ${_annual_base:.1f}B",
         xy=(2024, _annual_base), xytext=(2024 + _years * 0.3, _annual_base * 0.85),
-        fontsize=FONTS["annotation"], color="#999999",
-        arrowprops=dict(arrowstyle="->", color="#999999", lw=0.8),
+        fontsize=FONTS["annotation"], color=COLORS["reference"],
+        arrowprops=dict(arrowstyle="->", color=COLORS["reference"], lw=0.8),
     )
 
     # Annotate final year
@@ -537,8 +542,8 @@ def _(FONTS, growth_slider, mo, np, plt, years_slider):
         f"${_final:,.1f}B/yr",
         xy=(_x_labels[-1], _final),
         xytext=(_x_labels[-1] - _years * 0.2, _final * 1.1),
-        fontsize=FONTS["annotation"], fontweight="bold", color="#e74c3c",
-        arrowprops=dict(arrowstyle="->", color="#e74c3c", lw=1.2),
+        fontsize=FONTS["annotation"], fontweight="bold", color=COLORS["accent"],
+        arrowprops=dict(arrowstyle="->", color=COLORS["accent"], lw=1.2),
     )
 
     _ax.set_xlabel("Year", fontsize=FONTS["axis_label"])

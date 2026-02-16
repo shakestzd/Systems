@@ -195,7 +195,7 @@ def _(annotated_series, cfg, df_norm, save_fig):
         ylabel="Normalized Index (Base = 1.0)",
         fill_between=("Transformer_PPI", "Adjusted_Transformer_Price"),
     )
-    dd001_nominal_vs_adjusted=save_fig(fig_nominal, cfg.img_dir / "dd001_nominal_vs_adjusted.png")
+    save_fig(fig_nominal, cfg.img_dir / "dd001_nominal_vs_adjusted.png")
     return
 
 
@@ -231,7 +231,7 @@ def _(annotated_series, cfg, df_norm, pd, save_fig):
         ylabel="Normalized Index (Base = 1.0)",
         fill_between=("Transformer_PPI", "Adjusted_Transformer_Price"),
     )
-    dd001_pre2020_signal=save_fig(fig_pre2020, cfg.img_dir / "dd001_pre2020_signal.png")
+    save_fig(fig_pre2020, cfg.img_dir / "dd001_pre2020_signal.png")
     return
 
 

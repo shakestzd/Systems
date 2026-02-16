@@ -29,7 +29,7 @@ def _(mo):
 
 
 @app.cell
-def _(FONTS, cfg, np, plt, save_fig):
+def _(BAR_DEFAULTS, COLORS, FIGSIZE, FONTS, FUEL_COLORS, cfg, np, plt, save_fig):
     # Asset lifetime vs AI forecast horizon — the fundamental mismatch
     _techs = [
         "AI demand forecast",
@@ -43,22 +43,23 @@ def _(FONTS, cfg, np, plt, save_fig):
     ]
     _lifetimes = [3, 25, 25, 30, 30, 35, 50, 50]
     _colors = [
-        "#333333",
-        "#e74c3c",
-        "#7b68ee",
-        "#f0b429",
-        "#4ecdc4",
-        "#ff8c69",
-        "#3498db",
-        "#2ca02c",
+        COLORS["text_dark"],
+        FUEL_COLORS["gas_cc"],
+        FUEL_COLORS["battery"],
+        FUEL_COLORS["solar"],
+        FUEL_COLORS["wind"],
+        FUEL_COLORS["gas_ct"],
+        FUEL_COLORS["nuclear"],
+        FUEL_COLORS["hydro"],
     ]
 
-    fig_timeline, _ax = plt.subplots(figsize=(11, 4.5))
+    fig_timeline, _ax = plt.subplots(figsize=FIGSIZE["wide"])
     _y = np.arange(len(_techs))
 
     for i, (life, c) in enumerate(zip(_lifetimes, _colors)):
         _ax.barh(
-            i, life, left=2024, height=0.55, color=c, alpha=0.85, edgecolor="white"
+            i, life, left=2024, height=0.55, color=c,
+            alpha=BAR_DEFAULTS["alpha"], edgecolor=BAR_DEFAULTS["edgecolor"],
         )
         _ax.text(
             2024 + life + 0.5,
@@ -70,14 +71,14 @@ def _(FONTS, cfg, np, plt, save_fig):
         )
 
     # AI forecast horizon band
-    _ax.axvspan(2024, 2027, alpha=0.12, color="#333333", zorder=0)
-    _ax.axvline(2027, color="#333333", linestyle="--", linewidth=1.5, alpha=0.7)
+    _ax.axvspan(2024, 2027, alpha=0.12, color=COLORS["text_dark"], zorder=0)
+    _ax.axvline(2027, color=COLORS["text_dark"], linestyle="--", linewidth=1.5, alpha=0.7)
     _ax.text(
         2025.5,
         -0.8,
         "AI forecast\nhorizon",
         fontsize=FONTS["annotation"],
-        color="#555555",
+        color=COLORS["text_light"],
         ha="center",
         fontweight="bold",
     )
@@ -90,9 +91,7 @@ def _(FONTS, cfg, np, plt, save_fig):
     _ax.grid(True, axis="x", linestyle=":", alpha=0.4)
     plt.tight_layout()
 
-    asset_timeline = save_fig(
-        fig_timeline, cfg.img_dir / "dd002_asset_timeline.png"
-    )
+    save_fig(fig_timeline, cfg.img_dir / "dd002_asset_timeline.png")
     return
 
 
@@ -124,25 +123,41 @@ def _():
     sys.path.insert(0, str(mo.notebook_dir().parent.parent))
 
     import matplotlib.pyplot as plt
-    import pandas as pd
     import numpy as np
+    import pandas as pd
 
-    from src.notebook import setup, save_fig
     from src.data.db import query
-    from src.data.fred import fetch_csv
+    from src.notebook import save_fig, setup
     from src.plotting import (
+        BAR_DEFAULTS,
+        CATEGORICAL,
+        COLORS,
+        COMPANY_COLORS,
+        FIGSIZE,
         FONTS,
-        annotated_series,
+        FUEL_COLORS,
+        SCATTER_DEFAULTS,
+        company_color,
+        fuel_color,
+        horizontal_bar_ranking,
         legend_below,
         stacked_bar,
-        horizontal_bar_ranking,
         us_scatter_map,
     )
 
     cfg = setup()
     return (
+        BAR_DEFAULTS,
+        CATEGORICAL,
+        COLORS,
+        COMPANY_COLORS,
+        FIGSIZE,
         FONTS,
+        FUEL_COLORS,
+        SCATTER_DEFAULTS,
         cfg,
+        company_color,
+        fuel_color,
         horizontal_bar_ranking,
         legend_below,
         mo,
@@ -251,17 +266,16 @@ def _(eia):
 
 
 @app.cell
-def _(FONTS, cfg, gen_pivot, major_fuels, save_fig, stacked_bar):
-    # Define colors and labels for each fuel category
+def _(COLORS, FONTS, FUEL_COLORS, cfg, gen_pivot, major_fuels, save_fig, stacked_bar):
+    # Fuel labels for stacked bar (colors from design system)
+    _fuel_labels = {
+        "solar": "Solar", "wind": "Wind", "battery": "Battery Storage",
+        "gas_cc": "Gas (Combined Cycle)", "gas_ct": "Gas (Combustion Turbine)",
+        "nuclear": "Nuclear", "hydro": "Hydro", "coal": "Coal",
+    }
     _colors = {
-        "solar": {"color": "#f0b429", "label": "Solar"},
-        "wind": {"color": "#4ecdc4", "label": "Wind"},
-        "battery": {"color": "#7b68ee", "label": "Battery Storage"},
-        "gas_cc": {"color": "#e74c3c", "label": "Gas (Combined Cycle)"},
-        "gas_ct": {"color": "#ff8c69", "label": "Gas (Combustion Turbine)"},
-        "nuclear": {"color": "#3498db", "label": "Nuclear"},
-        "hydro": {"color": "#2ecc71", "label": "Hydro"},
-        "coal": {"color": "#555555", "label": "Coal"},
+        k: {"color": FUEL_COLORS[k], "label": _fuel_labels[k]}
+        for k in _fuel_labels
     }
 
     fig_mix = stacked_bar(
@@ -278,7 +292,7 @@ def _(FONTS, cfg, gen_pivot, major_fuels, save_fig, stacked_bar):
         _ira_idx = _years_list.index(2022)
         _ax.axvline(
             x=_ira_idx + 0.4,
-            color="#333333",
+            color=COLORS["text_dark"],
             linestyle="--",
             linewidth=1,
             alpha=0.6,
@@ -289,11 +303,11 @@ def _(FONTS, cfg, gen_pivot, major_fuels, save_fig, stacked_bar):
             fontsize=FONTS["annotation"],
             ha="center",
             bbox=dict(
-                boxstyle="round,pad=0.3", fc="white", ec="#333333", alpha=0.8
+                boxstyle="round,pad=0.3", fc="white", ec=COLORS["text_dark"], alpha=0.8
             ),
         )
 
-    generation_mix = save_fig(fig_mix, cfg.img_dir / "dd002_generation_mix.png")
+    save_fig(fig_mix, cfg.img_dir / "dd002_generation_mix.png")
     return
 
 
@@ -358,13 +372,13 @@ def _(FONTS, cfg, eia, legend_below, np, plt, save_fig):
     _x = np.arange(len(_fuels))
     _w = 0.35
     _bars1 = _ax.bar(
-        _x - _w / 2, _nameplate, _w, color="#4ecdc4", label="Nameplate Capacity"
+        _x - _w / 2, _nameplate, _w, color=FUEL_COLORS["wind"], label="Nameplate Capacity"
     )
     _bars2 = _ax.bar(
         _x + _w / 2,
         _effective,
         _w,
-        color="#e74c3c",
+        color=COLORS["accent"],
         label="Energy-Equivalent Capacity",
     )
 
@@ -378,7 +392,7 @@ def _(FONTS, cfg, eia, legend_below, np, plt, save_fig):
                 ha="center",
                 va="bottom",
                 fontsize=FONTS["value_label"],
-                color="#333333",
+                color=COLORS["text_dark"],
             )
     for _bar in _bars2:
         _h = _bar.get_height()
@@ -390,7 +404,7 @@ def _(FONTS, cfg, eia, legend_below, np, plt, save_fig):
                 ha="center",
                 va="bottom",
                 fontsize=FONTS["value_label"],
-                color="#333333",
+                color=COLORS["text_dark"],
             )
 
     _ax.set_xticks(_x)
@@ -399,9 +413,7 @@ def _(FONTS, cfg, eia, legend_below, np, plt, save_fig):
     legend_below(_ax)
     plt.tight_layout()
 
-    capacity_factor = save_fig(
-        fig_capfactor, cfg.img_dir / "dd002_capacity_factor.png"
-    )
+    save_fig(fig_capfactor, cfg.img_dir / "dd002_capacity_factor.png")
     return
 
 
@@ -468,42 +480,42 @@ def _(FONTS, cfg, plt, save_fig):
             "life": 25,
             "grid": 0.03,
             "size": 300,
-            "color": "#e74c3c",
+            "color": COLORS["accent"],
         },
         {
             "name": "BTM\nrenewables",
             "life": 27,
             "grid": 0.15,
             "size": 250,
-            "color": "#7b68ee",
+            "color": FUEL_COLORS["battery"],
         },
         {
             "name": "Corporate\nrenewable PPA",
             "life": 20,
             "grid": 0.5,
             "size": 500,
-            "color": "#2ca02c",
+            "color": COLORS["positive"],
         },
         {
             "name": "Grid\ngas CC",
             "life": 35,
             "grid": 0.7,
             "size": 400,
-            "color": "#ff8c69",
+            "color": FUEL_COLORS["gas_ct"],
         },
         {
             "name": "Solar+storage\nPPA",
             "life": 30,
             "grid": 0.8,
             "size": 550,
-            "color": "#f0b429",
+            "color": FUEL_COLORS["solar"],
         },
         {
             "name": "Nuclear\nrestart / SMR",
             "life": 50,
             "grid": 0.85,
             "size": 200,
-            "color": "#3498db",
+            "color": FUEL_COLORS["nuclear"],
         },
     ]
 
@@ -534,10 +546,10 @@ def _(FONTS, cfg, plt, save_fig):
 
     # Quadrant shading — upper right is the policy target
     _ax.axhspan(
-        0.5, 1.05, xmin=0.4, xmax=1.0, alpha=0.06, color="#2ca02c", zorder=0
+        0.5, 1.05, xmin=0.4, xmax=1.0, alpha=0.06, color=COLORS["positive"], zorder=0
     )
-    _ax.axhline(0.5, color="#cccccc", linestyle="--", linewidth=1, alpha=0.6)
-    _ax.axvline(30, color="#cccccc", linestyle="--", linewidth=1, alpha=0.6)
+    _ax.axhline(0.5, color=COLORS["muted"], linestyle="--", linewidth=1, alpha=0.6)
+    _ax.axvline(30, color=COLORS["muted"], linestyle="--", linewidth=1, alpha=0.6)
 
     # Quadrant labels
     _ax.text(
@@ -545,7 +557,7 @@ def _(FONTS, cfg, plt, save_fig):
         0.97,
         "Short-lived\nhigh grid benefit",
         fontsize=FONTS["annotation"],
-        color="#aaaaaa",
+        color=COLORS["reference"],
         ha="left",
         va="top",
     )
@@ -554,7 +566,7 @@ def _(FONTS, cfg, plt, save_fig):
         0.97,
         "Long-lived\nhigh grid benefit",
         fontsize=FONTS["annotation"],
-        color="#2ca02c",
+        color=COLORS["positive"],
         ha="right",
         va="top",
         fontweight="bold",
@@ -564,7 +576,7 @@ def _(FONTS, cfg, plt, save_fig):
         0.03,
         "Short-lived\nno grid benefit",
         fontsize=FONTS["annotation"],
-        color="#aaaaaa",
+        color=COLORS["reference"],
         ha="left",
         va="bottom",
     )
@@ -573,7 +585,7 @@ def _(FONTS, cfg, plt, save_fig):
         0.03,
         "Long-lived\nno grid benefit",
         fontsize=FONTS["annotation"],
-        color="#e74c3c",
+        color=COLORS["accent"],
         ha="right",
         va="bottom",
     )
@@ -587,9 +599,7 @@ def _(FONTS, cfg, plt, save_fig):
     _ax.grid(True, linestyle=":", alpha=0.3)
     plt.tight_layout()
 
-    generation_spectrum = save_fig(
-        fig_spectrum, cfg.img_dir / "dd002_generation_spectrum.png"
-    )
+    save_fig(fig_spectrum, cfg.img_dir / "dd002_generation_spectrum.png")
     return
 
 
@@ -641,15 +651,13 @@ def _(cfg, eia, horizontal_bar_ranking, legend_below, plt, save_fig):
     # Add legend for highlight colors
     _ax_st = fig_states.axes[0]
     _legend_handles = [
-        plt.Line2D([0], [0], marker="s", color="w", markerfacecolor="#d62728",
+        plt.Line2D([0], [0], marker="s", color="w", markerfacecolor=COLORS["negative"],
                    markersize=14, label="Data center corridor state"),
-        plt.Line2D([0], [0], marker="s", color="w", markerfacecolor="#1f77b4",
+        plt.Line2D([0], [0], marker="s", color="w", markerfacecolor=CATEGORICAL[0],
                    markersize=14, label="Other state"),
     ]
     legend_below(_ax_st, handles=_legend_handles, ncol=2)
-    state_generation = save_fig(
-        fig_states, cfg.img_dir / "dd002_state_generation.png"
-    )
+    save_fig(fig_states, cfg.img_dir / "dd002_state_generation.png")
     return
 
 
@@ -667,19 +675,8 @@ def _(cfg, eia, np, plt, save_fig, us_scatter_map):
         & (eia["latitude"] < 51)
     ].copy()
 
-    _fuel_colors = {
-        "solar": "#f0b429",
-        "wind": "#4ecdc4",
-        "gas_cc": "#e74c3c",
-        "gas_ct": "#ff8c69",
-        "battery": "#7b68ee",
-        "nuclear": "#3498db",
-        "hydro": "#2ecc71",
-        "coal": "#555555",
-    }
-
     _colors = [
-        _fuel_colors.get(f, "#aaaaaa") for f in _recent_geo["fuel_category"]
+        FUEL_COLORS.get(f, COLORS["reference"]) for f in _recent_geo["fuel_category"]
     ]
     _sizes = np.clip(_recent_geo["nameplate_capacity_mw"].values / 5, 3, 120)
 
@@ -694,7 +691,7 @@ def _(cfg, eia, np, plt, save_fig, us_scatter_map):
             markersize=18,
             label=label.replace("_", " ").title(),
         )
-        for label, c in _fuel_colors.items()
+        for label, c in FUEL_COLORS.items()
         if label in _recent_geo["fuel_category"].values
     ]
 
@@ -705,7 +702,7 @@ def _(cfg, eia, np, plt, save_fig, us_scatter_map):
         _sizes,
         "New power plants since 2020 cluster in data center corridors and renewable-rich regions",
         legend_handles=_legend_handles,
-        figsize=(16, 9),
+        figsize=FIGSIZE["large"],
         alpha=0.5,
     )
 
@@ -724,7 +721,7 @@ def _(cfg, eia, np, plt, save_fig, us_scatter_map):
         columnspacing=1.5,
     )
 
-    plant_map = save_fig(fig_plant_map, cfg.img_dir / "dd002_plant_map.png")
+    save_fig(fig_plant_map, cfg.img_dir / "dd002_plant_map.png")
     return
 
 
@@ -844,17 +841,17 @@ def _(FONTS, cfg, np, plt, save_fig, us_scatter_map):
     ]
 
     _owner_colors = {
-        "Amazon": "#ff9900",
-        "Google": "#4285f4",
-        "Meta": "#1877f2",
-        "Microsoft": "#00a4ef",
-        "xAI": "#333333",
-        "Oracle": "#f80000",
+        "Amazon": COMPANY_COLORS["AMZN"],
+        "Google": COMPANY_COLORS["GOOGL"],
+        "Meta": COMPANY_COLORS["META"],
+        "Microsoft": COMPANY_COLORS["MSFT"],
+        "xAI": COLORS["text_dark"],
+        "Oracle": COMPANY_COLORS["ORCL"],
     }
 
     _lats = [d["lat"] for d in _datacenters]
     _lons = [d["lon"] for d in _datacenters]
-    _colors = [_owner_colors.get(d["owner"], "#aaaaaa") for d in _datacenters]
+    _colors = [_owner_colors.get(d["owner"], COLORS["reference"]) for d in _datacenters]
     _sizes = np.array([d["mw"] for d in _datacenters]) / 2
 
     _legend_handles = [
@@ -880,7 +877,7 @@ def _(FONTS, cfg, np, plt, save_fig, us_scatter_map):
         legend_handles=_legend_handles,
         figsize=(14, 8),
         alpha=0.8,
-        edgecolors="#333333",
+        edgecolors=COLORS["text_dark"],
         linewidth=1.0,
     )
 
@@ -921,15 +918,15 @@ def _(FONTS, cfg, np, plt, save_fig, us_scatter_map):
                 (d["lon"], d["lat"]),
                 xytext=(_lx, _ly),
                 fontsize=FONTS["annotation"],
-                color="#333333",
-                arrowprops=dict(arrowstyle="->", color="#666666", lw=1.2,
+                color=COLORS["text_dark"],
+                arrowprops=dict(arrowstyle="->", color=COLORS["text_light"], lw=1.2,
                                 connectionstyle="arc3,rad=0.1"),
                 bbox=dict(
-                    boxstyle="round,pad=0.3", fc="white", ec="#cccccc", alpha=0.95
+                    boxstyle="round,pad=0.3", fc="white", ec=COLORS["muted"], alpha=0.95
                 ),
             )
 
-    dc_map = save_fig(fig_dc_map, cfg.img_dir / "dd002_datacenter_map.png")
+    save_fig(fig_dc_map, cfg.img_dir / "dd002_datacenter_map.png")
     return
 
 
@@ -979,14 +976,14 @@ def _(FONTS, cfg, elec_ppi, legend_below, natgas, pd, plt, save_fig):
     _ax1.plot(
         _gas.index,
         _gas["price"],
-        color="#e74c3c",
+        color=COLORS["accent"],
         linewidth=2,
         label="Henry Hub Spot Price",
     )
     _ax1.set_ylabel(
-        "Natural Gas ($/MMBtu)", color="#e74c3c", fontsize=FONTS["axis_label"]
+        "Natural Gas ($/MMBtu)", color=COLORS["accent"], fontsize=FONTS["axis_label"]
     )
-    _ax1.tick_params(axis="y", labelcolor="#e74c3c")
+    _ax1.tick_params(axis="y", labelcolor=COLORS["accent"])
     _ax1.set_ylim(0, 10)
 
     # Secondary axis: electricity PPI (indexed)
@@ -994,15 +991,15 @@ def _(FONTS, cfg, elec_ppi, legend_below, natgas, pd, plt, save_fig):
     _ax2.plot(
         _elec.index,
         _elec["price"],
-        color="#1f77b4",
+        color=CATEGORICAL[0],
         linewidth=1.5,
         alpha=0.7,
         label="Electricity PPI",
     )
     _ax2.set_ylabel(
-        "Electricity PPI (Index)", color="#1f77b4", fontsize=FONTS["axis_label"]
+        "Electricity PPI (Index)", color=CATEGORICAL[0], fontsize=FONTS["axis_label"]
     )
-    _ax2.tick_params(axis="y", labelcolor="#1f77b4")
+    _ax2.tick_params(axis="y", labelcolor=CATEGORICAL[0])
 
     # AI milestone annotations — compact placement to avoid obstructing data
     _ax1.annotate(
@@ -1011,7 +1008,7 @@ def _(FONTS, cfg, elec_ppi, legend_below, natgas, pd, plt, save_fig):
         xytext=(pd.Timestamp("2021-09-01"), 9.0),
         arrowprops=dict(arrowstyle="->", color="black", lw=1.2),
         fontsize=FONTS["annotation"] - 1,
-        bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="#666666", alpha=0.85),
+        bbox=dict(boxstyle="round,pad=0.2", fc="white", ec=COLORS["text_light"], alpha=0.85),
     )
     _ax1.annotate(
         "GPT-4",
@@ -1019,7 +1016,7 @@ def _(FONTS, cfg, elec_ppi, legend_below, natgas, pd, plt, save_fig):
         xytext=(pd.Timestamp("2021-06-01"), 1.0),
         arrowprops=dict(arrowstyle="->", color="black", lw=1.2),
         fontsize=FONTS["annotation"] - 1,
-        bbox=dict(boxstyle="round,pad=0.2", fc="white", ec="#666666", alpha=0.85),
+        bbox=dict(boxstyle="round,pad=0.2", fc="white", ec=COLORS["text_light"], alpha=0.85),
     )
     _ax1.grid(True, linestyle=":", alpha=0.4)
 
@@ -1029,7 +1026,7 @@ def _(FONTS, cfg, elec_ppi, legend_below, natgas, pd, plt, save_fig):
     legend_below(_ax1, handles=_lines1 + _lines2, labels=_labels1 + _labels2)
 
     plt.tight_layout()
-    energy_prices = save_fig(fig_gas, cfg.img_dir / "dd002_energy_prices.png")
+    save_fig(fig_gas, cfg.img_dir / "dd002_energy_prices.png")
     return
 
 
@@ -1082,10 +1079,10 @@ def _(cfg, horizontal_bar_ranking, save_fig):
         "Microsoft and Amazon have contracted more renewable energy than most countries generate",
         xlabel="Contracted Renewable Capacity (GW)",
         highlight_indices=[0, 1],
-        highlight_color="#2ca02c",
-        color="#4ecdc4",
+        highlight_color=COLORS["positive"],
+        color=FUEL_COLORS["wind"],
     )
-    hyperscaler_ppa = save_fig(fig_ppa, cfg.img_dir / "dd002_hyperscaler_ppa.png")
+    save_fig(fig_ppa, cfg.img_dir / "dd002_hyperscaler_ppa.png")
     return
 
 

@@ -43,8 +43,10 @@ notebook directory, then run the sync script. Do NOT edit PROJECT_STATUS.md by h
 ### DRY / Single Source of Truth
 - **Every configuration, constant, and shared value must have exactly one canonical location.**
   If a value appears in more than one place, extract it to a shared module.
-- `src/plotting.py:FONTS` — single source for all chart font sizes
-- `src/plotting.py:legend_below()` — single pattern for legend placement
+- `src/plotting.py` — dataviz design system (colors, fonts, sizing, chart helpers)
+  - `COLORS` (semantic roles), `FUEL_COLORS`, `COMPANY_COLORS`, `CATEGORICAL` (palettes)
+  - `FONTS` (text hierarchy), `FIGSIZE` (figure presets), `BAR_DEFAULTS`, `SCATTER_DEFAULTS`
+  - `legend_below()`, `annotate_point()`, `reference_line()`, lookup helpers
 - `src/notebook.py:setup()` — single entry point for notebook configuration
 - `research/deep_dives.csv` — single source for case study metadata
 - `scripts/sync_project_status.py` — generates PROJECT_STATUS.md from the above
@@ -94,6 +96,22 @@ notebook directory, then run the sync script. Do NOT edit PROJECT_STATUS.md by h
 - Use `mypy` for type checking
 - Follow existing patterns in `src/`
 - Tests go in `tests/` using `pytest`
+
+### Notebook Testing
+- **Always validate notebooks after changes** to `src/` or notebook files
+- Test all active notebooks headlessly:
+  ```
+  bash scripts/test_notebooks.sh
+  ```
+- Test a single notebook:
+  ```
+  bash scripts/test_notebooks.sh notebooks/dd001_capital_reality/01_capex_vs_reality.py
+  ```
+- Structural check (fast, no execution): `uv run marimo check notebooks/**/*.py`
+- Lint check: `uv run ruff check src/ notebooks/`
+- The test script uses `marimo export html` which executes every cell and exits
+  non-zero on failure. Add new notebooks to the `NOTEBOOKS` array in the script.
+- **Run `bash scripts/test_notebooks.sh` before committing notebook or `src/` changes.**
 
 ---
 

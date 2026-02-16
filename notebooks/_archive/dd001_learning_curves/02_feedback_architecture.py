@@ -281,7 +281,7 @@ def _(FONTS, cfg, legend_below, mpatches, np, plt, save_fig):
         return fig
 
     _cld_fig = draw_cld()
-    _cld_path=save_fig(_cld_fig, cfg.img_dir / "dd001_cld.png")
+    save_fig(_cld_fig, cfg.img_dir / "dd001_cld.png")
     return (draw_cld,)
 
 
@@ -425,7 +425,7 @@ def _(baseline, cfg, multi_panel, save_fig):
     ]
 
     _baseline_fig = multi_panel(baseline, _panels, "Baseline Simulation (2020\u20132040)")
-    _baseline_path=save_fig(_baseline_fig, cfg.img_dir / "dd001_baseline_simulation.png")
+    save_fig(_baseline_fig, cfg.img_dir / "dd001_baseline_simulation.png")
     return
 
 
@@ -658,7 +658,7 @@ def _(FONTS, cfg, legend_below, model_path, np, plt, pysd, save_fig):
     legend_below(ax_heat)
 
     plt.tight_layout()
-    _heat_path=save_fig(fig_heat, cfg.img_dir / "dd001_sensitivity_heatmap.png")
+    save_fig(fig_heat, cfg.img_dir / "dd001_sensitivity_heatmap.png")
     return
 
 
