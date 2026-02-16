@@ -34,11 +34,10 @@ framework for publication.
 
 | ID | Focus | Status |
 | :--- | :--- | :--- |
-| CS-1 | Transformer manufacturing and grid equipment | Draft complete |
-| CS-2 | Power generation mix and asset lock-in | Not started |
-| CS-3 | Grid interconnection and transmission | Not started |
+| DD-002 | Grid modernization: what's getting built, who benefits, feedback loops | Active — 3 notebooks complete |
+| CS-1 | Transformer manufacturing and grid equipment | Archived (not rigorous enough) |
+| CS-next | Hyperscaler labor/capital substitution — layoffs funding AI capex | Scoping |
 | CS-4 | Material supply chains (GOES, copper, critical minerals) | Not started |
-| CS-5 | Labor and workforce | Not started |
 
 ---
 
@@ -92,9 +91,12 @@ Systems/
 │   └── data/                    # Data pipelines and loaders
 │
 ├── notebooks/                   # Marimo notebooks (.py files)
-│   ├── dd001_learning_curves/   # CS-1: Transformer manufacturing
-│   │   ├── 01_investigation.py
-│   │   └── 02_feedback_architecture.py
+│   ├── dd002_grid_modernization/# Active: AI capital and grid modernization
+│   │   ├── 01_whats_getting_built.py
+│   │   ├── 02_who_benefits.py
+│   │   └── 03_feedback_architecture.py
+│   ├── _archive/                # Archived notebooks (not publication-ready)
+│   │   └── dd001_learning_curves/
 │   ├── images/                  # Generated figures (embedded in prose via mo.image)
 │   └── shakes.mplstyle          # Custom matplotlib style
 │
