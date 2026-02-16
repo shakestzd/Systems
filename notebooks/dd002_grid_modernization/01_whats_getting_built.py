@@ -102,7 +102,7 @@ def _(cfg, mo):
     )
     mo.md(
         f"""
-    # AI demand forecasts span 3 years — the infrastructure lasts 25-60
+    # AI demand forecasts span 3 years — the infrastructure lasts 25-50
 
     {_chart}
 
@@ -133,6 +133,7 @@ def _():
         CATEGORICAL,
         COLORS,
         COMPANY_COLORS,
+        CONTEXT,
         FIGSIZE,
         FONTS,
         FUEL_COLORS,
@@ -151,6 +152,7 @@ def _():
         CATEGORICAL,
         COLORS,
         COMPANY_COLORS,
+        CONTEXT,
         FIGSIZE,
         FONTS,
         FUEL_COLORS,
@@ -209,15 +211,55 @@ def _(pd, query):
     return eia, elec_ppi, natgas
 
 
+@app.cell
+def _(eia, natgas):
+    # Compute summary statistics from data — all prose references these
+    _recent = eia[eia["operating_year"] >= 2020]
+    _by_fuel = _recent.groupby("fuel_category")["nameplate_capacity_mw"].sum() / 1000
+
+    _cap_factors = {
+        "solar": 0.25, "wind": 0.35, "gas_cc": 0.57,
+        "gas_ct": 0.12, "nuclear": 0.93,
+    }
+
+    stats = {
+        "total_gw": _by_fuel.sum(),
+        "solar_gw": _by_fuel.get("solar", 0),
+        "wind_gw": _by_fuel.get("wind", 0),
+        "battery_gw": _by_fuel.get("battery", 0),
+        "gas_cc_gw": _by_fuel.get("gas_cc", 0),
+        "gas_ct_gw": _by_fuel.get("gas_ct", 0),
+        "nuclear_gw": _by_fuel.get("nuclear", 0),
+        "top_fuel": _by_fuel.idxmax(),
+        "current_gas_price": natgas["price"].iloc[-1],
+        "peak_gas_price": natgas["price"].max(),
+        "gas_cc_cf": _cap_factors["gas_cc"],
+        "solar_cf": _cap_factors["solar"],
+    }
+    stats["solar_share_pct"] = stats["solar_gw"] / stats["total_gw"] * 100
+
+    # Top states
+    _by_state = (
+        _recent.groupby("state")["nameplate_capacity_mw"].sum()
+        .sort_values(ascending=False) / 1000
+    )
+    stats["top_state"] = _by_state.index[0]
+    stats["top_state_gw"] = _by_state.iloc[0]
+    stats["second_state"] = _by_state.index[1]
+    stats["second_state_gw"] = _by_state.iloc[1]
+    return (stats,)
+
+
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
+def _(mo, stats):
+    mo.md(f"""
     ## The Generation Mix Since 2020
 
     The AI buildout is happening inside a broader energy transition. Since 2020,
-    the United States has added more new generation capacity than in any
-    comparable period since the post-WWII electrification. The fuel mix of
-    that capacity tells us what the grid will look like for the next 30-40 years.
+    the United States has added {stats['total_gw']:.0f} GW of new generation
+    capacity — among the most of any five-year period in recent decades. The
+    fuel mix of that capacity tells us what the grid will look like for the
+    next 30-40 years.
     """)
     return
 
@@ -312,7 +354,7 @@ def _(COLORS, FONTS, FUEL_COLORS, cfg, gen_pivot, major_fuels, save_fig, stacked
 
 
 @app.cell(hide_code=True)
-def _(cfg, mo):
+def _(cfg, mo, stats):
     _mix_chart = mo.image(
         src=(cfg.img_dir / "dd002_generation_mix.png").read_bytes(), width=800
     )
@@ -323,14 +365,17 @@ def _(cfg, mo):
     {_mix_chart}
 
     The chart tells a story that contradicts the dominant narrative. Solar is the
-    largest single source of new generation capacity since 2020 — not natural gas.
-    Battery storage is growing faster than any thermal source. Gas combined cycle
-    plants remain significant, but they are a shrinking share of the total.
+    largest single source of new generation capacity since 2020 ({stats['solar_gw']:.0f} GW,
+    or {stats['solar_share_pct']:.0f}% of the total) — not natural gas. Battery storage
+    ({stats['battery_gw']:.0f} GW) is growing faster than any thermal source. Gas
+    combined cycle plants ({stats['gas_cc_gw']:.0f} GW) remain significant, but
+    they are a shrinking share of the total.
 
     A caveat: nameplate capacity overstates solar's energy contribution. A gas
-    combined cycle plant typically runs at 55-65% capacity factor versus solar
-    at 25-30%, producing roughly twice the energy per installed GW. The chart
-    shows what is being built, not how much energy it generates.
+    combined cycle plant typically runs at ~{stats['gas_cc_cf']:.0%} capacity factor
+    versus solar at ~{stats['solar_cf']:.0%}, producing roughly twice the energy per
+    installed GW. The chart shows what is being built, not how much energy it
+    generates.
 
     It is also worth noting that most generation additions since 2020 are driven
     by IRA tax credits, state clean energy mandates, and cost competitiveness —
@@ -338,9 +383,9 @@ def _(cfg, mo):
     minority share of total additions. What AI does is accelerate the timeline
     and concentrate investment geographically.
 
-    This matters for the AI infrastructure thesis because it means the generation
-    mix being built to serve data centers is cleaner than the existing grid. The
-    question is whether that holds as AI demand accelerates.
+    *Data: EIA Form 860 (2024 release). Nameplate capacity only — does not
+    reflect capacity factor differences across fuel types. EIA data may lag
+    recently commissioned plants by 6-12 months.*
     """
     )
     return
@@ -418,22 +463,27 @@ def _(FONTS, cfg, eia, legend_below, np, plt, save_fig):
 
 
 @app.cell(hide_code=True)
-def _(cfg, mo):
+def _(cfg, mo, stats):
     _cf_chart = mo.image(
         src=(cfg.img_dir / "dd002_capacity_factor.png").read_bytes(), width=800
     )
+    _solar_eff = stats["solar_gw"] * stats["solar_cf"]
+    _gascc_eff = stats["gas_cc_gw"] * stats["gas_cc_cf"]
     mo.md(
         f"""
     # Solar leads in nameplate, but gas CC closes the gap when adjusted for capacity factor
 
     {_cf_chart}
 
-    The comparison makes the caveat concrete. Solar dominates nameplate additions,
-    but when adjusted for capacity factor — the fraction of time a plant actually
-    generates at full output — gas combined cycle narrows the gap substantially.
-    A single GW of gas CC delivers roughly twice the annual energy of a GW of solar.
-    Battery storage is excluded here; its value is in shifting supply timing, not
-    raw energy output.
+    The comparison makes the caveat concrete. Solar dominates nameplate additions
+    ({stats['solar_gw']:.0f} GW), but when adjusted for capacity factor — the fraction
+    of time a plant actually generates at full output — solar's effective capacity
+    drops to ~{_solar_eff:.0f} GW versus gas CC's ~{_gascc_eff:.0f} GW from just
+    {stats['gas_cc_gw']:.0f} GW nameplate. Battery storage is excluded here; its
+    value is in shifting supply timing, not raw energy output.
+
+    *Capacity factors are national EIA averages. Actual factors vary by region,
+    vintage, and site quality.*
     """
     )
     return
@@ -614,10 +664,12 @@ def _(cfg, mo):
 
     {_chart}
 
-    *Bubble size reflects approximate relative new capacity. The green-shaded
-    upper-right quadrant — long-lived assets with high grid benefit — is where
-    policy should steer AI capital. The lower-left is where it lands without
-    intervention. The regulatory environment determines which quadrant dominates.*
+    *Bubble size reflects approximate relative new capacity. The y-axis (grid
+    benefit) is an editorial judgment, not a measured quantity — reasonable
+    people may disagree on the positioning. The green-shaded upper-right
+    quadrant — long-lived assets with high grid benefit — is where policy
+    should steer AI capital. The lower-left is where it lands without
+    intervention.*
     """
     )
     return
@@ -644,7 +696,7 @@ def _(cfg, eia, horizontal_bar_ranking, legend_below, plt, save_fig):
     fig_states = horizontal_bar_ranking(
         _labels,
         _values,
-        "Texas, California, and Virginia lead new generation — all major data center corridors",
+        "Texas and California dominate new generation — data center corridor states cluster throughout",
         xlabel="New Capacity Since 2020 (GW)",
         highlight_indices=_highlight,
     )
@@ -944,14 +996,16 @@ def _(cfg, mo):
 
     {_dc_map}
 
-    *Source: Epoch AI Frontier Data Centers dataset (February 2025). Only facilities
-    with confirmed power capacity shown. Bubble size proportional to MW.*
+    *Source: Epoch AI Frontier Data Centers dataset (February 2025). Only
+    US-based facilities with confirmed power capacity shown. This is a partial
+    list — many data centers do not publicly disclose power capacity. Bubble
+    size proportional to MW.*
 
     The overlap between these two maps is the core geographic story: AI data
     centers are landing in the same states that are adding the most generation
     capacity. Ohio, Texas, and the Southeast corridor dominate both.
 
-    # Texas, California, and Virginia lead new generation — all major data center corridors
+    # Texas and California dominate new generation — data center corridor states cluster throughout
 
     {_state_chart}
 
@@ -1004,7 +1058,7 @@ def _(FONTS, cfg, elec_ppi, legend_below, natgas, pd, plt, save_fig):
     # AI milestone annotations — compact placement to avoid obstructing data
     _ax1.annotate(
         "ChatGPT launch",
-        xy=(pd.Timestamp("2022-11-30"), 7.0),
+        xy=(pd.Timestamp("2022-11-30"), 6.3),
         xytext=(pd.Timestamp("2021-09-01"), 9.0),
         arrowprops=dict(arrowstyle="->", color="black", lw=1.2),
         fontsize=FONTS["annotation"] - 1,
@@ -1031,7 +1085,7 @@ def _(FONTS, cfg, elec_ppi, legend_below, natgas, pd, plt, save_fig):
 
 
 @app.cell(hide_code=True)
-def _(cfg, mo):
+def _(cfg, mo, stats):
     _price_chart = mo.image(
         src=(cfg.img_dir / "dd002_energy_prices.png").read_bytes(), width=800
     )
@@ -1046,10 +1100,12 @@ def _(cfg, mo):
     Natural gas prices tell a more nuanced story than the "AI is raising
     electricity costs" narrative suggests. The 2022 price spike was driven
     by the Ukraine war and the European energy crisis, not by data center
-    demand. Since then, gas prices have collapsed to near-historic lows —
-    but the electricity PPI (blue) tells a different story: electricity
-    prices rose with gas and have not fully come back down. The divergence
-    reflects grid congestion, capacity costs, and growing demand.
+    demand. Since then, gas prices have declined sharply from their 2022 peaks
+    (the Henry Hub spot price is currently ~${stats['current_gas_price']:.2f}/MMBtu,
+    down from a peak of ~${stats['peak_gas_price']:.0f}/MMBtu) — but the
+    electricity PPI (blue) tells a different story: electricity prices rose
+    with gas and have not fully come back down. The divergence reflects grid
+    congestion, capacity costs, and growing demand.
 
     For data center operators, cheap gas is a double-edged sword. It makes
     gas-fired generation economically attractive in the near term, but it
@@ -1062,17 +1118,23 @@ def _(cfg, mo):
     solar alone is cheaper than new gas in most. The question is whether
     permitting timelines — not economics — push operators toward gas as a
     faster path to power.
+
+    *Gas prices are Henry Hub spot (DHHNGSP), a national benchmark that
+    does not reflect regional basis differentials or contracted prices that
+    data center operators actually pay. Electricity PPI is a wholesale index
+    (WPU0543) that tracks producer prices, not retail rates.*
     """
     )
     return
 
 
 @app.cell
-def _(cfg, horizontal_bar_ranking, save_fig):
+def _(CONTEXT, cfg, horizontal_bar_ranking, save_fig):
     # Hyperscaler renewable portfolio sizes (approximate, from sustainability reports)
     _companies = ["Microsoft", "Amazon", "Meta", "Google"]
     _gw = [34, 32.5, 12, 10]
 
+    # SWD gray+accent: MSFT and AMZN are the story (leaders)
     fig_ppa = horizontal_bar_ranking(
         _companies,
         _gw,
@@ -1080,7 +1142,7 @@ def _(cfg, horizontal_bar_ranking, save_fig):
         xlabel="Contracted Renewable Capacity (GW)",
         highlight_indices=[0, 1],
         highlight_color=COLORS["positive"],
-        color=FUEL_COLORS["wind"],
+        color=CONTEXT,
     )
     save_fig(fig_ppa, cfg.img_dir / "dd002_hyperscaler_ppa.png")
     return
@@ -1131,6 +1193,12 @@ def _(cfg, mo):
     environment, companies are continuing their clean energy strategies
     but muting public messaging. The underlying economics still favor
     renewables, but the visible narrative has shifted.
+
+    *PPA capacity figures are self-reported by companies in sustainability
+    reports and press releases. Definitions vary: some report nameplate
+    capacity, others report contracted output. Double-counting is possible
+    when multiple parties claim the same project. Independent verification
+    is limited.*
     """
     )
     return

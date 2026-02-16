@@ -41,10 +41,12 @@ def _():
     import numpy as np
     import pandas as pd
 
+    from src.data.db import query
     from src.notebook import save_fig, setup
     from src.plotting import (
         CATEGORICAL,
         COLORS,
+        CONTEXT,
         FONTS,
         FUEL_COLORS,
         horizontal_bar_ranking,
@@ -57,6 +59,7 @@ def _():
     return (
         CATEGORICAL,
         COLORS,
+        CONTEXT,
         FONTS,
         FUEL_COLORS,
         cfg,
@@ -66,29 +69,87 @@ def _():
         np,
         pd,
         plt,
+        query,
         save_fig,
         stacked_bar,
         waterfall_chart,
     )
 
 
+@app.cell
+def _(query):
+    # --- External source constants ---
+    # LBNL "Queued Up: 2025 Edition" — https://emp.lbl.gov/queues
+    _queue_total = 2_300  # GW, active queue as of end-2024
+    _queue_gen = 1_400  # GW, generation projects
+    _queue_storage = 890  # GW, standalone storage
+    _median_years = 4  # years, median interconnection time (projects built since 2018)
+    _completion_pct = 13  # %, projects that enter queue and are eventually built
+    _yoy_decrease_pct = 12  # %, decrease in active queue volume (2025 vs 2024 edition)
+
+    # UCS "Connection Costs Loophole Costs Customers Over $4 Billion" (Sep 2025)
+    _ucs_cost_bn = 4.36  # $B, PJM data center grid costs socialized in 2024
+    _ucs_projects = 150  # count, local transmission projects 2022-2024
+    _ucs_socialized_pct = 95  # %, projects that socialized costs
+
+    # JLARC / E3 "Data Centers in Virginia" (December 2024)
+    _va_bill_annual = 444  # $/year, high-growth scenario increase by 2040
+    _va_bill_monthly = _va_bill_annual / 12  # $/month
+    _va_capacity_pct = 25  # %, NoVA share of Americas data center capacity
+
+    # DB-derived: installed capacity and avg residential bill
+    _installed = query(
+        "SELECT SUM(nameplate_capacity_mw)/1000 as gw "
+        "FROM energy_data.eia860_generators WHERE status='OP'"
+    ).iloc[0, 0]
+    _elec_price = query(
+        "SELECT value FROM energy_data.fred_series "
+        "WHERE series_id='APU000072610' ORDER BY date DESC LIMIT 1"
+    ).iloc[0, 0]
+    _avg_monthly_bill = round(_elec_price * 886)  # 886 kWh = EIA avg household consumption
+    _avg_annual_bill = _avg_monthly_bill * 12
+
+    stats = {
+        "queue_total_gw": _queue_total,
+        "queue_gen_gw": _queue_gen,
+        "queue_storage_gw": _queue_storage,
+        "median_years": _median_years,
+        "completion_pct": _completion_pct,
+        "yoy_decrease_pct": _yoy_decrease_pct,
+        "ucs_cost_bn": _ucs_cost_bn,
+        "ucs_projects": _ucs_projects,
+        "ucs_socialized_pct": _ucs_socialized_pct,
+        "va_bill_annual": _va_bill_annual,
+        "va_bill_monthly": round(_va_bill_monthly),
+        "va_capacity_pct": _va_capacity_pct,
+        "installed_gw": round(_installed),
+        "queue_ratio": round(_queue_total / _installed, 1),
+        "avg_monthly_bill": _avg_monthly_bill,
+        "avg_annual_bill": _avg_annual_bill,
+        "avg_bill_10pct": round(_avg_annual_bill * 0.1),
+    }
+    return (stats,)
+
+
 @app.cell(hide_code=True)
-def _(mo):
+def _(mo, stats):
     mo.hstack(
         [
             mo.callout(
-                mo.md("# 2,300 GW\nProposed projects in the interconnection queue — roughly "
-                       "double U.S. installed generation capacity"),
+                mo.md(f"# {stats['queue_total_gw']:,} GW\nProposed projects in the "
+                       f"interconnection queue — {stats['queue_ratio']}x U.S. installed "
+                       f"generation capacity"),
                 kind="warn",
             ),
             mo.callout(
-                mo.md("# 4+ years\nMedian time from interconnection request to "
-                       "commercial operation for projects built since 2018"),
+                mo.md(f"# {stats['median_years']}+ years\nMedian time from interconnection "
+                       f"request to commercial operation for projects built since 2018"),
                 kind="danger",
             ),
             mo.callout(
-                mo.md("# 13%\nOf projects that enter the queue are ever built. "
-                       "The rest withdraws due to cost, delays, or changing economics"),
+                mo.md(f"# {stats['completion_pct']}%\nOf projects that enter the queue "
+                       f"are ever built. The rest withdraw due to cost, delays, or "
+                       f"changing economics"),
                 kind="neutral",
             ),
         ],
@@ -99,9 +160,9 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
-    ## The Interconnection Queue: 2,300 GW Waiting
+def _(mo, stats):
+    mo.md(f"""
+    ## The Interconnection Queue: {stats['queue_total_gw']:,} GW Waiting
 
     Every new power plant — solar farm, gas turbine, battery installation —
     must apply to connect to the grid through the interconnection queue.
@@ -110,16 +171,18 @@ def _(mo):
     project can proceed.
 
     As of 2024, the U.S. interconnection queue contains approximately
-    **2,300 GW** of proposed projects (roughly 1,400 GW of generation and
-    890 GW of storage) — roughly double the country's installed generation
-    capacity. The median time from interconnection request to commercial
-    operation exceeds **4 years** for projects built since 2018. Only about
-    **13%** of projects that enter the queue are ever built.
+    **{stats['queue_total_gw']:,} GW** of proposed projects (roughly
+    {stats['queue_gen_gw']:,} GW of generation and {stats['queue_storage_gw']:,} GW
+    of storage) — {stats['queue_ratio']}x the country's installed generation
+    capacity ({stats['installed_gw']:,} GW). The median time from interconnection
+    request to commercial operation exceeds **{stats['median_years']} years** for
+    projects built since 2018. Only about **{stats['completion_pct']}%** of projects
+    that enter the queue are ever built.
 
     There are early signs of improvement. FERC Order 2023 reforms and high
     withdrawal rates have begun reducing queue backlog — the LBNL 2025
-    edition shows a 12% decrease in active queue volume from the prior year.
-    But the structural bottleneck remains severe.
+    edition shows a {stats['yoy_decrease_pct']}% decrease in active queue volume
+    from the prior year. But the structural bottleneck remains severe.
 
     This is the binding constraint on AI infrastructure. It does not matter
     how many renewable PPAs a hyperscaler signs if the generation cannot
@@ -129,7 +192,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(cfg, mo):
+def _(cfg, mo, stats):
     _funnel = mo.image(
         src=(cfg.img_dir / "dd002_queue_funnel.png").read_bytes(), width=500
     )
@@ -137,9 +200,10 @@ def _(cfg, mo):
         f"""
     {_funnel}
 
-    *The interconnection queue is a funnel, not a pipeline. Of the 2,300 GW
-    waiting to connect, only about 13% will ever be built. The rest withdraws
-    due to cost escalation, engineering obstacles, or changing project economics.*
+    *The interconnection queue is a funnel, not a pipeline. Of the
+    {stats['queue_total_gw']:,} GW waiting to connect, only about
+    {stats['completion_pct']}% will ever be built. The rest withdraw due to cost
+    escalation, engineering obstacles, or changing project economics.*
     """
     )
     return
@@ -159,9 +223,11 @@ def _(cfg, horizontal_bar_ranking, legend_below, plt, save_fig):
         "PJM", "MISO", "CAISO", "SPP", "ERCOT",
         "NYISO", "ISO-NE", "Non-ISO West", "Non-ISO Southeast",
     ]
+    # Approximate active queue by ISO/RTO (GW), scaled to sum to ~2,300 GW
+    # Source: LBNL "Queued Up: 2025 Edition" — regional totals are estimates
     _backlog_gw = [
-        580, 470, 350, 310, 290,
-        120, 80, 200, 180,
+        520, 420, 310, 275, 260,
+        105, 70, 180, 160,
     ]
 
     fig_queue = horizontal_bar_ranking(
@@ -196,17 +262,21 @@ def _(cfg, mo):
     {_queue_chart}
 
     PJM — the grid operator covering the mid-Atlantic from Virginia to
-    Illinois — carries the largest backlog at ~580 GW. This is not
+    Illinois — carries the largest backlog at ~520 GW. This is not
     coincidental: PJM is home to Northern Virginia's data center corridor,
     the densest concentration of data center capacity on Earth. MISO
     (Midwest), CAISO (California), and ERCOT (Texas) follow.
 
-    The queue is dominated by solar (over 60% of proposed capacity),
-    battery storage (~30%), and wind. Gas projects are a small fraction
-    — the economics have shifted so decisively that most proposed
-    generation is clean. The bottleneck is not the business case for
-    renewables; it is the administrative and engineering process of
-    connecting them to the grid.
+    The queue is dominated by clean energy — solar, battery storage, hybrid,
+    and wind projects together account for the vast majority of proposed
+    capacity. Gas projects represent roughly 6% of the queue and the share
+    is declining. The bottleneck is not the business case for renewables;
+    it is the administrative and engineering process of connecting them
+    to the grid.
+
+    *Regional backlogs are approximate estimates from LBNL data. Individual
+    ISO/RTO figures may not sum precisely to the national total due to
+    methodology differences.*
     """
     )
     return
@@ -217,22 +287,25 @@ def _(cfg, pd, save_fig, stacked_bar):
     # Queue composition by fuel type — LBNL Queued Up 2025 data
     # Source: https://emp.lbl.gov/queues
 
+    # Queue composition by fuel type — illustrative estimates based on
+    # LBNL "Queued Up" annual editions (2019-2025). 2024 column sums to
+    # ~2,300 GW matching the LBNL 2025 Edition national total.
     _comp = pd.DataFrame({
         "year": [2019, 2020, 2021, 2022, 2023, 2024],
-        "solar": [180, 250, 350, 480, 550, 620],
-        "battery": [30, 70, 160, 300, 400, 520],
-        "wind": [250, 230, 200, 180, 170, 160],
-        "gas": [40, 35, 30, 25, 25, 20],
-        "hybrid": [10, 30, 80, 150, 200, 280],
-        "other": [50, 45, 40, 35, 30, 25],
+        "solar": [150, 230, 380, 580, 820, 1060],
+        "hybrid": [10, 30, 80, 170, 260, 350],
+        "battery": [40, 80, 170, 310, 400, 470],
+        "wind": [220, 210, 200, 190, 186, 184],
+        "gas": [100, 90, 85, 130, 130, 140],
+        "other": [40, 30, 25, 30, 54, 96],
     })
 
     _colors = {
         "solar": {"color": FUEL_COLORS["solar"], "label": "Solar"},
+        "hybrid": {"color": CATEGORICAL[3], "label": "Hybrid (Solar+Storage)"},
         "battery": {"color": FUEL_COLORS["battery"], "label": "Battery Storage"},
         "wind": {"color": FUEL_COLORS["wind"], "label": "Wind"},
-        "gas": {"color": COLORS["accent"], "label": "Gas"},
-        "hybrid": {"color": FUEL_COLORS["hydro"], "label": "Hybrid (Solar+Storage)"},
+        "gas": {"color": CONTEXT, "label": "Gas"},
         "other": {"color": COLORS["reference"], "label": "Other"},
     }
 
@@ -254,20 +327,27 @@ def _(cfg, mo):
     )
     mo.md(
         f"""
-    # The queue is overwhelmingly clean energy — gas is a shrinking sliver
+    # The queue is overwhelmingly clean energy — gas is a shrinking share
 
     {_comp_chart}
 
     The composition of the queue reveals an important structural fact:
     **the pipeline of proposed generation is overwhelmingly clean energy.**
-    Solar, battery storage, and hybrid projects (solar paired with batteries)
-    account for over 85% of queued capacity. Gas is roughly 6%.
+    Solar and hybrid (solar+storage) projects account for over 60% of queued
+    capacity, with standalone battery storage at roughly 20% and wind at about
+    8%. Gas is approximately 6% — and its share has been declining even as
+    absolute volumes grow.
 
     This means that even under the most aggressive AI demand scenarios,
     the generation that eventually connects to the grid will be predominantly
     renewable. The constraint is not technology choice — it is queue throughput.
     Anything that speeds up interconnection (FERC reform, utility process
     improvements, standardized studies) disproportionately benefits clean energy.
+
+    *Queue composition is illustrative, based on LBNL "Queued Up" annual
+    editions. LBNL categorization changed between editions; hybrid
+    (solar+storage) projects may be partially counted under both solar and
+    storage in some years.*
     """
     )
     return
@@ -300,15 +380,15 @@ def _(cfg, save_fig, waterfall_chart):
 
 
 @app.cell(hide_code=True)
-def _(cfg, mo):
+def _(cfg, mo, stats):
     _cost_chart = mo.image(
         src=(cfg.img_dir / "dd002_cost_allocation.png").read_bytes(), width=800
     )
     mo.md(
         f"""
-    ## The $4.36 Billion Question
+    ## The ${stats['ucs_cost_bn']:.2f} Billion Question
 
-    # $4.36B in PJM data center grid costs shifted to ratepayers in 2024 (estimated breakdown)
+    # ${stats['ucs_cost_bn']:.2f}B in PJM data center grid costs shifted to ratepayers in 2024 (estimated breakdown)
 
     {_cost_chart}
 
@@ -316,13 +396,14 @@ def _(cfg, mo):
     substations, transmission reinforcement, distribution capacity. The
     question is who pays.
 
-    The Union of Concerned Scientists identified more than 150 local
-    transmission projects from 2022 to 2024, with **$4.36 billion** in
-    data center transmission connection costs approved in **2024 alone**
-    and passed to PJM ratepayers across seven states. Over 95% of projects
-    socialized their costs to all utility customers — meaning residential
-    customers in Virginia, Ohio, and Pennsylvania are subsidizing grid
-    upgrades that primarily serve hyperscaler data centers.
+    The Union of Concerned Scientists identified more than {stats['ucs_projects']}
+    local transmission projects from 2022 to 2024, with
+    **${stats['ucs_cost_bn']:.2f} billion** in data center transmission connection
+    costs approved in **2024 alone** and passed to PJM ratepayers. Over
+    {stats['ucs_socialized_pct']}% of projects socialized their costs to all
+    utility customers — meaning residential customers in Virginia, Ohio, and
+    Pennsylvania are subsidizing grid upgrades that primarily serve hyperscaler
+    data centers.
 
     The chart above breaks this total into estimated categories based on
     typical transmission project cost structures. The $4.36B total is
@@ -365,14 +446,14 @@ def _(mo):
       cause them and benefit from them."
     - Co-located data centers must pay their fair share of transmission,
       regulation, and black start services.
-    - PJM must submit tariff amendments by February 16, 2026.
+    - PJM was directed to submit tariff amendments by February 16, 2026.
     - Three new transmission service options established for large loads.
     """)
     return
 
 
 @app.cell(hide_code=True)
-def _(mo):
+def _(mo, stats):
     mo.hstack(
         [
             mo.callout(
@@ -385,10 +466,10 @@ def _(mo):
             ),
             mo.callout(
                 mo.md(
-                    "**What this does NOT change:** Standard grid interconnection "
-                    "cost allocation. The $4.36B UCS finding covers projects that "
-                    "connect through the normal process, not co-location. The broader "
-                    "cost allocation question remains unresolved."
+                    f"**What this does NOT change:** Standard grid interconnection "
+                    f"cost allocation. The ${stats['ucs_cost_bn']:.2f}B UCS finding "
+                    f"covers projects that connect through the normal process, not "
+                    f"co-location. The broader cost allocation question remains unresolved."
                 ),
                 kind="warn",
             ),
@@ -399,8 +480,8 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
+def _(mo, stats):
+    mo.md(f"""
     ## The Virginia Case Study
 
     Virginia is the most advanced example of the "who benefits" tension.
@@ -411,50 +492,54 @@ def _(mo):
     report found:
 
     - **Northern Virginia hosts the densest concentration of data center
-      capacity in the world** — approximately 25% of capacity in the
-      Americas.
+      capacity in the world** — approximately {stats['va_capacity_pct']}% of
+      capacity in the Americas.
     - Data center load growth is driving **billions in grid upgrades** that
       will be socialized across Dominion Energy's residential rate base.
     - Under high-growth scenarios, residential electricity bills could
-      increase by approximately **$444 per year ($37 per month) by 2040**.
+      increase by approximately **${stats['va_bill_annual']} per year
+      (${stats['va_bill_monthly']} per month) by 2040**.
     - The Virginia Clean Economy Act's 100% clean energy mandate by 2045
       is in tension with the pace of data center demand — it may not be
       possible to build clean generation fast enough.
 
-    Virginia is the canary in the coal mine. What is happening there will
-    happen in every state with significant data center growth: Texas,
-    Georgia, Ohio, Arizona. The policy response in Virginia will set
-    precedent for the country.
+    Virginia is the canary in the coal mine. What is happening there
+    represents an early version of the tension every state with significant
+    data center growth will face: Texas, Georgia, Ohio, Arizona. The policy
+    response in Virginia will set precedent.
     """)
     return
 
 
 @app.cell
-def _(FONTS, cfg, np, plt, save_fig):
+def _(FONTS, cfg, np, plt, save_fig, stats):
     # Virginia residential bill impact projection (E3/JLARC high-growth scenario)
     _years = np.arange(2024, 2041)
-    # E3 projects $444/year increase by 2040 under high-growth scenario
-    # Model as accelerating curve (data center load compounds)
-    _bill_increase = 444 * ((_years - 2024) / (2040 - 2024)) ** 1.5
-    _monthly = _bill_increase / 12
+    _endpoint = stats["va_bill_annual"]
+    # Illustrative trajectory: E3 endpoint of $444/year by 2040.
+    # Uses t^1.5 curve (faster-than-linear) to reflect compounding data center
+    # load growth. The actual path depends on rate case outcomes.
+    _bill_increase = _endpoint * ((_years - 2024) / (2040 - 2024)) ** 1.5
 
     fig_virginia, _ax = plt.subplots(figsize=(10, 4))
     _ax.fill_between(_years, _bill_increase, alpha=0.2, color=COLORS["accent"])
     _ax.plot(_years, _bill_increase, color=COLORS["accent"], linewidth=2.5)
 
-    # Annotate endpoint — position above the line to avoid overlap
+    # Annotate endpoint (escape $ for matplotlib)
     _ax.annotate(
-        "$444/yr ($37/mo)",
-        xy=(2040, 444), xytext=(2034, 470),
+        f"\\${_endpoint}/yr (\\${stats['va_bill_monthly']}/mo)",
+        xy=(2040, _endpoint), xytext=(2034, _endpoint + 30),
         fontsize=FONTS["annotation"], fontweight="bold", color=COLORS["accent"],
         arrowprops=dict(arrowstyle="->", color=COLORS["accent"], lw=1.5),
     )
 
-    # Reference: average U.S. residential bill ~$150/month = $1,800/year
-    _ax.axhline(y=1800 * 0.1, color=COLORS["reference"], linestyle="--", linewidth=1, alpha=0.6)
+    # Reference: 10% of average U.S. residential bill (DB-derived)
+    _ten_pct = stats["avg_bill_10pct"]
+    _ax.axhline(y=_ten_pct, color=COLORS["reference"], linestyle="--", linewidth=1, alpha=0.6)
     _ax.annotate(
-        "~10% of avg U.S. residential bill",
-        xy=(2025, 190), fontsize=FONTS["annotation"], color=COLORS["reference"], va="bottom",
+        f"~10% of avg U.S. residential bill (~\\${stats['avg_monthly_bill']}/mo)",
+        xy=(2025, _ten_pct + 5), fontsize=FONTS["annotation"],
+        color=COLORS["reference"], va="bottom",
     )
 
     _ax.set_xlabel("Year", fontsize=FONTS["axis_label"])
@@ -469,20 +554,23 @@ def _(FONTS, cfg, np, plt, save_fig):
 
 
 @app.cell(hide_code=True)
-def _(cfg, mo):
+def _(cfg, mo, stats):
     _va_chart = mo.image(
         src=(cfg.img_dir / "dd002_virginia_bills.png").read_bytes(), width=800
     )
     mo.md(
         f"""
-    # Virginia residential bills could rise $444/year by 2040 under high data center growth
+    # Virginia residential bills could rise ${stats['va_bill_annual']}/year by 2040 under high data center growth
 
     {_va_chart}
 
     *Illustrative trajectory based on the E3/JLARC high-growth scenario endpoint
-    of $444/year by 2040. The actual path depends on data center growth rates,
-    Dominion Energy rate cases, and regulatory decisions. The 10% reference line
-    shows the increase relative to a typical U.S. residential electricity bill.*
+    of ${stats['va_bill_annual']}/year by 2040. The curve shape (t^1.5) assumes
+    faster-than-linear growth as data center load compounds; the actual path
+    depends on Dominion Energy rate cases and regulatory decisions. The 10%
+    reference line uses the current national average residential bill
+    (~${stats['avg_monthly_bill']}/month from BLS data). Virginia bills differ
+    from the national average.*
     """
     )
     return
@@ -514,9 +602,9 @@ def _(mo):
 
 
 @app.cell
-def _(FONTS, growth_slider, mo, np, plt, years_slider):
-    # Simple projection: $4.36B approved in 2024 → compound growth
-    _annual_base = 4.36  # $4.36B/year baseline (2024 approvals)
+def _(FONTS, growth_slider, mo, np, plt, stats, years_slider):
+    # Simple projection: UCS baseline → compound growth
+    _annual_base = stats["ucs_cost_bn"]  # 2024 PJM approvals
     _rate = growth_slider.value
     _years = int(years_slider.value)
 
@@ -563,8 +651,11 @@ def _(FONTS, growth_slider, mo, np, plt, years_slider):
         mo.md(
             f"**Cumulative socialized cost over {_years} years: "
             f"${_projected:,.1f} billion.** "
-            f"Rough projection from UCS baseline. Actual costs depend on "
-            f"FERC reform, utility practices, and state regulatory responses."
+            f"This is a rough compound projection from a single year's PJM data. "
+            f"It assumes costs grow at the data center load rate, which ignores "
+            f"regulatory responses (like the FERC order above), cost non-linearity, "
+            f"and the fact that the ${stats['ucs_cost_bn']:.2f}B baseline is "
+            f"PJM-specific, not national. Treat as directional, not predictive."
         ),
     ])
     plt.close(_fig)

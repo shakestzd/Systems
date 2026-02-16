@@ -38,10 +38,10 @@ for nb in "${NOTEBOOKS[@]}"; do
     printf "TEST  %-60s " "$nb"
     if uv run marimo export html "$path" > /dev/null 2>&1; then
         echo "OK"
-        ((passed++))
+        passed=$((passed + 1))
     else
         echo "FAIL"
-        ((failed++))
+        failed=$((failed + 1))
         failures+=("$nb")
     fi
 done

@@ -5,8 +5,8 @@ app = marimo.App(width="medium", app_title="AI Capital vs. Physical Reality")
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
+def _(mo, stats):
+    mo.md(f"""
     # AI Valuations vs. Physical Infrastructure Reality
     ## Where Does the Capital Actually Land?
 
@@ -14,21 +14,22 @@ def _(mo):
 
     ---
 
-    AI company valuations have added ~\$10 trillion in market cap since January 2023.
-    Hyperscaler capital expenditure is approaching $300B+ per year. But how much of
-    that capital is actually converting to physical infrastructure — and what does the
-    grid get from the portion that does?
+    AI company valuations have added nearly ${stats['mkt_gain_t']:.1f} trillion in
+    market cap since January 2023. Hyperscaler capital expenditure reached
+    ~${stats['capex_2024']:.0f}B in 2024, with ~${stats['guidance_2025']:.0f}B guided
+    for 2025. But how much of that capital is actually converting to physical
+    infrastructure — and what does the grid get from the portion that does?
 
     This notebook traces the **three-layer disconnect** between AI financial narratives
     and physical outcomes:
 
-    1. **Valuations vs. Capex** — \$10T in market cap gains vs. ~$300B in annual spending
+    1. **Valuations vs. Capex** — ~${stats['mkt_gain_t']:.1f}T in market cap gains vs. ~${stats['capex_2024']:.0f}B in annual spending
     2. **Capex vs. Revenue** — The "$600B question" (Sequoia, 2024)
-    3. **Announcements vs. Physical Reality** — 75-80% of queued projects never reach operation
+    3. **Announcements vs. Physical Reality** — most queued projects never reach operation (LBNL, 2024)
 
-    The key insight: physical construction is ~30-40% of capex but creates the most
-    durable assets. Equipment is ~50-60% but depreciates in 3-6 years. **The grid gets
-    lasting infrastructure even if the AI demand thesis falters.**
+    The key insight: an estimated ~30-40% of capex funds physical construction that
+    creates the most durable assets. Equipment (~50-60%) depreciates in 3-6 years.
+    **The grid gets lasting infrastructure even if the AI demand thesis falters.**
     """)
     return
 
@@ -53,11 +54,14 @@ def _():
         COLORS,
         COMPANY_COLORS,
         COMPANY_LABELS,
+        CONTEXT,
         FIGSIZE,
         FONTS,
         annotate_point,
+        chart_title,
         company_color,
         company_label,
+        focus_colors,
         legend_below,
         reference_line,
     )
@@ -65,14 +69,13 @@ def _():
     cfg = setup()
     return (
         BAR_DEFAULTS,
-        CATEGORICAL,
         COLORS,
-        COMPANY_COLORS,
-        COMPANY_LABELS,
+        CONTEXT,
         FIGSIZE,
         FONTS,
         annotate_point,
         cfg,
+        chart_title,
         company_color,
         company_label,
         legend_below,
@@ -81,7 +84,6 @@ def _():
         pd,
         plt,
         query,
-        reference_line,
         save_fig,
     )
 
@@ -129,16 +131,38 @@ def _(pd, query):
 
 
 @app.cell
+def _(capex_annual, guidance_2025, mkt_cap):
+    # Compute key summary stats — used by all markdown captions to avoid hardcoded numbers.
+    _tickers_6 = ["MSFT", "AMZN", "GOOGL", "META", "ORCL", "NVDA"]
+    _annual = capex_annual[capex_annual["ticker"].isin(_tickers_6)]
+    stats = {
+        "capex_2022": _annual[_annual["year"] == 2022]["capex_bn"].sum(),
+        "capex_2023": _annual[_annual["year"] == 2023]["capex_bn"].sum(),
+        "capex_2024": _annual[_annual["year"] == 2024]["capex_bn"].sum(),
+        "guidance_2025": guidance_2025[
+            guidance_2025["ticker"].isin(_tickers_6)
+        ]["capex_bn"].sum(),
+        "mkt_gain_t": mkt_cap["gain_t"].sum(),
+    }
+    stats["ratio_vs_2024"] = stats["mkt_gain_t"] / (stats["capex_2024"] / 1000)
+    # Per-company annual totals (for inline citations)
+    stats["meta_2022"] = _annual[
+        (_annual["ticker"] == "META") & (_annual["year"] == 2022)
+    ]["capex_bn"].sum()
+    stats["meta_2023"] = _annual[
+        (_annual["ticker"] == "META") & (_annual["year"] == 2023)
+    ]["capex_bn"].sum()
+    return (stats,)
+
+
+@app.cell
 def _(
-    BAR_DEFAULTS,
     COLORS,
-    COMPANY_COLORS,
-    COMPANY_LABELS,
     FIGSIZE,
     FONTS,
     capex_annual,
     cfg,
-    company_color,
+    chart_title,
     company_label,
     guidance_2025,
     legend_below,
@@ -150,8 +174,8 @@ def _(
     # Combine actuals with 2025 guidance
     _tickers = ["MSFT", "AMZN", "GOOGL", "META", "ORCL", "NVDA"]
 
-    # Aggregate actuals by year for 2021-2024
-    _years = [2021, 2022, 2023, 2024]
+    # Aggregate actuals by year for 2022-2024
+    _years = [2022, 2023, 2024]
     _data = capex_annual[
         (capex_annual["ticker"].isin(_tickers)) & (capex_annual["year"].isin(_years))
     ].copy()
@@ -163,61 +187,67 @@ def _(
         ignore_index=True,
     )
 
+    # SWD: companies on x-axis, years stacked — shows WHO is driving the acceleration.
+    # Graduated grays (light→dark) for actuals, accent for 2025 guidance.
     fig_capex, _ax = plt.subplots(figsize=FIGSIZE["wide"])
     _all_years = sorted(_combined["year"].unique())
-    _bar_width = 0.12
-    _x = np.arange(len(_all_years))
+    _x = np.arange(len(_tickers))
 
-    for _i, _ticker in enumerate(_tickers):
-        _sub = _combined[_combined["ticker"] == _ticker]
+    # Year colors: graduated grays for actuals, accent for guidance
+    _year_colors = {
+        2022: "#d4d4d4",
+        2023: "#aaaaaa",
+        2024: "#777777",
+        2025: COLORS["accent"],
+    }
+
+    # Build stacked data: each year is a layer (bottom=oldest)
+    _bottoms = np.zeros(len(_tickers))
+    for _yr in _all_years:
         _vals = []
-        for y in _all_years:
-            _match = _sub[_sub["year"] == y]
+        for _ticker in _tickers:
+            _match = _combined[
+                (_combined["ticker"] == _ticker) & (_combined["year"] == _yr)
+            ]
             _vals.append(_match["capex_bn"].sum() if len(_match) else 0)
-
-        _offset = (_i - len(_tickers) / 2 + 0.5) * _bar_width
+        _vals = np.array(_vals)
         _bars = _ax.bar(
-            _x + _offset,
-            _vals,
-            _bar_width,
-            label=company_label(_ticker),
-            color=company_color(_ticker),
-            **BAR_DEFAULTS,
+            _x, _vals, bottom=_bottoms, width=0.55,
+            color=_year_colors[_yr], edgecolor="white", linewidth=0.5,
+            label=str(_yr) + ("*" if _yr == 2025 else ""),
         )
-
-        # Mark 2025 guidance bar with hatching
-        if 2025 in _all_years:
-            _idx_2025 = _all_years.index(2025)
-            _bars[_idx_2025].set_hatch("//")
-            _bars[_idx_2025].set_alpha(0.5)
+        # Hatch the 2025 guidance bars
+        if _yr == 2025:
+            for _b in _bars:
+                _b.set_hatch("//")
+                _b.set_alpha(0.85)
+        _bottoms += _vals
 
     _ax.set_xticks(_x)
-    _ax.set_xticklabels([str(y) for y in _all_years], fontsize=FONTS["tick_label"])
-    _ax.set_ylabel("Capital expenditure ($B)", fontsize=FONTS["axis_label"])
+    _ax.set_xticklabels(
+        [company_label(t) for t in _tickers], fontsize=FONTS["tick_label"],
+    )
+    _ax.set_ylabel("Annual capital expenditure ($B)", fontsize=FONTS["axis_label"])
     _ax.tick_params(axis="y", labelsize=FONTS["tick_label"])
 
-    # Annotate total for each year
-    for j, y in enumerate(_all_years):
-        _total = _combined[_combined["year"] == y]["capex_bn"].sum()
-        _suffix = "*" if y == 2025 else ""
+    # Total per company above each bar — the hero element
+    for _j, _ticker in enumerate(_tickers):
+        _total = _combined[_combined["ticker"] == _ticker]["capex_bn"].sum()
         _ax.text(
-            j,
-            _total / len(_tickers) + max(_combined.groupby("year")["capex_bn"].max()) * 0.05,
-            f"${_total:.0f}B{_suffix}",
-            ha="center",
-            fontsize=FONTS["small"],
-            fontweight="bold",
-            color=COLORS["text_dark"],
+            _j, _bottoms[_j] + 4, f"${_bottoms[_j]:.0f}B",
+            ha="center", fontsize=FONTS["annotation"], fontweight="bold",
+            color=COLORS["accent"],
         )
 
-    legend_below(_ax, ncol=6)
+    legend_below(_ax, ncol=len(_all_years))
+    chart_title(fig_capex, "Hyperscaler capex has more than doubled in two years")
     plt.tight_layout()
     save_fig(fig_capex, cfg.img_dir / "dd001_capex_acceleration.png")
     return
 
 
 @app.cell(hide_code=True)
-def _(cfg, mo):
+def _(cfg, mo, stats):
     _chart = mo.image(
         src=(cfg.img_dir / "dd001_capex_acceleration.png").read_bytes(), width=850
     )
@@ -227,80 +257,112 @@ def _(cfg, mo):
     {_chart}
 
     *2025 figures are management guidance (hatched bars), not audited actuals.
-    Total Big 5+Nvidia capex: ~$147B (2023) to ~$345B (2025 guidance). Sources:
-    SEC 10-K/10-Q filings, earnings call transcripts.*
+    Combined capex for these six companies: ~${stats['capex_2023']:.0f}B (2023) →
+    ~${stats['capex_2024']:.0f}B (2024) → ~${stats['guidance_2025']:.0f}B (2025
+    guidance). Capex aggregated by calendar year; note that Microsoft (June FY) and
+    Oracle (May FY) report on non-calendar fiscal years. Capex figures include all
+    capital expenditure, not only AI-related spending (e.g., Amazon includes logistics
+    infrastructure). Sources: SEC 10-K/10-Q filings, earnings call transcripts.*
     """)
     return
 
 
 @app.cell
 def _(
-    BAR_DEFAULTS,
     COLORS,
     FIGSIZE,
     FONTS,
     cfg,
+    chart_title,
     company_color,
+    company_label,
+    legend_below,
     mkt_cap,
-    np,
     plt,
-    reference_line,
     save_fig,
+    stats,
 ):
+    # Single stacked horizontal bar — the TOTAL length vs. the capex reference
+    # line tells the scale-mismatch story far better than individual bars.
+    _sorted = mkt_cap.sort_values("gain_t", ascending=False)
+    _total = _sorted["gain_t"].sum()
+    _capex_t = stats["capex_2024"] / 1000  # $B → $T
+
     fig_mktcap, _ax = plt.subplots(figsize=FIGSIZE["wide"])
 
-    _sorted = mkt_cap.sort_values("gain_t", ascending=True)
-    _y = np.arange(len(_sorted))
-    _colors_gain = [company_color(t) for t in _sorted["ticker"]]
+    _left = 0.0
+    for _, _row in _sorted.iterrows():
+        _ticker = _row["ticker"]
+        _gain = _row["gain_t"]
+        _clr = company_color(_ticker)
+        _ax.barh(
+            0, _gain, left=_left, height=0.55,
+            color=_clr, edgecolor="white", linewidth=1.5,
+            label=company_label(_ticker),
+        )
+        # Direct label on segments wide enough to hold text
+        if _gain >= 0.8:
+            _ax.text(
+                _left + _gain / 2, 0,
+                f"{company_label(_ticker)}\n+${_gain:.1f}T",
+                ha="center", va="center",
+                fontsize=FONTS["annotation"] - 1, fontweight="bold",
+                color="white",
+            )
+        _left += _gain
 
-    _ax.barh(
-        _y,
-        _sorted["gain_t"],
-        height=0.55,
-        color=_colors_gain,
-        alpha=BAR_DEFAULTS["alpha"],
-        edgecolor=BAR_DEFAULTS["edgecolor"],
+    # Reference line: the punchline — capex is a sliver of the total
+    _ax.axvline(
+        _capex_t, color=COLORS["accent"], linestyle="-", linewidth=2.5, alpha=0.9,
+    )
+    _ax.text(
+        _capex_t, 0.38,
+        f"  2024 capex: ${stats['capex_2024']:.0f}B",
+        fontsize=FONTS["annotation"], fontweight="bold",
+        color=COLORS["accent"], va="bottom",
     )
 
-    for _i, (_, _row) in enumerate(_sorted.iterrows()):
-        _ax.text(
-            _row["gain_t"] + 0.08,
-            _i,
-            f"+${_row['gain_t']:.1f}T",
-            va="center",
-            fontsize=FONTS["value_label"],
-            fontweight="bold",
-        )
+    # Total at right end
+    _ax.text(
+        _total + 0.12, 0,
+        f"${_total:.1f}T",
+        ha="left", va="center",
+        fontsize=FONTS["value_label"], fontweight="bold",
+        color=COLORS["text_dark"],
+    )
 
-    _ax.set_yticks(_y)
-    _ax.set_yticklabels(_sorted["company"], fontsize=FONTS["tick_label"])
+    _ax.set_yticks([])
     _ax.set_xlabel(
         "Market cap gain, Jan 2023 \u2192 Jan 2025 ($T)", fontsize=FONTS["axis_label"]
     )
     _ax.tick_params(axis="x", labelsize=FONTS["tick_label"])
 
-    # Reference line: total 2024 capex
-    reference_line(_ax, 0.30, orientation="v", label="Total 2024\ncapex: $230B")
-
+    legend_below(_ax, ncol=len(_sorted))
+    chart_title(
+        fig_mktcap,
+        f"~{stats['ratio_vs_2024']:.0f}x gap between market cap gains and annual capex",
+    )
     plt.tight_layout()
     save_fig(fig_mktcap, cfg.img_dir / "dd001_valuation_disconnect.png")
     return
 
 
 @app.cell(hide_code=True)
-def _(cfg, mo):
+def _(cfg, mo, stats):
     _chart = mo.image(
         src=(cfg.img_dir / "dd001_valuation_disconnect.png").read_bytes(), width=850
     )
-    mo.md(rf"""
-    # Markets added ~\$10T in value against ~$230B in annual spending
+    mo.md(f"""
+    # Markets added ~\${stats['mkt_gain_t']:.1f}T in value against ~\${stats['capex_2024']:.0f}B in annual spending
 
     {_chart}
 
-    *The six largest AI-associated companies gained ~$9.5T in market capitalization
-    in two years. Their combined annual capex is ~$230B (2024). Markets are pricing
-    AI returns at roughly 30x the infrastructure investment. The red dashed line
-    shows total 2024 capex for scale.*
+    *The six largest AI-associated companies gained ~\${stats['mkt_gain_t']:.1f}T in
+    market capitalization in two years (Jan 2023 – Jan 2025). Their combined 2024
+    capex was ~\${stats['capex_2024']:.0f}B — markets priced in
+    ~{stats['ratio_vs_2024']:.0f}x the annual infrastructure investment. The red line
+    shows total 2024 capex for scale. Sources: Yahoo Finance (market cap), SEC filings
+    (capex).*
 
     This is Layer 1 of the disconnect: the financial narrative runs far ahead
     of the physical capital being deployed.
@@ -343,73 +405,82 @@ def _(mo):
 
 
 @app.cell
-def _(BAR_DEFAULTS, COLORS, FIGSIZE, FONTS, cfg, np, plt, save_fig):
-    _categories = [
-        "Physical construction\n(buildings, power infra)",
-        "Equipment\n(servers, GPUs, networking)",
-        "Other\n(land, permits, services)",
-    ]
-    _shares = [35, 55, 10]  # Midpoint estimates from industry data
-    _asset_life = ["20-40 years", "3-6 years", "Varies"]
-    _colors = [COLORS["positive"], COLORS["negative"], COLORS["neutral"]]
+def _(
+    COLORS,
+    CONTEXT,
+    FONTS,
+    cfg,
+    chart_title,
+    legend_below,
+    plt,
+    save_fig,
+    stats,
+):
+    from matplotlib.patches import Patch, Rectangle
 
-    _ratios = {"width_ratios": [1.2, 1]}
-    fig_decomp, (_ax1, _ax2) = plt.subplots(
-        1, 2, figsize=FIGSIZE["double"], gridspec_kw=_ratios
+    # Estimated decomposition: shares are industry estimates, base is 2024 actual
+    _total_capex = round(stats["capex_2024"])  # $B, data-driven
+    _equip = _total_capex * 55 / 100
+    _const = _total_capex * 35 / 100
+    _equip_life = 6   # max asset life (years)
+    _const_life = 40  # max asset life (years)
+
+    fig_decomp, _ax = plt.subplots(figsize=(10, 5))
+
+    # Construction: wide rectangle, short — the lock-in story (accent)
+    _ax.add_patch(Rectangle(
+        (0, 0), _const_life, _const,
+        facecolor=COLORS["accent"], alpha=0.85,
+        edgecolor="white", linewidth=1.5,
+    ))
+    # Equipment: narrow rectangle, tall — depreciates fast (context gray)
+    _ax.add_patch(Rectangle(
+        (0, 0), _equip_life, _equip,
+        facecolor=CONTEXT, alpha=0.85,
+        edgecolor="white", linewidth=1.5,
+    ))
+
+    # Asset life labels beside each bar
+    _ax.text(
+        _equip_life + 1, _equip * 0.55,
+        "3\u20136 years",
+        fontsize=FONTS["annotation"], color=COLORS["text_dark"], fontweight="bold",
+    )
+    _ax.text(
+        _const_life + 1, _const * 0.5,
+        "20\u201340 years",
+        fontsize=FONTS["annotation"], color=COLORS["accent"], fontweight="bold",
     )
 
-    # Left: Capex decomposition pie
-    _wedges, _texts, _autotexts = _ax1.pie(
-        _shares,
-        labels=None,
-        autopct="%1.0f%%",
-        colors=_colors,
-        startangle=90,
-        pctdistance=0.6,
-        textprops={"fontsize": FONTS["value_label"], "fontweight": "bold"},
-    )
-    for t in _autotexts:
-        t.set_color("white")
-
-    _ax1.legend(
-        _wedges,
-        _categories,
-        loc="lower center",
-        bbox_to_anchor=(0.5, -0.15),
-        ncol=1,
-        fontsize=FONTS["small"],
-        frameon=False,
-    )
-
-    # Right: Asset lifetime comparison
-    _durations = [30, 4.5, 5]  # Midpoint lifetimes
-    _y = np.arange(3)
-    _ax2.barh(
-        _y,
-        _durations,
-        height=0.5,
-        color=_colors,
-        alpha=BAR_DEFAULTS["alpha"],
-        edgecolor=BAR_DEFAULTS["edgecolor"],
-    )
-    for _i, (_dur, _life_label) in enumerate(zip(_durations, _asset_life)):
-        _ax2.text(
-            _dur + 0.5,
-            _i,
-            _life_label,
-            va="center",
-            fontsize=FONTS["value_label"],
-            fontweight="bold",
-        )
-
-    _ax2.set_yticks(_y)
-    _ax2.set_yticklabels(
-        ["Construction", "Equipment", "Other"],
+    # Axes: only show meaningful ticks
+    _ax.set_xlim(0, 48)
+    _ax.set_ylim(0, _equip * 1.15)
+    _ax.set_xticks([_equip_life, _const_life])
+    _ax.set_yticks([_const, _equip])
+    _ax.set_yticklabels(
+        [f"\\${_const:.0f}B", f"\\${_equip:.0f}B"],
         fontsize=FONTS["tick_label"],
     )
-    _ax2.set_xlabel("Typical asset life (years)", fontsize=FONTS["axis_label"])
-    _ax2.set_xlim(0, 45)
+    _ax.tick_params(axis="x", labelsize=FONTS["tick_label"])
+    _ax.set_xlabel("Asset Life (years)", fontsize=FONTS["axis_label"], style="italic")
+    _ax.set_ylabel("Capex", fontsize=FONTS["axis_label"], style="italic")
 
+    legend_below(
+        _ax,
+        handles=[
+            Patch(facecolor=CONTEXT, edgecolor=CONTEXT, alpha=0.85),
+            Patch(facecolor=COLORS["accent"], edgecolor=COLORS["accent"], alpha=0.85),
+        ],
+        labels=[
+            "Equipment (servers, GPUs, networking)",
+            "Construction (buildings, substations, power)",
+        ],
+    )
+
+    chart_title(
+        fig_decomp,
+        "35% of capex creates 20\u201340 year assets \u2014 the rest depreciates in under 6",
+    )
     plt.tight_layout()
     save_fig(fig_decomp, cfg.img_dir / "dd001_capex_decomposition.png")
     return
@@ -425,11 +496,13 @@ def _(cfg, mo):
 
     {_chart}
 
-    *Of ~\$300B+ in annual hyperscaler capex, roughly \$100-120B goes to physical
-    construction (buildings, substations, power interconnections). These are 20-40
-    year assets that persist regardless of whether the AI demand thesis holds.
-    The remaining ~\$170B in equipment depreciates in 3-6 years — it's a recurring
-    cost, not a durable commitment.*
+    *These are industry-level estimates, not audited figures. The ~55% equipment /
+    ~35% construction split is an approximation derived from analyst reports and
+    partial 10-K disclosures; Microsoft's property schedule suggests a roughly
+    50/50 split for their own capex, and ratios vary by company and year. The key
+    qualitative point — that a substantial share of capex funds long-lived physical
+    assets — holds across plausible ranges. Bar height reflects annual spend; width reflects
+    asset life.*
 
     This asymmetry is the crux of the infrastructure lock-in problem. The financial
     risk (will AI generate returns?) is a 3-5 year question. The infrastructure
@@ -451,16 +524,15 @@ def _(mo):
       SoftBank's balance sheet had ~$30-40B deployable capital. Financial structure
       remains opaque.
     - **PJM Interconnection Queue:** ~90 GW of data center requests. Historical
-      attrition rate: **75-80% of queued projects never reach commercial operation.**
+      withdrawal rates exceed 70% of queued capacity (LBNL, *Queued Up* 2024 edition;
+      exact rates vary by year and interconnection type).
     - **ERCOT Large Load Requests:** ~60 GW pending (includes data centers and crypto).
-    - **Industry-wide:** Only 20-30% of announced data center projects proceed to
-      construction within the initially announced timeline.
 
-    The binding constraint is **power availability**. Average time from interconnection
-    request to energized service has stretched to 3-5 years in some regions (up from
-    1-2 years). This is a physical bottleneck that no amount of capital can instantly
-    resolve — it requires substations, transmission lines, and generation capacity
-    that take years to permit and build.
+    The binding constraint is **power availability**. Median time from interconnection
+    request to commercial operation has grown to 5 years nationally (LBNL, *Queued Up*
+    2024), up from ~2 years a decade ago. This is a physical bottleneck that no
+    amount of capital can instantly resolve — it requires substations, transmission
+    lines, and generation capacity that take years to permit and build.
 
     As of early 2025: no major hyperscaler project cancellations reported. The pattern
     is delays and site relocation, not outright cancellation. The capital is real,
@@ -472,82 +544,159 @@ def _(mo):
 
 @app.cell
 def _(
-    BAR_DEFAULTS,
-    CATEGORICAL,
     COLORS,
+    CONTEXT,
     FIGSIZE,
     FONTS,
-    annotate_point,
     cfg,
-    np,
+    chart_title,
     plt,
     save_fig,
+    stats,
 ):
-    _categories = [
-        "Intellectual\nproperty",
-        "Equipment",
-        "Structures",
-        "Hyperscaler\ncapex",
+    import matplotlib.patches as _mp
+    import matplotlib.path as _mpath
+
+    _capex = round(stats["capex_2024"])  # data-driven, not hardcoded
+    _bea_total = 3500  # Total US private nonresidential fixed investment (BEA)
+    _pct = _capex / _bea_total * 100
+
+    # BEA categories ($B, approximate 2024) — bottom to top
+    _cats = [
+        ("Structures", 750),
+        ("Equipment", 1400),
+        ("Intellectual property", 1400),
     ]
-    _values = [1400, 1400, 750, 300]  # $B, approximate 2024
-    _colors = CATEGORICAL[:4]
+    _cat_sum = sum(v for _, v in _cats)
 
-    fig_share, _ax = plt.subplots(figsize=FIGSIZE["single"])
-    _x = np.arange(len(_categories))
+    fig_share, _ax = plt.subplots(figsize=FIGSIZE["wide"])
 
-    _bars = _ax.bar(
-        _x,
-        _values,
-        color=_colors,
-        width=0.6,
-        **BAR_DEFAULTS,
-    )
+    # --- Layout constants ---
+    _LX = 2.5    # left column right edge
+    _RX = 7.5    # right column left edge
+    _CW = 0.7    # column width
+    _GAP = 50    # visual gap between right-side nodes ($B)
 
-    for bar, val in zip(_bars, _values):
+    # --- Compute vertical positions ---
+    # Left: contiguous (no gaps)
+    _left_pos = []
+    _ly = 0.0
+    for _, _val in _cats:
+        _left_pos.append((_ly, _ly + _val))
+        _ly += _val
+
+    # Right: spaced with gaps
+    _right_pos = []
+    _ry = 0.0
+    for _i, (_, _val) in enumerate(_cats):
+        _right_pos.append((_ry, _ry + _val))
+        _ry += _val + _GAP
+    _max_y = max(_ly, _ry)
+
+    # --- Left node ---
+    _ax.add_patch(_mp.Rectangle(
+        (_LX - _CW, 0), _CW, _cat_sum,
+        facecolor=CONTEXT, alpha=0.5, edgecolor="white", linewidth=1,
+    ))
+    # Hyperscaler slice at bottom (accent)
+    _ax.add_patch(_mp.Rectangle(
+        (_LX - _CW, 0), _CW, _capex,
+        facecolor=COLORS["accent"], alpha=0.75, edgecolor="white", linewidth=1,
+    ))
+
+    # --- Right nodes + flow bands ---
+    _xm = (_LX + _RX) / 2
+    for _i, (_name, _val) in enumerate(_cats):
+        _ly0, _ly1 = _left_pos[_i]
+        _ry0, _ry1 = _right_pos[_i]
+
+        # Right rectangle
+        _ax.add_patch(_mp.Rectangle(
+            (_RX, _ry0), _CW, _val,
+            facecolor=CONTEXT, alpha=0.5, edgecolor="white", linewidth=1,
+        ))
+
+        # S-curve flow band (cubic Bezier)
+        verts = [
+            (_LX, _ly0),
+            (_xm, _ly0), (_xm, _ry0), (_RX, _ry0),
+            (_RX, _ry1),
+            (_xm, _ry1), (_xm, _ly1), (_LX, _ly1),
+            (_LX, _ly0),
+        ]
+        codes = [
+            _mpath.Path.MOVETO,
+            _mpath.Path.CURVE4, _mpath.Path.CURVE4, _mpath.Path.CURVE4,
+            _mpath.Path.LINETO,
+            _mpath.Path.CURVE4, _mpath.Path.CURVE4, _mpath.Path.CURVE4,
+            _mpath.Path.CLOSEPOLY,
+        ]
+        _ax.add_patch(_mp.PathPatch(
+            _mpath.Path(verts, codes),
+            facecolor=CONTEXT, alpha=0.3,
+            edgecolor="none",
+        ))
+
+        # Right-side label
         _ax.text(
-            bar.get_x() + bar.get_width() / 2,
-            bar.get_height() + 30,
-            f"${val:,}B",
-            ha="center",
-            fontsize=FONTS["value_label"],
-            fontweight="bold",
+            _RX + _CW + 0.2, (_ry0 + _ry1) / 2,
+            f"{_name}\n${_val:,}B",
+            ha="left", va="center",
+            fontsize=FONTS["annotation"],
+            color=COLORS["text_dark"],
         )
 
-    # Annotate the hyperscaler share
-    _total = 3500  # Total US private nonresidential fixed investment
-    _pct = 300 / _total * 100
-    annotate_point(
-        _ax,
-        f"{_pct:.0f}% of total\nUS private\ninvestment",
-        xy=(3, 300),
-        xytext=(2.2, 1100),
+    # --- Left-side labels ---
+    _ax.text(
+        _LX - _CW - 0.15, _cat_sum / 2,
+        f"US nonresidential\nfixed investment\n${_bea_total / 1000:.1f}T/year",
+        ha="right", va="center",
+        fontsize=FONTS["annotation"], fontweight="bold",
+        color=COLORS["text_dark"],
+    )
+    _ax.text(
+        _LX - _CW - 0.15, _capex / 2,
+        f"Hyperscaler capex\n${_capex}B ({_pct:.0f}%)",
+        ha="right", va="center",
+        fontsize=FONTS["annotation"], fontweight="bold",
         color=COLORS["accent"],
     )
 
-    _ax.set_xticks(_x)
-    _ax.set_xticklabels(_categories, fontsize=FONTS["tick_label"])
-    _ax.set_ylabel("Annual investment ($B)", fontsize=FONTS["axis_label"])
-    _ax.tick_params(axis="y", labelsize=FONTS["tick_label"])
+    _ax.set_xlim(0, 10.5)
+    _ax.set_ylim(-120, _max_y + 120)
+    _ax.axis("off")
 
+    chart_title(
+        fig_share,
+        f"Hyperscaler capex is ~{_pct:.0f}% of all US private nonresidential investment",
+    )
     plt.tight_layout()
     save_fig(fig_share, cfg.img_dir / "dd001_capex_us_share.png")
     return
 
 
 @app.cell(hide_code=True)
-def _(cfg, mo):
+def _(cfg, mo, stats):
     _chart = mo.image(
         src=(cfg.img_dir / "dd001_capex_us_share.png").read_bytes(), width=850
     )
+    _bea_total = 3500  # BEA NIPA Table 5.3.5, 2024 ($B)
+    _pct = stats["capex_2024"] / _bea_total * 100
     mo.md(f"""
-    # Hyperscaler capex is ~9% of all US private nonresidential investment
+    # Hyperscaler capex is ~{_pct:.0f}% of all US private nonresidential investment
 
     {_chart}
 
-    *Total US private nonresidential fixed investment is ~$3.5T annually (BEA, 2024).
-    Hyperscaler capex (~$300B) represents a significant and rapidly growing share —
-    concentrated in a handful of companies making infrastructure decisions that
-    normally take decades of utility planning.*
+    *Total US private nonresidential fixed investment is ~${_bea_total / 1000:.1f}T
+    annually (BEA NIPA Table 5.3.5, 2024). Hyperscaler capex (~${stats['capex_2024']:.0f}B
+    in 2024) represents a significant and rapidly growing share — concentrated in a
+    handful of companies making infrastructure decisions that normally take decades of
+    utility planning.*
+
+    **Caveat:** This comparison overstates the US-specific share. Hyperscaler capex
+    is global (significant spending in Europe, Asia, and the Middle East), while the
+    BEA denominator is US-only. The true US share is lower, but no public data
+    cleanly separates domestic from international hyperscaler capex.
 
     For context: total US data center construction spending is estimated at $30-50B
     annually (JLL, CBRE). The Census Bureau's C30 construction series does not
@@ -558,8 +707,8 @@ def _(cfg, mo):
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
+def _(mo, stats):
+    mo.md(f"""
     ---
 
     ## The DeepSeek Test
@@ -587,7 +736,10 @@ def _(mo):
     **hyperscaler capex is stickier than valuations.** Stock prices fluctuate on
     sentiment; capital expenditure programs, once committed, roll forward on
     multi-year procurement contracts, construction timelines, and competitive
-    dynamics (the prisoner's dilemma — no one can be the first to stop spending).
+    pressure. This is not absolute — Meta cut capex from ~${stats['meta_2022']:.0f}B
+    (2022) to ~${stats['meta_2023']:.0f}B (2023) during its "year of efficiency" and
+    the stock rallied — but the current competitive dynamic, where every hyperscaler
+    fears falling behind on AI capacity, makes unilateral deceleration costly.
     """)
     return
 
@@ -595,10 +747,12 @@ def _(mo):
 @app.cell
 def _(
     COLORS,
+    CONTEXT,
     FIGSIZE,
     FONTS,
     capex_raw,
     cfg,
+    chart_title,
     company_color,
     company_label,
     legend_below,
@@ -607,6 +761,7 @@ def _(
     save_fig,
 ):
     _tickers = ["MSFT", "AMZN", "GOOGL", "META"]
+    _deepseek_date = pd.Timestamp("2025-01-27")
 
     fig_quarterly, _ax = plt.subplots(figsize=FIGSIZE["wide"])
 
@@ -614,37 +769,57 @@ def _(
         _sub = capex_raw[capex_raw["ticker"] == _ticker].sort_values("date")
         if len(_sub) < 2:
             continue
+        # SWD: pre-DeepSeek is CONTEXT gray, post-DeepSeek is the story
+        _pre = _sub[_sub["date"] <= _deepseek_date]
+        _post = _sub[_sub["date"] >= _deepseek_date]
+        _clr = company_color(_ticker)
+
+        # Context: pre-DeepSeek in gray (not muted brand color)
         _ax.plot(
-            _sub["date"],
-            _sub["capex_bn"],
-            marker="o",
-            markersize=5,
+            _pre["date"], _pre["capex_bn"],
+            marker="o", markersize=3, color=CONTEXT,
+            linewidth=1.2, alpha=0.5,
+        )
+        # Story: post-DeepSeek in bold brand color — no slowdown
+        _ax.plot(
+            _post["date"], _post["capex_bn"],
+            marker="o", markersize=6, color=_clr,
+            linewidth=3, alpha=1.0,
             label=company_label(_ticker),
-            color=company_color(_ticker),
-            linewidth=2.5,
         )
 
     _ax.set_ylabel("Quarterly capex ($B)", fontsize=FONTS["axis_label"])
     _ax.tick_params(axis="both", labelsize=FONTS["tick_label"])
     _ax.grid(True, axis="y", linestyle=":", alpha=0.4)
 
-    # Annotate DeepSeek moment
-    _deepseek_date = pd.Timestamp("2025-01-27")
+    # DeepSeek moment — accent it as the dividing line
     _ymax = capex_raw[capex_raw["ticker"].isin(_tickers)]["capex_bn"].max()
     _ax.axvline(
-        _deepseek_date, color=COLORS["text_dark"], linestyle="--", linewidth=1.5, alpha=0.5
+        _deepseek_date, color=COLORS["accent"], linestyle="-", linewidth=2, alpha=0.7,
     )
     _ax.text(
         _deepseek_date,
-        _ymax * 0.95,
-        " DeepSeek R1",
-        fontsize=FONTS["small"],
-        color=COLORS["text_light"],
+        _ymax * 0.98,
+        "  DeepSeek R1",
+        fontsize=FONTS["annotation"],
+        color=COLORS["accent"],
         fontweight="bold",
         va="top",
     )
+    # Callout: the punchline — position below the lines to avoid overlap
+    _ax.text(
+        _deepseek_date + pd.Timedelta(days=200),
+        _ymax * 0.18,
+        "All four accelerated\nafter DeepSeek",
+        fontsize=FONTS["annotation"],
+        color=COLORS["accent"],
+        fontweight="bold",
+        ha="left", va="center",
+        bbox={"boxstyle": "round,pad=0.4", "fc": "white", "ec": COLORS["accent"], "alpha": 0.8},
+    )
 
     legend_below(_ax, ncol=4)
+    chart_title(fig_quarterly, "DeepSeek R1 changed nothing \u2014 all four hyperscalers accelerated capex")
     plt.tight_layout()
     save_fig(fig_quarterly, cfg.img_dir / "dd001_quarterly_capex.png")
     return
@@ -661,7 +836,7 @@ def _(cfg, mo):
     {_chart}
 
     *Quarterly capital expenditure for the four largest AI infrastructure spenders.
-    The dashed line marks DeepSeek R1's release (January 2025). Despite the efficiency
+    The red line marks DeepSeek R1's release (January 2025). Despite the efficiency
     shock, no company reduced capex guidance. Data: yfinance (SEC filings).*
     """)
     return

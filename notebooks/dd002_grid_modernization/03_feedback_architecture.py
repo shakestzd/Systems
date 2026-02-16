@@ -16,9 +16,9 @@ def _(mo):
 
     Part 1 showed that new generation capacity is predominantly clean — solar
     and battery storage dominate additions since 2020. Part 2 showed that the
-    interconnection queue is the binding constraint, and that $4.36 billion in
-    grid upgrade costs were approved for socialization to ratepayers in 2024
-    alone.
+    interconnection queue is the binding constraint, and that an estimated $4.36 billion in
+    grid upgrade costs were identified for socialization to ratepayers in 2024
+    alone (UCS, September 2025).
 
     This part formalizes the feedback loops that determine whether AI capital
     catalyzes grid modernization for everyone or builds private infrastructure
@@ -97,8 +97,10 @@ def _(mo):
 
     This loop fires regardless of whether AI demand connects to the grid
     or goes behind-the-meter. Every GW of solar or wind built drives
-    down costs for the next GW. The learning curve is the one unambiguous
-    positive — it proceeds in all scenarios.
+    down costs for the next GW. The learning curve is the most robust
+    positive — it proceeds in most scenarios, though its pace depends
+    on sustained deployment volume (Wright's Law links cost reduction
+    to cumulative production doublings, not elapsed time).
 
     ### Balancing Loops (Resist)
 
@@ -245,7 +247,7 @@ def _(FONTS, cfg, legend_below, mpatches, np, plt, save_fig):
         mpatches.Patch(color=_r2, label="R2: Renewable Learning Curve"),
         mpatches.Patch(color=_b1, label="B1: Regulatory Uncertainty"),
         mpatches.Patch(color=_b2, label="B2: Behind-the-Meter Bypass"),
-        mpatches.Patch(color=_b3, label="B3: Stranded Asset / Queue Dynamics"),
+        mpatches.Patch(color=_b3, label="B3: Stranded Asset Risk"),
     ]
     legend_below(ax, handles=_legend_items, ncol=3)
     save_fig(fig_cld, cfg.img_dir / "dd002_cld.png")
@@ -284,19 +286,37 @@ def _(mo):
     ## From Loops to Stocks and Flows
 
     The CLD shows the structure. To test which loops dominate, we need a
-    simulation model. The stock-and-flow model has five stocks:
+    simulation model. The stock-and-flow model below is **exploratory, not
+    predictive** — it identifies which feedback loops dominate under different
+    parameter regimes, not the precise 2035 grid spillover index. Parameters
+    are order-of-magnitude assumptions chosen for structural insight.
+
+    > **Model scope:** The model represents a stylized data center corridor
+    > (e.g., Northern Virginia), not the full U.S. grid. Initial conditions
+    > are scaled accordingly — the 200 GW queue is a subset of the ~2,300 GW
+    > national interconnection queue (LBNL, 2025). The reinforcing loops (R1,
+    > R2) are endogenous; the balancing loops (B1, B2, B3) are represented
+    > through exogenous parameters (regulatory favorability converges to a
+    > target rather than responding endogenously to ratepayer burden or
+    > political dynamics).
 
     | Stock | Units | Initial Value | What It Represents |
     | :--- | :--- | :--- | :--- |
     | Grid Capacity | GW | 50 | Grid-connected generation serving data center corridors |
     | Behind-the-Meter Capacity | GW | 5 | On-site generation bypassing the grid |
-    | Queue Backlog | GW | 200 | Projects waiting for interconnection |
-    | Renewable Cost Index | $/MWh | 40 | LCOE of utility-scale solar + storage |
+    | Queue Backlog | GW | 200 | Projects waiting for interconnection (corridor subset) |
+    | Renewable Cost Index | $/MWh | 40 | Approximate LCOE of utility-scale solar + storage |
     | Regulatory Favorability | 0-1 | 0.6 | Index of regulatory support for grid connection |
 
     The key output metric is the **grid spillover index**: the fraction of
     total capacity that is grid-connected. Higher means more spillover benefit
     to non-data-center users. Lower means more private infrastructure.
+
+    > **Note on the learning curve:** The model uses a simplified exponential
+    > cost decline (proportional to production growth rate), not a true Wright
+    > Law power function of cumulative production. The qualitative behavior
+    > (declining costs with deployment) is correct, but the exact trajectory
+    > differs from Wright Law predictions. See Limitations below.
     """)
     return
 
@@ -313,7 +333,30 @@ def _(cfg, pysd):
 
 
 @app.cell
-def _(FONTS, baseline, cfg, multi_panel, save_fig):
+def _(baseline):
+    _spill_start = baseline["grid spillover index"].iloc[0]
+    _spill_end = baseline["grid spillover index"].iloc[-1]
+    _cost_start = baseline["Renewable Cost Index"].iloc[0]
+    _cost_end = baseline["Renewable Cost Index"].iloc[-1]
+    _queue_start = baseline["Queue Backlog"].iloc[0]
+    _grid_end = baseline["Grid Capacity"].iloc[-1]
+    _btm_end = baseline["Behind the Meter Capacity"].iloc[-1]
+    stats = {
+        "spill_start": round(_spill_start, 2),
+        "spill_end": round(_spill_end, 2),
+        "spill_start_pct": round(_spill_start * 100),
+        "spill_end_pct": round(_spill_end * 100),
+        "cost_start": round(_cost_start),
+        "cost_end": round(_cost_end),
+        "queue_start": round(_queue_start),
+        "grid_end": round(_grid_end),
+        "btm_end": round(_btm_end),
+    }
+    return (stats,)
+
+
+@app.cell
+def _(CATEGORICAL, COLORS, FONTS, baseline, cfg, multi_panel, save_fig):
     _panels = [
         {
             "columns": {
@@ -389,7 +432,7 @@ def _(FONTS, baseline, cfg, multi_panel, save_fig):
 
 
 @app.cell(hide_code=True)
-def _(cfg, mo):
+def _(cfg, mo, stats):
     _baseline_chart = mo.image(
         src=(cfg.img_dir / "dd002_baseline_simulation.png").read_bytes(), width=850
     )
@@ -403,16 +446,16 @@ def _(cfg, mo):
 
     1. **Grid capacity grows, but behind-the-meter grows faster.** Both
        increase substantially, but BTM capacity gains share over time.
-       The grid spillover index declines from 0.91 to 0.69 — meaning
+       The grid spillover index declines from {stats['spill_start']} to {stats['spill_end']} — meaning
        the share of AI-driven infrastructure that benefits the broader
-       grid shrinks from 91% to 69%.
+       grid shrinks from {stats['spill_start_pct']}% to {stats['spill_end_pct']}%.
 
-    2. **The queue clears.** The initial backlog of 200 GW processes
+    2. **The queue clears.** The initial backlog of {stats['queue_start']} GW processes
        through over the simulation period. This is optimistic — it
        assumes current queue processing rates hold as demand grows.
 
     3. **Renewable costs keep falling.** The learning curve drives
-       solar+storage LCOE from $40/MWh to ~$31/MWh by 2040. This
+       solar+storage LCOE from ${stats['cost_start']}/MWh to ~${stats['cost_end']}/MWh by 2040. This
        proceeds regardless of regulatory choices.
 
     The baseline tells a cautious story: the grid modernizes, but
@@ -449,7 +492,7 @@ def _(mo):
 
 
 @app.cell
-def _(FONTS, baseline, btm_cost_slider, grid_inv_slider, legend_below, mo, model, plt, reg_slider):
+def _(CATEGORICAL, COLORS, FONTS, baseline, btm_cost_slider, grid_inv_slider, legend_below, mo, model, plt, reg_slider):
     # Run scenario with slider values
     _scenario = model.run(params={
         "expansion aggressiveness": grid_inv_slider.value,
@@ -632,12 +675,31 @@ def _(mo):
     ## Limitations
 
     This model captures structural dynamics, not numerical prediction.
-    Several important features are omitted:
+    Several important features are omitted or simplified:
 
-    - **Geographic resolution.** The model is national-level. In reality,
-      grid dynamics vary enormously by ISO/RTO — PJM, ERCOT, and CAISO
-      have different queue processes, cost allocation rules, and generation
-      mixes.
+    - **Partial loop implementation.** The B2 loop (ratepayer burden →
+      political backlash → regulatory change) and B3 loop (stranded asset
+      risk → investment hesitation) are shown in the CLD but only partially
+      represented in the simulation. Regulatory favorability converges
+      smoothly to an exogenous target rather than responding endogenously
+      to ratepayer costs or political dynamics. This means the model
+      cannot capture tipping-point dynamics from political feedback.
+    - **Learning curve simplification.** The renewable cost decline uses
+      a linearized exponential approximation (cost falls at a constant
+      percentage of production growth rate × cost), not a true Wright Law
+      power function of cumulative production. The qualitative direction
+      is correct, but the pace of cost decline does not accelerate or
+      decelerate with deployment volume as Wright's Law predicts.
+    - **BTM construction delay.** Behind-the-meter additions face no
+      construction delay in the model, while grid additions have a 3-year
+      permitting delay. In reality, large on-site generation (>100 MW gas
+      turbines, utility-scale solar) also faces 1-2+ year permitting and
+      construction timelines. This asymmetry biases the model toward BTM
+      growth.
+    - **Geographic resolution.** The model represents a stylized corridor.
+      In reality, grid dynamics vary enormously by ISO/RTO — PJM, ERCOT,
+      and CAISO have different queue processes, cost allocation rules, and
+      generation mixes.
     - **Temporal dynamics of FERC rulemaking.** Regulatory change is modeled
       as a smooth convergence toward a target. In practice, it happens through
       discrete orders, court challenges, and compliance timelines.
@@ -646,10 +708,16 @@ def _(mo):
       modeled.
     - **Financing constraints.** Access to capital, interest rates, and tax
       equity markets affect investment pace but are not captured.
-    - **Political economy feedback.** The model does not fully capture how
-      job losses in one sector (tech layoffs) interact with job creation
-      in another (infrastructure construction) to shape political support
-      for AI-favorable policy.
+    - **Path dependence.** The model has no hysteresis — running it with
+      favorable parameters always produces favorable outcomes regardless
+      of past history. In reality, sunk BTM infrastructure and eroded
+      political constituencies for grid investment create path dependence
+      that makes the "capture" regime harder to reverse.
+    - **Parameter calibration.** Model parameters (growth rates, cost
+      advantages, processing rates) are order-of-magnitude assumptions,
+      not empirically calibrated values. The sensitivity analysis
+      compensates by sweeping parameter ranges rather than relying on
+      point estimates.
 
     These omissions define the boundary of what the model can and cannot
     say. It can identify which feedback loops dominate under different
@@ -658,16 +726,16 @@ def _(mo):
 
     ---
 
-    ## Connection to CS-1
+    ## Connection to Earlier Case Studies
 
-    The transformer case study (CS-1) asked whether AI demand could unlock
-    learning curves in grid hardware manufacturing. This case study asks
-    whether the infrastructure that hardware goes into benefits everyone
-    or just the companies paying for it.
+    The transformer case study (CS-1, now archived) asked whether AI demand
+    could unlock learning curves in grid hardware manufacturing. This case
+    study asks whether the infrastructure that hardware goes into benefits
+    everyone or just the companies paying for it.
 
     The answer depends on the same regulatory variables: trade policy
     shapes transformer supply (CS-1), while energy and utility policy
-    shape grid infrastructure (CS-2/3). Both are being decided now, and
+    shape grid infrastructure (DD-002). Both are being decided now, and
     both create 30-50 year infrastructure consequences from near-term
     political choices.
 
@@ -681,15 +749,22 @@ def _(mo):
 
     ### Sources
 
-    - Sterman, J. (2000). *Business Dynamics.* McGraw-Hill.
-    - Meadows, D. (2008). *Thinking in Systems.* Chelsea Green.
-    - LBNL Queued Up (2025 Edition) — interconnection queue data
-    - FERC Docket EL25-49-000 — co-location cost allocation order
-    - UCS (September 2025) — PJM data center cost socialization ($4.36B approved in 2024)
-    - JLARC / E3 (December 2024) — Virginia data center grid impact
-    - Grid Strategies (2023) — *The Era of Flat Power Demand is Over*
-    - IRENA (2024) — renewable energy cost trends and learning rates
-    - Wright, T.P. (1936). Factors Affecting the Cost of Airplanes.
+    **Systems dynamics foundations:**
+    - Sterman, J. (2000). *Business Dynamics: Systems Thinking and Modeling for a Complex World.* McGraw-Hill.
+    - Meadows, D. (2008). *Thinking in Systems: A Primer.* Chelsea Green Publishing.
+
+    **Grid and interconnection data:**
+    - LBNL (April 2025). *Queued Up: Characteristics of Power Plants Seeking Transmission Interconnection (2025 Edition).* Lawrence Berkeley National Laboratory.
+    - Grid Strategies (December 2023). *The Era of Flat Power Demand is Over.* Grid Strategies LLC.
+
+    **Regulatory and cost allocation:**
+    - FERC Docket EL25-49-000 (December 18, 2025). Order on co-located load cost allocation in PJM.
+    - UCS (September 2025). *Data Center Demand and the Grid: Quantifying Cost Socialization in PJM.* Union of Concerned Scientists. Estimates $4.36B in grid upgrade costs identified for socialization in 2024.
+    - JLARC / E3 (December 2024). *Review of Data Center Impacts on Virginia's Electric Grid.* Joint Legislative Audit and Review Commission.
+
+    **Renewable energy costs and learning curves:**
+    - IRENA (2024). *Renewable Power Generation Costs in 2023.* International Renewable Energy Agency.
+    - Wright, T.P. (1936). "Factors Affecting the Cost of Airplanes." *Journal of the Aeronautical Sciences,* 3(4), 122-128.
     """)
     return
 
