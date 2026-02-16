@@ -268,11 +268,20 @@ FRED_CSV_URL = "https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}"
 
 # Series relevant to the research
 FRED_SERIES = {
+    # Energy prices (DD-002)
     "WPU0543": "Electric power PPI",
     "DHHNGSP": "Henry Hub natural gas spot price",
     "PCU335311335311": "Transformer PPI",
     "CPIENGSL": "Energy CPI",
     "APU000072610": "Average electricity price (cents/kWh)",
+    # Employment (DD-003)
+    "USCONS": "All Employees, Construction",
+    "CES4422000001": "All Employees, Utilities",
+    "CES6054150001": "All Employees, Computer Systems Design",
+    "USINFO": "All Employees, Information Sector",
+    "CES6054000001": "All Employees, Professional/Scientific/Tech",
+    "MANEMP": "All Employees, Manufacturing",
+    "UNRATE": "Unemployment Rate",
 }
 
 
@@ -319,6 +328,236 @@ def fred_series(
 
 
 # ---------------------------------------------------------------------------
+# BLS QCEW — County-level employment by industry
+# ---------------------------------------------------------------------------
+
+QCEW_API_URL = "https://data.bls.gov/cew/data/api/{year}/a/industry/{naics}.csv"
+
+# NAICS codes for DD-003 labor analysis
+QCEW_NAICS = {
+    "518210": "Data Processing, Hosting, Related Services",
+    "236220": "Commercial/Institutional Building Construction",
+    "2211": "Electric Power Generation/Transmission/Distribution",
+    "5415": "Computer Systems Design and Related Services",
+    "334": "Computer and Electronic Product Manufacturing",
+}
+
+
+@dlt.resource(write_disposition="replace")
+def bls_qcew(
+    years: list[int] | None = None,
+    naics_codes: dict[str, str] | None = None,
+) -> dlt.sources.DltResource:
+    """Download BLS QCEW annual averages for selected NAICS codes.
+
+    Uses the BLS QCEW API (per-industry endpoint) to fetch county-level
+    employment data. No API key required.
+    """
+    years = years or list(range(2016, 2025))
+    codes = naics_codes or QCEW_NAICS
+
+    for naics, description in codes.items():
+        for year in years:
+            url = QCEW_API_URL.format(year=year, naics=naics)
+            logger.info("Fetching QCEW %s (%s) for %d", naics, description, year)
+
+            try:
+                resp = requests.get(url, timeout=60)
+                resp.raise_for_status()
+                df = pd.read_csv(io.StringIO(resp.text))
+            except Exception:
+                logger.warning(
+                    "Failed to fetch QCEW %s for %d", naics, year, exc_info=True
+                )
+                continue
+
+            # Filter to private ownership (own_code=5) and county level
+            if "own_code" in df.columns:
+                df = df[df["own_code"] == 5]
+
+            for _, row in df.iterrows():
+                area_fips = str(row.get("area_fips", "")).strip()
+                # Skip state-level and national aggregates
+                if area_fips.endswith("000") or len(area_fips) != 5:
+                    continue
+
+                avg_empl = row.get("annual_avg_emplvl")
+                avg_wage = row.get("annual_avg_wkly_wage")
+                establishments = row.get("annual_avg_estabs")
+
+                try:
+                    avg_empl = int(avg_empl) if pd.notna(avg_empl) else None
+                except (TypeError, ValueError):
+                    avg_empl = None
+                try:
+                    avg_wage = int(avg_wage) if pd.notna(avg_wage) else None
+                except (TypeError, ValueError):
+                    avg_wage = None
+                try:
+                    establishments = int(establishments) if pd.notna(establishments) else None
+                except (TypeError, ValueError):
+                    establishments = None
+
+                yield {
+                    "year": year,
+                    "area_fips": area_fips,
+                    "state_fips": area_fips[:2],
+                    "county_fips": area_fips[2:],
+                    "industry_code": naics,
+                    "industry_description": description,
+                    "annual_avg_employment": avg_empl,
+                    "annual_avg_weekly_wage": avg_wage,
+                    "annual_avg_establishments": establishments,
+                    "disclosure_code": str(row.get("disclosure_code", "")),
+                }
+
+
+# ---------------------------------------------------------------------------
+# Census County Business Patterns
+# ---------------------------------------------------------------------------
+
+CENSUS_CBP_URL = "https://api.census.gov/data/{year}/cbp"
+
+CBP_NAICS = {
+    "518210": "Data Processing, Hosting",
+    "236220": "Commercial Building Construction",
+    "2211": "Electric Power",
+    "5415": "Computer Systems Design",
+}
+
+
+@dlt.resource(write_disposition="replace")
+def census_cbp(
+    years: list[int] | None = None,
+    naics_codes: dict[str, str] | None = None,
+) -> dlt.sources.DltResource:
+    """Fetch Census County Business Patterns for selected NAICS codes.
+
+    Uses the Census Bureau API (no key required for basic access).
+    Returns county-level establishment, employment, and payroll data.
+    """
+    years = years or list(range(2016, 2023))
+    codes = naics_codes or CBP_NAICS
+
+    for naics, description in codes.items():
+        for year in years:
+            url = CENSUS_CBP_URL.format(year=year)
+            params = {
+                "get": "NAICS2017,ESTAB,EMP,PAYANN",
+                "for": "county:*",
+                "NAICS2017": naics,
+            }
+            logger.info("Fetching Census CBP %s (%s) for %d", naics, description, year)
+
+            try:
+                resp = requests.get(url, params=params, timeout=60)
+                resp.raise_for_status()
+                data = resp.json()
+            except Exception:
+                logger.warning(
+                    "Failed to fetch Census CBP %s for %d", naics, year, exc_info=True
+                )
+                continue
+
+            if not data or len(data) < 2:
+                continue
+
+            headers = data[0]
+            for row in data[1:]:
+                record = dict(zip(headers, row))
+
+                estab = record.get("ESTAB")
+                emp = record.get("EMP")
+                payann = record.get("PAYANN")
+
+                try:
+                    estab = int(estab) if estab else None
+                except (TypeError, ValueError):
+                    estab = None
+                try:
+                    emp = int(emp) if emp else None
+                except (TypeError, ValueError):
+                    emp = None
+                try:
+                    payann = int(payann) if payann else None
+                except (TypeError, ValueError):
+                    payann = None
+
+                yield {
+                    "year": year,
+                    "state_fips": record.get("state", ""),
+                    "county_fips": record.get("county", ""),
+                    "naics_code": naics,
+                    "naics_description": description,
+                    "establishments": estab,
+                    "employment": emp,
+                    "annual_payroll_1000": payann,
+                }
+
+
+# ---------------------------------------------------------------------------
+# Hyperscaler CapEx (via yfinance + historical CSV)
+# ---------------------------------------------------------------------------
+
+HYPERSCALER_TICKERS = ["MSFT", "GOOGL", "AMZN", "META", "NVDA", "ORCL"]
+
+
+@dlt.resource(write_disposition="replace")
+def hyperscaler_capex(
+    tickers: list[str] | None = None,
+) -> dlt.sources.DltResource:
+    """Pull quarterly capital expenditure from yfinance + historical CSV.
+
+    Merges live yfinance data (~5 trailing quarters) with a manually
+    maintained historical CSV for earlier quarters.
+    Values are positive (absolute spend in $B).
+    """
+    import yfinance as yf
+
+    tickers = tickers or HYPERSCALER_TICKERS
+
+    # Load historical reference CSV if available
+    hist_path = PROJECT_ROOT / "data" / "external" / "hyperscaler_capex_historical.csv"
+    hist_rows: dict[tuple[str, str], dict] = {}
+    if hist_path.exists():
+        hist_df = pd.read_csv(hist_path, parse_dates=["date"])
+        for _, row in hist_df.iterrows():
+            key = (str(row["ticker"]), pd.Timestamp(row["date"]).isoformat()[:10])
+            hist_rows[key] = {
+                "ticker": str(row["ticker"]),
+                "date": pd.Timestamp(row["date"]).isoformat()[:10],
+                "capex_bn": float(row["capex_bn"]),
+            }
+        logger.info("Loaded %d historical capex rows", len(hist_rows))
+
+    # Fetch live data from yfinance
+    for ticker in tickers:
+        try:
+            t = yf.Ticker(ticker)
+            cf = t.quarterly_cashflow
+            if cf is None or cf.empty:
+                logger.warning("No cash flow data for %s", ticker)
+                continue
+            if "Capital Expenditure" not in cf.index:
+                logger.warning("No CapEx line for %s", ticker)
+                continue
+
+            capex_series = cf.loc["Capital Expenditure"]
+            for date, value in capex_series.items():
+                if pd.notna(value):
+                    key = (ticker, pd.Timestamp(date).isoformat()[:10])
+                    hist_rows[key] = {
+                        "ticker": ticker,
+                        "date": pd.Timestamp(date).isoformat()[:10],
+                        "capex_bn": round(abs(float(value)) / 1e9, 3),
+                    }
+        except Exception:
+            logger.warning("Failed to fetch CapEx for %s", ticker, exc_info=True)
+
+    yield from sorted(hist_rows.values(), key=lambda r: (r["date"], r["ticker"]))
+
+
+# ---------------------------------------------------------------------------
 # Pipeline Runner
 # ---------------------------------------------------------------------------
 
@@ -354,11 +593,35 @@ def run_fred() -> None:
     logger.info("FRED series: %s", info)
 
 
+def run_bls() -> None:
+    """Run BLS QCEW pipeline."""
+    pipeline = _make_pipeline()
+    info = pipeline.run(bls_qcew())
+    logger.info("BLS QCEW: %s", info)
+
+
+def run_census() -> None:
+    """Run Census CBP pipeline."""
+    pipeline = _make_pipeline()
+    info = pipeline.run(census_cbp())
+    logger.info("Census CBP: %s", info)
+
+
+def run_capex() -> None:
+    """Run hyperscaler CapEx pipeline."""
+    pipeline = _make_pipeline()
+    info = pipeline.run(hyperscaler_capex())
+    logger.info("Hyperscaler CapEx: %s", info)
+
+
 def run_all() -> None:
     """Run all pipelines."""
     run_fred()
     run_eia()
     run_lbnl()
+    run_bls()
+    run_census()
+    run_capex()
 
 
 if __name__ == "__main__":
@@ -370,9 +633,12 @@ if __name__ == "__main__":
     parser.add_argument("--eia", action="store_true", help="EIA Form 860 only")
     parser.add_argument("--lbnl", action="store_true", help="LBNL queue only")
     parser.add_argument("--fred", action="store_true", help="FRED series only")
+    parser.add_argument("--bls", action="store_true", help="BLS QCEW only")
+    parser.add_argument("--census", action="store_true", help="Census CBP only")
+    parser.add_argument("--capex", action="store_true", help="Hyperscaler CapEx only")
     args = parser.parse_args()
 
-    if not any([args.eia, args.lbnl, args.fred]):
+    if not any([args.eia, args.lbnl, args.fred, args.bls, args.census, args.capex]):
         run_all()
     else:
         if args.fred:
@@ -381,3 +647,9 @@ if __name__ == "__main__":
             run_eia()
         if args.lbnl:
             run_lbnl()
+        if args.bls:
+            run_bls()
+        if args.census:
+            run_census()
+        if args.capex:
+            run_capex()

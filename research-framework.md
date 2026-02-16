@@ -96,7 +96,7 @@ Accelerated permitting for gas generation to meet data center demand locks in
 30-40 year fossil assets. Simultaneously, data center operators are signing the
 largest corporate renewable PPAs in history. The policy environment determines
 which generation mix gets built, and that choice outlives multiple administrations.
-Rolling back clean energy mandates while AI drives the largest grid buildout in
+Rolling back clean energy mandates while AI accelerates the largest grid buildout in
 decades creates a tension: the capital flows regardless of policy, but *what kind*
 of infrastructure it builds depends on the regulatory moment.
 

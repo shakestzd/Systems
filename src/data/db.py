@@ -43,7 +43,7 @@ def query(sql: str, db_path: Path | str | None = None) -> pd.DataFrame:
 def tables(db_path: Path | str | None = None) -> pd.DataFrame:
     """List all tables in the research database."""
     return query(
-        "SELECT table_schema, table_name, estimated_size "
+        "SELECT table_schema, table_name "
         "FROM information_schema.tables "
         "WHERE table_schema NOT IN ('information_schema', 'pg_catalog') "
         "ORDER BY table_schema, table_name",

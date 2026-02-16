@@ -14,10 +14,13 @@ def _(mo):
 
     ---
 
-    AI companies are making 40-year energy decisions on 3-year demand forecasts.
-    The largest grid buildout in decades is being funded by companies that just
-    want to run GPUs. The question is what fuel mix that buildout locks in — and
-    whether anyone else benefits from the infrastructure it creates.
+    The largest grid buildout in decades is underway — driven by clean energy
+    economics, the IRA, and now accelerated by AI demand. AI companies are
+    concentrating capital in specific corridors and compressing timelines, but
+    they didn't start the buildout. They are, however, making 40-year energy
+    decisions on 3-year demand forecasts. The question is what fuel mix their
+    money locks in — and whether anyone else benefits from the infrastructure
+    it creates.
 
     This is Part 1 of three. It asks: **what new generation capacity is being
     driven by AI demand, and is it clean or dirty?**
