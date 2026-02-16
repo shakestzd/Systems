@@ -1,6 +1,5 @@
-ID,Focus Area,Topic,Core Question,Deliverable,Status,Last Updated
-CS-1,Grid Equipment,Transformer Manufacturing,"How is AI-driven demand reshaping the transformer supply chain through vertical integration, standardization, trade dynamics, and labor constraints?",Publishable analysis + PySD feedback model,Draft Complete,2026-02-14
-CS-2,Generation,Power Generation Mix and Asset Lock-in,"What generation assets are being built to serve data center demand, and what are their 30-40 year implications?",Generation mix analysis with EIA/FERC data,Not Started,2026-02-14
-CS-3,Transmission,Grid Interconnection and Transmission,"How does the interconnection queue constrain AI infrastructure, and how does queue reform shape where capital lands?",Queue backlog analysis with LBNL/ISO data,Not Started,2026-02-14
-CS-4,Materials,Material Supply Chains (GOES Copper Critical Minerals),"How concentrated are the material supply chains underpinning power infrastructure, and what are the trade dynamics?",Supply chain concentration and trade analysis,Not Started,2026-02-14
-CS-5,Labor,Labor Market Dynamics,"What is the full labor picture — infrastructure workforce constraints, build-vs-operate temporal mismatch, knowledge-work displacement, skills gap, and political economy feedback?",Labor market analysis with BLS/JOLTS/WARN data,Not Started,2026-02-14
+ID,Focus Area,Topic,Core Question,Notebook Dir,Status,Last Updated
+DD-002,Grid Modernization,AI Capital and Grid Modernization,"Where does AI capex land in grid infrastructure, who benefits, and what feedback loops emerge?",dd002_grid_modernization,Active,2026-02-15
+CS-1,Grid Equipment,Transformer Manufacturing,"How is AI-driven demand reshaping the transformer supply chain?",_archive/dd001_learning_curves,Archived,2026-02-15
+CS-next,Labor,Hyperscaler Labor/Capital Substitution,"Are hyperscalers substituting capital for labor, and what does the data say?",,Scoping,2026-02-15
+CS-4,Materials,Material Supply Chains,"How concentrated are material supply chains underpinning power infrastructure?",,Not Started,2026-02-14

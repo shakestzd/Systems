@@ -1,6 +1,5 @@
 # CLAUDE.md - Where AI Capital Lands
 
-**Last updated:** 2026-02-14
 **Owner:** Thandolwethu Zwelakhe Dlamini (Shakes)
 
 ---
@@ -22,22 +21,48 @@ The analytical framework combines:
    where capital lands
 4. **Systems dynamics modeling** (PySD) — Map feedback architecture and leverage points
 
-See `research-framework.md` for the full framework, case study plans, and references.
+See `research-framework.md` for the full framework and references.
 
-## Current Phase
+## Project Status (auto-generated)
 
-**Phase 1:** Tightening CS-1 (transformer case study) and establishing the analytical
-framework for publication.
-- Sprint 1 of the shakestzd life strategy system (Feb 9 - May 3, 2026)
+@PROJECT_STATUS.md
 
-## Case Studies
+Case studies, active notebooks, source modules, dependencies, and project structure
+are all generated from the filesystem and `research/deep_dives.csv` by running:
+```
+uv run python scripts/sync_project_status.py
+```
 
-| ID | Focus | Status |
-| :--- | :--- | :--- |
-| DD-002 | Grid modernization: what's getting built, who benefits, feedback loops | Active — 3 notebooks complete |
-| CS-1 | Transformer manufacturing and grid equipment | Archived (not rigorous enough) |
-| CS-next | Hyperscaler labor/capital substitution — layoffs funding AI capex | Scoping |
-| CS-4 | Material supply chains (GOES, copper, critical minerals) | Not started |
+**To add a new case study:** Add a row to `research/deep_dives.csv`, create the
+notebook directory, then run the sync script. Do NOT edit PROJECT_STATUS.md by hand.
+
+---
+
+## Code Principles
+
+### DRY / Single Source of Truth
+- **Every configuration, constant, and shared value must have exactly one canonical location.**
+  If a value appears in more than one place, extract it to a shared module.
+- `src/plotting.py:FONTS` — single source for all chart font sizes
+- `src/plotting.py:legend_below()` — single pattern for legend placement
+- `src/notebook.py:setup()` — single entry point for notebook configuration
+- `research/deep_dives.csv` — single source for case study metadata
+- `scripts/sync_project_status.py` — generates PROJECT_STATUS.md from the above
+- When adding new shared configuration, put it in `src/` and import it — never
+  hardcode values in notebook cells
+
+### Separation of Concerns
+- **Data pipelines** (`src/data/`) — fetch, clean, store data; no visualization
+- **Plotting** (`src/plotting.py`) — reusable chart functions; return Figure objects
+- **Notebook setup** (`src/notebook.py`) — style, paths, save_fig; no data logic
+- **Dynamics models** (`src/dynamics/`) — PySD model wrappers; no visualization
+- **Notebooks** (`notebooks/`) — analysis narrative, call src/ functions, display results
+
+### Reuse and Parameterization
+- Extract repeated patterns into `src/` functions with clear parameters
+- Use consistent color palettes across related charts (define once, import everywhere)
+- Prefer function parameters over hardcoded values
+- If you copy-paste code between cells, it belongs in `src/`
 
 ---
 
@@ -62,7 +87,6 @@ framework for publication.
 ### General
 - Read files before editing them
 - Use absolute paths
-- Verify dates with `date` command before writing timestamps
 - Do not auto-commit unless explicitly asked
 
 ### Code Style
@@ -70,53 +94,6 @@ framework for publication.
 - Use `mypy` for type checking
 - Follow existing patterns in `src/`
 - Tests go in `tests/` using `pytest`
-
----
-
-## Project Structure
-
-```
-Systems/
-├── CLAUDE.md                    # This file
-├── pyproject.toml               # Project config and dependencies (uv managed)
-├── README.md                    # Project overview
-├── research-framework.md        # Analytical framework, case studies, references
-├── data-sources.md              # Catalog of data sources
-│
-├── src/                         # Python source code
-│   ├── __init__.py
-│   ├── notebook.py              # Shared notebook setup (style, paths, save_fig)
-│   ├── plotting.py              # Reusable plotting functions
-│   ├── dynamics/                # Systems dynamics models (PySD / Vensim .mdl)
-│   └── data/                    # Data pipelines and loaders
-│
-├── notebooks/                   # Marimo notebooks (.py files)
-│   ├── dd002_grid_modernization/# Active: AI capital and grid modernization
-│   │   ├── 01_whats_getting_built.py
-│   │   ├── 02_who_benefits.py
-│   │   └── 03_feedback_architecture.py
-│   ├── _archive/                # Archived notebooks (not publication-ready)
-│   │   └── dd001_learning_curves/
-│   ├── images/                  # Generated figures (embedded in prose via mo.image)
-│   └── shakes.mplstyle          # Custom matplotlib style
-│
-├── research/                    # Research tracking
-│   └── deep_dives.csv           # Case study pipeline
-│
-├── data/                        # Not committed to git
-│   ├── raw/
-│   ├── processed/
-│   └── external/
-│
-├── tests/                       # pytest tests
-│
-└── .claude/                     # Claude Code config
-    └── agents/                  # Specialized sub-agents
-        ├── researcher.md
-        ├── critic.md
-        ├── writer.md
-        └── fact-checker.md
-```
 
 ---
 
@@ -136,8 +113,6 @@ Delegate to them using the Task tool with `subagent_type` matching the agent nam
 
 ### Publication Pipeline
 
-The agents are designed to run in sequence, each building on the previous:
-
 ```
 1. RESEARCH    (researcher)  Find primary data, validate existing references
        ↓
@@ -156,26 +131,6 @@ The agents are designed to run in sequence, each building on the previous:
 
 Steps 3-6 may iterate. The critic and fact-checker may surface issues that require
 returning to the researcher for additional data.
-
-### How to Delegate
-
-**Research a topic:**
-> "Use the researcher agent to find primary data on U.S. transformer imports and
-> domestic manufacturing capacity."
-
-**Review a draft:**
-> "Use the critic agent to review notebook 02 for logical gaps and missing evidence."
-
-**Polish prose:**
-> "Use the writer agent to improve the narrative structure and chart titles in the
-> generation mix analysis."
-
-**Pre-publication check:**
-> "Use the fact-checker agent to verify all claims in CS-1 before publishing."
-
-**Parallel delegation** works when agents don't depend on each other's output:
-- researcher + critic can run simultaneously on different content
-- writer and fact-checker should run sequentially (writer first, then fact-checker)
 
 ### Agent Design Principles
 
@@ -198,16 +153,6 @@ returning to the researcher for additional data.
 | [Vensim PLE](https://vensim.com/free-downloads/) | GUI-based SD modeling (free) |
 | Sterman's *Business Dynamics* | SD reference text |
 | Meadows' *Thinking in Systems* | Conceptual SD primer |
-
----
-
-## Key Dependencies
-
-- **PySD** -- Systems dynamics simulation in Python
-- **Marimo** -- Reactive notebooks (replaces Jupyter)
-- **fredapi** -- FRED economic data API
-- **yfinance** -- Financial data
-- **pandas / matplotlib / numpy** -- Data analysis and visualization
 
 ---
 
