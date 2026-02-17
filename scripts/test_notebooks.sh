@@ -14,9 +14,14 @@ REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 # Archived notebooks (notebooks/_archive/) are excluded.
 NOTEBOOKS=(
     "notebooks/dd001_capital_reality/01_capex_vs_reality.py"
+    "notebooks/dd001_capital_reality/99_methods_and_sources.py"
     "notebooks/dd002_grid_modernization/01_whats_getting_built.py"
     "notebooks/dd002_grid_modernization/02_who_benefits.py"
+    "notebooks/dd002_grid_modernization/99_methods_and_sources.py"
     "notebooks/dd002_grid_modernization/03_feedback_architecture.py"
+    "notebooks/dd004_utility_regulation/01_pe_utility_acquisitions.py"
+    "notebooks/dd004_utility_regulation/02_data_center_community_impact.py"
+    "notebooks/dd004_utility_regulation/03_cost_liability_map.py"
 )
 
 # Allow testing a single notebook by passing it as an argument.
