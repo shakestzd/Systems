@@ -14,25 +14,31 @@ def _(mo, stats):
 
     ---
 
-    The Magnificent Seven have added ~\\${stats['mkt_gain_t']:.1f} trillion in
-    market cap since January 2023. Capital expenditure across the six major AI
-    infrastructure builders reached ~\\${stats['capex_2025']:.0f}B in 2025 (up from
-    ~\\${stats['capex_2024']:.0f}B in 2024), with ~\\${stats['guidance_2026']:.0f}B guided
-    for 2026. But how much of that capital is actually converting to physical
-    infrastructure — and what does the grid get from the portion that does?
+    The Magnificent Seven have added about \\${stats['mkt_gain_t']:.1f} trillion in
+    market capitalization since January 2023. Capital expenditure across the six major
+    AI infrastructure builders reached about \\${stats['capex_2025']:.0f}B in 2025, up
+    from about \\${stats['capex_2024']:.0f}B in 2024, with about
+    \\${stats['guidance_2026_point']:.0f}B guided for 2026 (caveat band:
+    \\${stats['guidance_2026_low']:.0f}–\\${stats['guidance_2026_high']:.0f}B). The key
+    question is how much of that spending is converting into physical infrastructure,
+    and what the grid ultimately receives from that conversion.
 
-    The disconnect between financial narrative and physical outcome plays out at
-    every level. Markets added ~\\${stats['mkt_gain_t']:.1f}T in value on AI expectations
-    while actual annual infrastructure spending reached ~\\${stats['capex_2025']:.0f}B.
-    Cloud revenue is growing fast (~\\${stats['cloud_rev_q4_annual']:.0f}B annualized) but
-    capex-to-revenue ratios remain far above historical norms. And most of what gets
-    announced never gets built — the majority of queued projects are withdrawn before
-    reaching operation (LBNL, 2024).
+    The core issue is whether financial momentum is tracking physical delivery.
+    Capex-to-revenue ratios remain far above historical norms: cloud revenue is running
+    at about \\${stats['cloud_rev_q4_annual']:.0f}B annualized, while these firms are
+    spending the equivalent of about {stats['capex_2025']/stats['cloud_rev_q4_annual']:.1f}x
+    annualized cloud revenue on supporting infrastructure. Interconnection data points
+    in the same direction — LBNL's 2024 queue data shows that most queued capacity is
+    withdrawn before completion. In short, capital is being committed, announced, and
+    priced faster than infrastructure can be delivered.
 
-    But here's what matters for the physical economy: ~{stats['decomp_const_pct']}% of
-    capex funds construction that creates 20-40 year assets (per FY2024 10-K data).
-    Equipment (~{stats['decomp_equip_pct']}%) depreciates in 3-6 years. **The grid gets
-    lasting infrastructure even if the AI demand thesis falters.**
+    About {stats['decomp_const_pct']}% of capex funds construction — data centers,
+    substations, and transmission interconnects. These are 20–40 year assets that can
+    remain embedded in utility rate bases and land titles long after the current demand
+    cycle. The other {stats['decomp_equip_pct']}% is mostly equipment that depreciates
+    in 3–6 years and turns over with technology cycles. That asymmetry is central: when
+    long-lived assets outlast the demand thesis that justified them, do they become
+    durable grid infrastructure — or stranded capital?
     """)
     return
 
@@ -176,7 +182,7 @@ def _(pd, query):
 
 
 @app.cell
-def _(bea_nipa, capex_annual, citations, cloud_rev, guidance_2026, mkt_cap, ocf_data, pnfi_bn, ppe_schedule, queue_summary):
+def _(bea_nipa, capex_annual, capex_raw, citations, cloud_rev, guidance_2026, mkt_cap, ocf_data, pnfi_bn, ppe_schedule, queue_summary):
     # Compute key summary stats — used by all markdown captions to avoid hardcoded numbers.
     # RULE: Every figure in prose must trace to either:
     #   (a) a DB-computed value (EDGAR, yfinance, LBNL, FRED)
@@ -304,6 +310,14 @@ def _(bea_nipa, capex_annual, citations, cloud_rev, guidance_2026, mkt_cap, ocf_
     stats["bea_equipment_pct"] = round(_bea_equip / _bea_total * 100)
     stats["bea_ip_pct"] = round(_bea_ip / _bea_total * 100)
 
+    # --- Cumulative AI-era capital stock (2022–2025) ---
+    # Applies FY2024 10-K PP&E construction share as a proxy for the marginal flow.
+    # This understates the true construction share if recent capex skews more toward
+    # buildings (data center builds) than the cumulative PP&E stock implies.
+    _ai_era = _annual[_annual["year"].isin([2022, 2023, 2024, 2025])]
+    stats["ai_era_total_bn"] = round(_ai_era["capex_bn"].sum())
+    stats["ai_era_const_bn"] = round(stats["ai_era_total_bn"] * stats["decomp_const_pct"] / 100)
+
     # --- Citation-backed constants (from source_citations.csv → DuckDB) ---
     # Each value traces to a specific source document with full provenance.
     # See data/external/source_citations.csv for source_name, date, detail, URL.
@@ -325,9 +339,21 @@ def _(bea_nipa, capex_annual, citations, cloud_rev, guidance_2026, mkt_cap, ocf_
         (stats["msft_fy25_revised_g"] - stats["msft_fy25_initial_g"])
         / stats["msft_fy25_initial_g"] * 100
     )
+    # Guidance reliability band — derived from two observed guidance-vs-actual pairs:
+    # (1) Meta FY2023: guided $34-39B (Q3 2022 earnings call, Oct 2022)
+    #     actual $27.5B → ~29% below guidance high (source_citations: meta_2023_guidance_high)
+    # (2) MSFT FY2025: guided ~$60B (FY2024 Q4 earnings, Jul 2024)
+    #     revised to ~$80B within one quarter (Q1 FY2025, Oct 2024) → +33%
+    # Band = max(|revision|) across N=2 observed pairs = 33%
+    # N=2: treat as a directional bound, not a statistical confidence interval.
     stats["guidance_max_revision_pct"] = max(
         stats["meta_guidance_cut_pct"], stats["msft_guidance_raise_pct"]
     )
+    stats["guidance_2026_point"] = stats["guidance_2026"]
+    _guidance_band = stats["guidance_max_revision_pct"] / 100
+    stats["guidance_2026_low"] = round(stats["guidance_2026_point"] * (1 - _guidance_band))
+    stats["guidance_2026_high"] = round(stats["guidance_2026_point"] * (1 + _guidance_band))
+    stats["guidance_band_pct"] = stats["guidance_max_revision_pct"]
 
     # Meta headcount reduction (Meta 10-K FY2022 → FY2023)
     stats["meta_headcount_2022"] = int(citations["meta_headcount_2022"])
@@ -337,9 +363,18 @@ def _(bea_nipa, capex_annual, citations, cloud_rev, guidance_2026, mkt_cap, ocf_
         / stats["meta_headcount_2022"] * 100
     )
 
+    # 3-company capex (AMZN, GOOGL, MSFT) — apples-to-apples vs cloud revenue
+    _tickers_3 = ["AMZN", "GOOGL", "MSFT"]
+    _annual_3 = capex_annual[capex_annual["ticker"].isin(_tickers_3)]
+    stats["capex_3co_2024"] = _annual_3[_annual_3["year"] == 2024]["capex_bn"].sum()
+    stats["capex_3co_2025"] = _annual_3[_annual_3["year"] == 2025]["capex_bn"].sum()
+    # 3-co 2026 guidance (AMZN + GOOGL + MSFT only — set after per-company loop)
+    stats["capex_3co_2026g"] = (
+        stats["amzn_2026g"] + stats["googl_2026g"] + stats["msft_2026g"]
+    )
+
     # External cited constants
     stats["sequoia_rev_target_bn"] = int(citations["sequoia_rev_target_bn"])
-    stats["sequoia_rev_target_qtr_bn"] = stats["sequoia_rev_target_bn"] // 4
     stats["gcp_backlog_bn"] = int(citations["gcp_backlog_bn"])
     stats["gcp_backlog_growth_pct"] = int(citations["gcp_backlog_growth_pct"])
     stats["vc_ai_2024_bn"] = float(citations["vc_ai_2024_bn"])
@@ -454,23 +489,148 @@ def _(cfg, mo, stats):
 
     {_chart}
 
-    *The Magnificent Seven gained ~\\${stats['mkt_gain_t']:.1f}T in market capitalization
-    over three years (Jan 2023 - Feb 2026). Combined 2025 capex for the six AI
-    infrastructure builders was ~\\${stats['capex_2025']:.0f}B — markets priced in
-    ~{stats['ratio_vs_2025']:.0f}x the annual infrastructure investment. The red line
-    shows total 2025 capex for scale. Tesla is included in market cap but its capex
-    (~\\$11B, primarily automotive) is excluded from the AI capex total; see callout
-    below. Note: some companies (AMZN, MSFT) saw mkt cap dip or flatten in early 2026
-    even as capex accelerated — the valuation gap is narrowing but remains extreme.
-    Sources: Yahoo Finance (market cap, Feb 14 2026), SEC filings via yfinance (capex).*
+    *The Magnificent Seven added about \\${stats['mkt_gain_t']:.1f}T in market
+    capitalization from January 2023 to February 2026. Combined 2025 capex for the
+    six AI infrastructure builders was about \\${stats['capex_2025']:.0f}B, implying a
+    ~{stats['ratio_vs_2025']:.0f}x gap between valuation gains and annual infrastructure
+    spend. The red line marks 2025 capex for scale. Tesla is included in market-cap
+    gains but excluded from AI capex totals because most of its capex remains
+    automotive. Sources: Yahoo Finance (market cap, Feb 14 2026), SEC filings via
+    yfinance (capex).*
 
-    Market capitalization reflects discounted future earnings expectations, not
-    current asset values — so comparing a stock of expected value to a flow of
-    annual spending is a scale comparison, not a like-for-like equivalence. Still,
-    the magnitude of the gap reveals how much future revenue growth is already
-    priced in, and how little of that expected value has been converted to physical
-    infrastructure so far.
+    Market capitalization reflects expected future earnings, while capex is a current
+    spending flow. This is a scale comparison, not a one-to-one valuation test. The
+    gap is real. Whether it signals mispricing or early-stage buildout depends on
+    which earnings scenario is correct.
     """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    > **The Tesla/xAI question.** Tesla's \\$1.18T market cap gain (Jan 2023–Feb 2026)
+    > is overwhelmingly priced on AI, not cars: forward P/E is ~160x vs. the auto sector
+    > median of 6.2x. Tesla spent ~\\$5B on AI infrastructure in 2024 (44% of total capex)
+    > and guides \\$20B+ for 2026. Separately, Musk's xAI built the 200,000-GPU "Colossus"
+    > supercomputer for ~\\$7B — AI infrastructure capital flowing through a web of related
+    > entities with overlapping leadership and ambiguous corporate boundaries.
+    >
+    > Tesla's capex is excluded from the totals above because its core spend remains
+    > automotive, but the AI narrative drives its valuation — making it arguably the most
+    > extreme example of the disconnect this analysis tracks.
+    >
+    > *Sources: Tesla 10-K (2024), CNBC, CompaniesMarketCap.*
+    """)
+    return
+
+
+@app.cell
+def _(COLORS, CONTEXT, FIGSIZE, FONTS, capex_annual, cfg, chart_title, plt, save_fig):
+    # Absolute capex ($B), 4 hyperscalers (AMZN, GOOGL, MSFT, META), 2015–2025.
+    # Temporal gray+accent split: cloud-buildout era in CONTEXT gray,
+    # AI buildout era (2022+) in accent. Shows the acceleration in dollar terms
+    # without market-cap denominator noise.
+    #
+    # Capex (2015–2021): SEC 10-K annual reports (PP&E additions / purchases)
+    #   MSFT fiscal year (ends June) mapped to calendar year of FY end
+    # Capex (2022–2025): yfinance cash flow statements via DuckDB (hyperscaler_capex table)
+    _hist_capex_4co = {
+        2015: 22.9,   # AMZN $4.6B + GOOGL $9.9B + MSFT $5.9B + META $2.5B
+        2016: 30.8,   # AMZN $7.8B + GOOGL $10.2B + MSFT $8.3B + META $4.5B
+        2017: 40.0,   # AMZN $12.0B + GOOGL $13.2B + MSFT $8.1B + META $6.7B
+        2018: 64.0,   # AMZN $13.4B + GOOGL $25.1B + MSFT $11.6B + META $13.9B
+        2019: 70.9,   # AMZN $16.9B + GOOGL $23.5B + MSFT $15.4B + META $15.1B
+        2020: 93.5,   # AMZN $40.1B + GOOGL $22.3B + MSFT $15.4B + META $15.7B
+        2021: 125.5,  # AMZN $61.1B + GOOGL $24.6B + MSFT $20.6B + META $19.2B
+    }
+    _tickers_4 = ["AMZN", "GOOGL", "MSFT", "META"]
+    _ann4 = capex_annual[capex_annual["ticker"].isin(_tickers_4)]
+    for _y in [2022, 2023, 2024, 2025]:
+        _hist_capex_4co[_y] = float(_ann4[_ann4["year"] == _y]["capex_bn"].sum())
+
+    _years = sorted(_hist_capex_4co.keys())
+    _values = [_hist_capex_4co[y] for y in _years]
+
+    # Split at 2022: cloud era ends at 2021, AI buildout starts at 2022
+    # Overlap at one point (2021/2022) to keep the line visually connected
+    _split = _years.index(2022)
+
+    fig_capex_ratio, _ax = plt.subplots(figsize=FIGSIZE["wide"])
+
+    # Cloud-buildout era: CONTEXT gray (pre-AI history = context)
+    _ax.plot(
+        _years[:_split + 1], _values[:_split + 1],
+        color=CONTEXT, linewidth=2.0, marker="o", markersize=4, zorder=3,
+    )
+    # AI buildout era: accent (the story)
+    _ax.plot(
+        _years[_split:], _values[_split:],
+        color=COLORS["accent"], linewidth=2.5, marker="o", markersize=5, zorder=4,
+    )
+
+    # 2019 pre-AI baseline reference line
+    _v19 = _hist_capex_4co[2019]
+    _ax.axhline(_v19, color=CONTEXT, linewidth=1, linestyle="--", alpha=0.45)
+    _ax.text(
+        2015.2, _v19 + 5,
+        f"2019 baseline: ${_v19:.0f}B",
+        fontsize=FONTS["annotation"] - 1, color=CONTEXT,
+    )
+
+    # Direct label at 2025: value + growth multiple vs 2019 (no arrow — direct label)
+    _v25 = _hist_capex_4co[2025]
+    _mult = _v25 / _v19
+    _ax.text(
+        2025.15, _v25,
+        f"  ${_v25:.0f}B\n  ({_mult:.1f}× vs 2019)",
+        fontsize=FONTS["annotation"], color=COLORS["accent"], fontweight="bold",
+        va="center",
+    )
+
+    # "AI buildout" era label — anchor it to the 2022 transition point with a
+    # vertical dashed line so the reader sees exactly where the era begins
+    _v22 = _hist_capex_4co[2022]
+    _ax.axvline(2022, color=COLORS["accent"], linewidth=1, linestyle=":", alpha=0.5, zorder=2)
+    _ax.text(
+        2022.1, _v22 * 1.55,
+        "AI buildout era",
+        fontsize=FONTS["annotation"] - 1, color=COLORS["accent"], alpha=0.85,
+        ha="left",
+    )
+
+    _ax.set_xlabel("Year", fontsize=FONTS["axis_label"])
+    _ax.set_ylabel("Annual capex, 4 hyperscalers ($B)", fontsize=FONTS["axis_label"])
+    _ax.tick_params(labelsize=FONTS["tick_label"])
+    _ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"${x:.0f}B"))
+    _ax.set_xlim(2014.5, 2026.5)
+
+    _title = f"Hyperscaler capex grew {_mult:.1f}× from 2019 to 2025 — the AI buildout has no cloud-era precedent"
+    chart_title(fig_capex_ratio, _title)
+    plt.tight_layout()
+    save_fig(fig_capex_ratio, cfg.img_dir / "dd001_capex_ratio_history.png")
+    return
+
+
+@app.cell(hide_code=True)
+def _(cfg, mo, stats):
+    _chart_ratio = mo.image(
+        src=(cfg.img_dir / "dd001_capex_ratio_history.png").read_bytes(), width=850
+    )
+    _capex_4co_2025 = (
+        stats["amzn_2025"] + stats["googl_2025"] + stats["msft_2025"] + stats["meta_2025"]
+    )
+    _mult_4co = _capex_4co_2025 / 70.9  # 2019 baseline hardcoded ($70.9B)
+    mo.md(
+        f"# Hyperscaler capex grew {_mult_4co:.1f}× from 2019 to 2025 — the AI buildout has no cloud-era precedent\n\n"
+        f"{_chart_ratio}\n\n"
+        f"*Annual capex for Amazon, Alphabet, Microsoft, and Meta, 2015–2025. "
+        f"Gray marks the cloud-buildout period (2015–2021); color marks the AI-buildout "
+        f"period (2022–2025). Combined 2025 capex reached ~\\${_capex_4co_2025:.0f}B. "
+        f"Pre-2022 values come from SEC 10-K filings; 2022–2025 values come from "
+        f"yfinance cash-flow data in DuckDB. Microsoft fiscal-year data is mapped to "
+        f"the calendar year of fiscal-year end.*"
+    )
     return
 
 
@@ -548,7 +708,7 @@ def _(
     _ax.set_xticklabels(
         [company_label(t) for t in _tickers], fontsize=FONTS["tick_label"],
     )
-    _ax.set_ylabel("Annual capital expenditure ($B)", fontsize=FONTS["axis_label"])
+    _ax.set_ylabel("Cumulative capex, 2022–2026 ($B)", fontsize=FONTS["axis_label"])
     _ax.tick_params(axis="y", labelsize=FONTS["tick_label"])
 
     # Total per company above each bar — the hero element
@@ -560,7 +720,7 @@ def _(
         )
 
     legend_below(_ax, ncol=len(_all_years))
-    chart_title(fig_capex, "AI infrastructure capex tripled in three years — and 2026 guidance doubles again")
+    chart_title(fig_capex, "Hyperscaler capex tripled in three years — and 2026 guidance doubles again")
     plt.tight_layout()
     save_fig(fig_capex, cfg.img_dir / "dd001_capex_acceleration.png")
     return
@@ -572,54 +732,20 @@ def _(cfg, mo, stats):
         src=(cfg.img_dir / "dd001_capex_acceleration.png").read_bytes(), width=850
     )
     mo.md(f"""
-    # AI infrastructure capex tripled in three years — and 2026 guidance doubles again
+    # Hyperscaler capex tripled in three years — and 2026 guidance doubles again
 
     {_chart}
 
-    *2026 figures are management guidance (hatched bars), not audited actuals.
-    Combined capex for these six AI capex leaders: ~\\${stats['capex_2023']:.0f}B (2023) →
-    ~\\${stats['capex_2024']:.0f}B (2024) → ~\\${stats['capex_2025']:.0f}B (2025) →
-    ~\\${stats['guidance_2026']:.0f}B (2026 guidance). Capex aggregated by calendar year;
-    note that Microsoft (June FY) and Oracle (May FY) report on non-calendar fiscal
-    years. Capex figures include all capital expenditure, not only AI-related spending —
-    notably, Amazon's capex includes logistics and fulfillment infrastructure, which is a
-    significant portion of its total (~\\${stats['amzn_2024']:.0f}B in 2024). ~{stats['ai_capex_share_pct']}% of 2026 capex is expected to
-    fund AI infrastructure directly (CreditSights, Feb 2026). Additionally, these figures
-    exclude leased capacity — significant data center capacity is leased from colocation
-    providers (Equinix, Digital Realty) and does not appear in the lessee's capex line.
-    Total AI infrastructure investment is higher than what corporate capex alone shows.
-    Sources: SEC 10-K/10-Q filings via yfinance, earnings call transcripts (Jan-Feb 2026).*
-    """)
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
-    > **The Tesla/xAI question.** Tesla's \\$1.18T market cap gain (Jan 2023 - Feb 2026)
-    > is overwhelmingly priced on AI, not cars: forward P/E is ~160x vs. the auto sector
-    > median of 6.2x, and Musk claims 80% of Tesla's future value will come from the
-    > Optimus robot. Tesla spent ~\\$5B on AI infrastructure in 2024 (44% of total capex),
-    > scaling from 35K to 85K H100 GPUs, and guides \\$20B+ for 2026 with a hard pivot
-    > toward robotaxi and Optimus production (discontinuing Model S/X to repurpose lines).
-    >
-    > Separately, Musk's xAI built the 200,000-GPU "Colossus" supercomputer in Memphis
-    > for ~\\$7B, raised \\$22B+ in venture capital, and was acquired by SpaceX in February
-    > 2026 at a \\$250B valuation. Tesla invested \\$2B in xAI's Series E — over shareholder
-    > objections (the non-binding vote rejected the investment; Tesla's board proceeded
-    > anyway). Shareholders have sued Musk for diverting \\$500M of Nvidia GPUs and 11+
-    > engineers from Tesla to xAI.
-    >
-    > The Tesla-xAI-SpaceX nexus illustrates a distinct pattern: AI infrastructure capital
-    > flowing through a web of related entities with overlapping leadership, shared resources,
-    > and ambiguous corporate boundaries. Tesla's capex is excluded from the AI capex
-    > total above because its core spend remains automotive, but the AI narrative drives
-    > its valuation — making it arguably the most extreme example of the disconnect this
-    > analysis tracks.
-    >
-    > *Sources: Tesla 10-K (2024), TechCrunch, CNBC, CompaniesMarketCap, AI Magazine,
-    > court filings (Cleveland Bakers and Teamsters Pension Fund v. Musk, Delaware
-    > Chancery Court, June 2024).*
+    *Combined capex for six companies: ~\\${stats['capex_2023']:.0f}B (2023),
+    ~\\${stats['capex_2024']:.0f}B (2024), ~\\${stats['capex_2025']:.0f}B (2025), and
+    ~\\${stats['guidance_2026_point']:.0f}B guided for 2026 (hatched bars). The 2026 figure
+    is management guidance, not audited actuals. Using observed guidance revisions
+    (±{stats['guidance_band_pct']}%), a plausible range is
+    \\${stats['guidance_2026_low']:.0f}–\\${stats['guidance_2026_high']:.0f}B. Figures
+    include total capex, not only AI-specific spend; CreditSights estimates about
+    {stats['ai_capex_share_pct']}% of 2026 capex is AI-attributed. Leased capacity is
+    excluded, so total infrastructure deployment is higher than shown. Sources: SEC
+    10-K/10-Q filings via yfinance; guidance from Q4 2025 earnings calls.*
     """)
     return
 
@@ -631,52 +757,61 @@ def _(mo, stats):
 
     ## The Revenue Question
 
-    Sequoia Capital's David Cahn estimated (September 2024) that the AI industry
-    needs ~\\${stats['sequoia_rev_target_bn']}B in annual revenue to justify the infrastructure buildout. As of
-    Q4 2025, the three major cloud providers generated ~\\${stats['cloud_rev_q4']:.0f}B
-    in quarterly revenue (~\\${stats['cloud_rev_q4_annual']:.0f}B annualized). Full-year
-    2025 combined cloud revenue was ~\\${stats['cloud_rev_2025']:.0f}B.
+    For an apples-to-apples view, this section compares Amazon, Alphabet, and
+    Microsoft on both sides of the ledger. They are the three firms that disclose
+    cloud revenue segments in comparable form. Meta is excluded because it reports
+    no equivalent cloud revenue line.
+
+    In 2025, these three companies spent about \\${stats['capex_3co_2025']:.0f}B on
+    capex while reporting about \\${stats['cloud_rev_2025']:.0f}B in cloud revenue.
+    In Q4 2025, quarterly capex exceeded quarterly cloud revenue for the first time.
+    Sequoia Capital's David Cahn independently flagged this dynamic — his estimates
+    of the revenue needed to justify the buildout escalated from \\$200B (June 2024)
+    to \\$600B (September 2024) to ~\\$1T (early 2025). The directional point is now
+    visible in the companies' own reported financials.
 
     The gap is narrowing — but capex is accelerating faster:
 
     | Metric | 2024 | 2025 | 2026 (guided) |
     | :--- | :--- | :--- | :--- |
-    | AI capex (6 co.) | ~\\${stats['capex_2024']:.0f}B | ~\\${stats['capex_2025']:.0f}B | ~\\${stats['guidance_2026']:.0f}B |
-    | Cloud revenue (3 providers) | ~\\${stats['cloud_rev_2024']:.0f}B | ~\\${stats['cloud_rev_2025']:.0f}B | est. ~\\${stats['cloud_rev_2026_low']}-{stats['cloud_rev_2026_high']}B\\*\\* |
-    | Capex / Revenue ratio\\* | ~{stats['capex_2024'] / stats['cloud_rev_2024']:.1f}x | ~{stats['capex_2025'] / stats['cloud_rev_2025']:.1f}x | ~{stats['capex_rev_2026_low']}-{stats['capex_rev_2026_high']}x |
+    | Capex (AMZN + GOOGL + MSFT) | ~\\${stats['capex_3co_2024']:.0f}B | ~\\${stats['capex_3co_2025']:.0f}B | ~\\${stats['capex_3co_2026g']:.0f}B\\* |
+    | Cloud revenue (same 3) | ~\\${stats['cloud_rev_2024']:.0f}B | ~\\${stats['cloud_rev_2025']:.0f}B | est. ~\\${stats['cloud_rev_2026_low']}–{stats['cloud_rev_2026_high']}B\\*\\* |
+    | Capex / Revenue ratio | ~{stats['capex_3co_2024'] / stats['cloud_rev_2024']:.1f}x | ~{stats['capex_3co_2025'] / stats['cloud_rev_2025']:.1f}x | ~{stats['capex_3co_2026g'] / stats['cloud_rev_2026_high']:.1f}–{stats['capex_3co_2026g'] / stats['cloud_rev_2026_low']:.1f}x |
 
-    \\*This ratio overstates the mismatch: the numerator covers 6 companies (including
-    Meta, Oracle, Nvidia) while the denominator covers only 3 cloud providers' reported
-    cloud segments (AWS, Microsoft Intelligent Cloud, Google Cloud). Meta and Nvidia
-    do not report comparable cloud revenue. An apples-to-apples 3-company ratio
-    (AMZN + GOOGL + MSFT capex vs. their cloud revenue) would be lower — but still
-    elevated by historical standards. The directional trend is clear either way:
-    capex is outpacing revenue growth.
+    \\*2026 capex guidance: Amazon \\${stats['amzn_2026g']:.0f}B + Alphabet \\${stats['googl_2026g']:.0f}B
+    + Microsoft \\${stats['msft_2026g']:.0f}B, from Q4 2025 earnings calls. Capex is
+    company-total; cloud-specific capex is not separately disclosed.
 
-    \\*\\*2026 cloud revenue estimate based on Q4 2025 run rate extrapolation plus
-    consensus analyst estimates (Morgan Stanley, Goldman Sachs, Jan-Feb 2026).
+    \\*\\*2026 cloud revenue estimate from Q4 2025 run-rate extrapolation plus consensus
+    analyst estimates (Morgan Stanley, Goldman Sachs, Jan–Feb 2026).
 
-    **The ratio is getting worse, not better.** In normal infrastructure businesses,
+    **The ratio has worsened through 2025.** In normal infrastructure businesses,
     capex-to-revenue ratios of 1-2x are sustainable. At the current trajectory, these
     companies are spending more on infrastructure than their cloud businesses generate
-    in revenue. The bet is that AI-driven demand creates a step function in revenue
-    growth.
+    in revenue. Whether AI-driven demand creates a step-function in revenue growth —
+    the thesis these spending programs depend on — remains the open question.
 
-    **Counterargument:** Cloud revenue is growing {stats['cloud_yoy_min']:.0f}-{stats['cloud_yoy_max']:.0f}% YoY across providers (Q4 2025),
-    and Google Cloud's contracted backlog surged {stats['gcp_backlog_growth_pct']}% to \\${stats['gcp_backlog_bn']}B (Alphabet Q4 2025
-    earnings call). But a meaningful portion is these companies selling AI services
-    to each other or to VC-funded startups — circular spending that inflates the
-    top line without proving durable end-user demand. VC investment in AI/ML startups
-    reached \\${stats['vc_ai_2024_bn']}B globally in 2024 — over a third of all VC dollars (PitchBook,
-    2025 Annual VC Report) — and
-    many of those startups are major cloud customers. If VC funding contracts,
-    a portion of cloud revenue disappears with it. This is the same dynamic
-    that inflated telecom revenue in 1999-2000.
+    Cloud revenue is growing {stats['cloud_yoy_min']:.0f}–{stats['cloud_yoy_max']:.0f}% YoY
+    (Q4 2025), and Google Cloud's contracted backlog surged {stats['gcp_backlog_growth_pct']}%
+    to \\${stats['gcp_backlog_bn']}B (Alphabet Q4 2025 earnings call) — signals that
+    demand is real. But the composition of that demand matters. A meaningful portion
+    reflects these companies selling AI services to VC-funded startups, which reached
+    \\${stats['vc_ai_2024_bn']}B globally in 2024 — over a third of all VC dollars
+    (PitchBook, 2025). Those startups are major cloud customers. If VC funding
+    contracts, a portion of cloud revenue contracts with it. Whether that circularity
+    is large enough to affect the trajectory is unknown; it is a variable worth
+    tracking.
 
-    The revenue gap matters for this research because it determines **durability**.
-    If AI revenue catches up, the infrastructure is justified. If it doesn't,
-    the physical assets persist anyway — but the economics shift from
-    "demand-thesis-dependent" to "stranded or repurposed."
+    This gap matters because it is a durability question. If revenue catches up, the
+    buildout is validated by demand. If it does not, the physical assets remain — and
+    the question becomes who bears that long-run exposure and under what conditions.
+    That is what the later notebooks trace.
+
+    *This analysis extends the revenue-gap framing developed by Sequoia Capital
+    ("AI's $600B Question," September 2024) and examined by Goldman Sachs
+    ("Gen AI: Too Much Spend, Too Little Return?", September 2024). It differs
+    in using auditable EDGAR data for capex actuals and company-reported cloud
+    segments for revenue, rather than extrapolations from NVIDIA data center revenue.*
     """)
     return
 
@@ -687,73 +822,118 @@ def _(
     CONTEXT,
     FIGSIZE,
     FONTS,
+    capex_raw,
     cfg,
     chart_title,
     cloud_rev,
     legend_below,
+    np,
     pd,
     plt,
     save_fig,
     stats,
 ):
-    # Revenue gap chart: quarterly cloud revenue trajectory vs capex trajectory
-    _cloud_quarterly = (
+    # Revenue gap chart: same 3 companies on both sides (apples-to-apples)
+    # Gray bars = cloud revenue, accent line = capex — crossover is the story.
+
+    # Quarterly cloud revenue (3 providers)
+    _cloud_qtr = (
         cloud_rev.groupby("quarter")["revenue_bn"]
         .sum()
         .reset_index()
         .sort_values("quarter")
     )
-    _cloud_quarterly["date"] = pd.to_datetime(
-        _cloud_quarterly["quarter"].str.replace(r"(\d{4})-Q(\d)", r"\1", regex=True)
-        + "-"
-        + _cloud_quarterly["quarter"].str.replace(
-            r"(\d{4})-Q(\d)", lambda m: str(int(m.group(2)) * 3), regex=True
-        )
-        + "-28",
-        format="%Y-%m-%d",
+
+    # Quarterly capex for the SAME 3 companies
+    _tickers_3 = ["AMZN", "GOOGL", "MSFT"]
+    _capex_3 = capex_raw[capex_raw["ticker"].isin(_tickers_3)].copy()
+    _capex_3["quarter"] = (
+        _capex_3["date"].dt.year.astype(str)
+        + "-Q"
+        + _capex_3["date"].dt.quarter.astype(str)
     )
+    _capex_qtr = (
+        _capex_3.groupby("quarter")["capex_bn"]
+        .sum()
+        .reset_index()
+        .sort_values("quarter")
+    )
+
+    # Align to common quarters
+    _common = sorted(set(_cloud_qtr["quarter"]) & set(_capex_qtr["quarter"]))
+    _rev = _cloud_qtr[_cloud_qtr["quarter"].isin(_common)].sort_values("quarter")
+    _cap = _capex_qtr[_capex_qtr["quarter"].isin(_common)].sort_values("quarter")
+    _rev_vals = _rev["revenue_bn"].values
+    _cap_vals = _cap["capex_bn"].values
 
     fig_rev, _ax = plt.subplots(figsize=FIGSIZE["wide"])
+    _x = np.arange(len(_common))
 
+    # Gray bars: cloud revenue (the context)
     _ax.bar(
-        _cloud_quarterly["date"],
-        _cloud_quarterly["revenue_bn"],
-        width=60,
-        color=CONTEXT,
-        alpha=0.7,
-        label="Combined cloud revenue (AWS + MSFT Cloud + GCP)",
+        _x, _rev_vals, width=0.6, color=CONTEXT, alpha=0.7,
+        label="Cloud revenue (AWS + MSFT Cloud + GCP)",
     )
 
-    # Reference line: Sequoia $600B annual target (= $150B/quarter)
-    _target_qtr = stats["sequoia_rev_target_qtr_bn"]
-    _ax.axhline(_target_qtr, color=COLORS["accent"], linestyle="--", linewidth=2, alpha=0.8)
+    # Accent line: capex (the story)
+    _ax.plot(
+        _x, _cap_vals, color=COLORS["accent"], linewidth=2.5,
+        marker="o", markersize=5, label="Capital expenditure (same 3 co.)",
+    )
+
+    # Annotate crossover
+    _gaps = _rev_vals - _cap_vals
+    for _i in range(1, len(_gaps)):
+        if _gaps[_i - 1] > 0 and _gaps[_i] <= 0:
+            _ax.annotate(
+                f"Capex overtakes revenue\n\\${_cap_vals[_i]:.0f}B vs \\${_rev_vals[_i]:.0f}B",
+                xy=(_i, _cap_vals[_i]),
+                xytext=(_i - 3, _cap_vals[_i] + 15),
+                fontsize=FONTS["annotation"], color=COLORS["accent"],
+                fontweight="bold",
+                arrowprops=dict(
+                    arrowstyle="->", color=COLORS["accent"],
+                    connectionstyle="arc3,rad=-0.2", linewidth=1.5,
+                ),
+            )
+            break
+
+    # Direct-label last data points
+    _last = len(_common) - 1
     _ax.text(
-        _cloud_quarterly["date"].iloc[-1],
-        _target_qtr + 3,
-        f'  ${stats["sequoia_rev_target_bn"]}B/yr target (Sequoia)',
-        fontsize=FONTS["annotation"],
-        color=COLORS["accent"],
-        fontweight="bold",
-        va="bottom",
+        _last, _rev_vals[_last] - 4, f"${_rev_vals[_last]:.0f}B",
+        ha="center", va="top", fontsize=FONTS["annotation"],
+        color=COLORS["text_light"],
     )
-
-    # Annotate latest quarter
-    _latest = _cloud_quarterly.iloc[-1]
     _ax.text(
-        _latest["date"],
-        _latest["revenue_bn"] + 3,
-        f"${_latest['revenue_bn']:.0f}B",
-        ha="center",
-        fontsize=FONTS["annotation"],
-        fontweight="bold",
-        color=COLORS["text_dark"],
+        _last + 0.15, _cap_vals[_last] + 1.5, f"${_cap_vals[_last]:.0f}B",
+        ha="left", va="bottom", fontsize=FONTS["annotation"],
+        color=COLORS["accent"], fontweight="bold",
     )
 
-    _ax.set_ylabel("Quarterly cloud revenue ($B)", fontsize=FONTS["axis_label"])
-    _ax.tick_params(axis="both", labelsize=FONTS["tick_label"])
+    # Investment intensity callout: ratio at start and end (no secondary axis)
+    _ratio = _cap_vals / _rev_vals
+    _ax.text(
+        0, _rev_vals[0] * 0.3,
+        f"Investment intensity:\n{_ratio[0]:.1f}× (capex/cloud rev)",
+        ha="left", va="bottom", fontsize=FONTS["annotation"] - 1,
+        color=COLORS["text_light"],
+    )
+    _ax.text(
+        _last, _cap_vals[_last] * 1.08,
+        f"{_ratio[-1]:.1f}×",
+        ha="center", va="bottom", fontsize=FONTS["annotation"],
+        color=COLORS["accent"], fontweight="bold",
+    )
 
-    legend_below(_ax, ncol=1)
-    chart_title(fig_rev, "Cloud revenue growing but still well below the capex justification threshold")
+    _ax.set_xticks(_x)
+    _ax.set_xticklabels(_common, fontsize=FONTS["tick_label"], rotation=45, ha="right")
+    _ax.set_ylabel("Quarterly ($B)", fontsize=FONTS["axis_label"])
+    _ax.tick_params(axis="y", labelsize=FONTS["tick_label"])
+    _ax.set_ylim(0, max(max(_rev_vals), max(_cap_vals)) * 1.25)
+
+    legend_below(_ax, ncol=2)
+    chart_title(fig_rev, f"Total capex overtook cloud revenue in late 2025 — ~{stats['ai_capex_share_pct']}% AI-attributed (CreditSights)")
     plt.tight_layout()
     save_fig(fig_rev, cfg.img_dir / "dd001_revenue_gap.png")
     return
@@ -765,130 +945,22 @@ def _(cfg, mo, stats):
         src=(cfg.img_dir / "dd001_revenue_gap.png").read_bytes(), width=850
     )
     mo.md(f"""
-    # Cloud revenue is growing fast — but capex is growing faster
+    # Total capex overtook cloud revenue in late 2025
 
     {_chart}
 
-    *Combined quarterly revenue for AWS, Microsoft Intelligent Cloud, and Google Cloud
-    Platform. The dashed line shows the ~\\${stats['sequoia_rev_target_qtr_bn']}B/quarter (\\${stats['sequoia_rev_target_bn']}B/year) threshold Sequoia
-    estimated would justify current infrastructure spending. Q4 2025 combined revenue
-    was ~\\${stats['cloud_rev_q4']:.0f}B (~\\${stats['cloud_rev_q4_annual']:.0f}B annualized).
-    Note: Microsoft Intelligent Cloud includes Azure plus other server products, making
-    it a broader measure than pure cloud compute. Revenue segments were restated in
-    Microsoft's FY2025 reporting. Sources: SEC filings, earnings releases (Q1 2023 –
-    Q4 2025).*
+    *Both series cover the same three companies: Amazon, Alphabet, and Microsoft. Gray
+    bars show quarterly cloud revenue — AWS, Microsoft Intelligent Cloud, and Google
+    Cloud, as reported in SEC 10-Q filings. The red line shows quarterly total capex
+    for the same firms. In Q4 2025, capex exceeded quarterly cloud revenue for the
+    first time. Full-year 2025: ~\\${stats['capex_3co_2025']:.0f}B capex versus
+    ~\\${stats['cloud_rev_2025']:.0f}B cloud revenue. Capex is company-total because
+    cloud-segment capex is not separately disclosed in SEC filings.
+    Sources: SEC 10-Q filings (Q1 2023 – Q4 2025).*
     """)
     return
 
 
-@app.cell
-def _(
-    COLORS,
-    CONTEXT,
-    FONTS,
-    cfg,
-    chart_title,
-    legend_below,
-    plt,
-    save_fig,
-    stats,
-):
-    from matplotlib.patches import Patch, Rectangle
-
-    # Decomposition: shares from FY2024 10-K property schedules, base is 2025 actual
-    # Percentages from stats dict (sourced from 10-K filings — see stats cell)
-    _total_capex = round(stats["capex_2025"])  # $B, data-driven
-    _equip = _total_capex * stats["decomp_equip_pct"] / 100
-    _const = _total_capex * stats["decomp_const_pct"] / 100
-    _equip_life = 6   # max asset life (years)
-    _const_life = 40  # max asset life (years)
-
-    fig_decomp, _ax = plt.subplots(figsize=FIGSIZE["single"])
-
-    # Construction: wide rectangle, short — the lock-in story (accent)
-    _ax.add_patch(Rectangle(
-        (0, 0), _const_life, _const,
-        facecolor=COLORS["accent"], alpha=0.85,
-        edgecolor="white", linewidth=1.5,
-    ))
-    # Equipment: narrow rectangle, tall — depreciates fast (context gray)
-    _ax.add_patch(Rectangle(
-        (0, 0), _equip_life, _equip,
-        facecolor=CONTEXT, alpha=0.85,
-        edgecolor="white", linewidth=1.5,
-    ))
-
-    # Asset life labels beside each bar
-    _ax.text(
-        _equip_life + 1, _equip * 0.55,
-        "3\u20136 years",
-        fontsize=FONTS["annotation"], color=COLORS["text_dark"], fontweight="bold",
-    )
-    _ax.text(
-        _const_life + 1, _const * 0.5,
-        "20\u201340 years",
-        fontsize=FONTS["annotation"], color=COLORS["accent"], fontweight="bold",
-    )
-
-    # Axes: only show meaningful ticks
-    _ax.set_xlim(0, 48)
-    _ax.set_ylim(0, _equip * 1.15)
-    _ax.set_xticks([_equip_life, _const_life])
-    _ax.set_yticks([_const, _equip])
-    _ax.set_yticklabels(
-        [f"\\${_const:.0f}B", f"\\${_equip:.0f}B"],
-        fontsize=FONTS["tick_label"],
-    )
-    _ax.tick_params(axis="x", labelsize=FONTS["tick_label"])
-    _ax.set_xlabel("Asset Life (years)", fontsize=FONTS["axis_label"], style="italic")
-    _ax.set_ylabel("Capex", fontsize=FONTS["axis_label"], style="italic")
-
-    legend_below(
-        _ax,
-        handles=[
-            Patch(facecolor=CONTEXT, edgecolor=CONTEXT, alpha=0.85),
-            Patch(facecolor=COLORS["accent"], edgecolor=COLORS["accent"], alpha=0.85),
-        ],
-        labels=[
-            "Equipment (servers, GPUs, networking)",
-            "Construction (buildings, substations, power)",
-        ],
-    )
-
-    chart_title(
-        fig_decomp,
-        f"{stats['decomp_const_pct']}% of capex creates 20\u201340 year assets \u2014 the rest depreciates in under 6",
-    )
-    plt.tight_layout()
-    save_fig(fig_decomp, cfg.img_dir / "dd001_capex_decomposition.png")
-    return
-
-
-@app.cell(hide_code=True)
-def _(cfg, mo, stats):
-    _chart = mo.image(
-        src=(cfg.img_dir / "dd001_capex_decomposition.png").read_bytes(), width=850
-    )
-    mo.md(f"""
-    # {stats['decomp_const_pct']}% of capex creates 20-40 year assets — the rest depreciates in under 6
-
-    {_chart}
-
-    *Split derived from FY2024 10-K property schedules: Meta reports {stats['meta_buildings_pct']}% buildings/land/CIP
-    vs. {stats['meta_servers_pct']}% servers/network; Amazon {stats['amzn_buildings_pct']}% buildings vs. {stats['amzn_equipment_pct']}% equipment; Alphabet {stats['googl_buildings_pct']}% buildings
-    vs. {stats['googl_tech_pct']}% technical infrastructure. Cross-company midpoint: ~{stats['decomp_equip_pct']}% equipment (range: {stats['decomp_equip_low']}-{stats['decomp_equip_high']}%),
-    ~{stats['decomp_const_pct']}% construction (range: {stats['decomp_const_low']}-{stats['decomp_const_high']}%), ~{stats['decomp_other_pct']}% other (land, permitting, soft costs). Ratios
-    reflect cumulative gross PP&E (the stock of assets), which may differ from marginal capex
-    flows in any given year. Bar height reflects 2025 annual spend; width reflects asset life.
-    Note: Google extended server useful life from 4 to 6 years in 2024, adding ~\\$3.9B to
-    annual operating income — asset life assumptions materially affect the economics
-    (Alphabet 10-K FY2024, Note 1).*
-
-    This asymmetry is the crux of the infrastructure lock-in problem. The financial
-    risk (will AI generate returns?) is a 3-5 year question. The infrastructure
-    consequence (what did we build?) is a 30-50 year answer.
-    """)
-    return
 
 
 @app.cell(hide_code=True)
@@ -898,11 +970,16 @@ def _(mo, stats):
 
     ## Announcements vs. Physical Reality
 
-    The gap between what's announced and what gets built is enormous:
+    The central gap is conversion, not commitment. Announcements are large, but
+    delivery is constrained by interconnection timelines, permitting, and equipment
+    bottlenecks:
 
-    - **Stargate Project:** \\${stats['stargate_announced_bn']}B announced (Jan 2025). \\${stats['stargate_initial_bn']}B initially committed.
-      SoftBank's balance sheet had ~\\$30-40B deployable capital. Financial structure
-      remains opaque. *(Sources: White House announcement, Jan 2025; FT analysis)*
+    - **Stargate Project:** \\${stats['stargate_announced_bn']}B announced intent (White House
+      press conference, Jan 21, 2025 — no binding construction commitment at announcement).
+      \\${stats['stargate_initial_bn']}B Phase 1 committed and under active deployment.
+      SoftBank's balance sheet had ~\\$30-40B deployable capital at announcement time;
+      financial structure and timeline for the remaining \\${stats['stargate_announced_bn'] - stats['stargate_initial_bn']}B remain opaque.
+      *(Sources: White House announcement, Jan 2025; FT analysis)*
     - **U.S. Interconnection Queue:** Over {stats['queue_total_gw']:,} GW of generation and storage capacity
       seeking grid connection as of end-2024 — roughly
       3x total U.S. installed capacity (Rand et al., LBNL *Queued Up* 2025 Edition).
@@ -939,8 +1016,9 @@ def _(mo, stats):
 
     As of early 2025: no major AI infrastructure project cancellations reported. The
     pattern is delays and site relocation, not outright cancellation. The capital is
-    real, but the conversion rate from announcement to operating infrastructure is
-    far lower than headlines suggest.
+    real, but the evidence so far suggests the conversion from announcement to operating
+    infrastructure is slower and more contingent than headlines imply. How much slower
+    is a question the data can start to answer — but not yet close.
     """)
     return
 
@@ -1012,132 +1090,80 @@ def _(cfg, mo, stats):
 
     {_chart}
 
-    *Total generation and storage capacity in U.S. interconnection queues, year-end.
-    Of all capacity that requested interconnection from 2000-2024, only {stats['queue_completion_pct']}% reached
-    commercial operation while {stats['queue_withdrawal_pct']}% was withdrawn. Completion rates by cohort: {stats['queue_cohort_2000_2005_pct']}%
-    (2000-2005), {stats['queue_cohort_2006_2010_pct']}% (2006-2010), {stats['queue_cohort_2011_2015_pct']}% (2011-2015), {stats['queue_cohort_2016_2020_pct']}% (2016-2020) — rates have
-    always been low and are declining (Rand et al., 2025, Table 3). The queue grew
-    ~{stats['queue_yoy_pct']}% in 2024 to over {stats['queue_total_gw']:,} GW.
-    Separately, over 100 GW of large load (primarily data center) interconnection
-    requests were tracked for the first time (Rand et al., 2025).
-    Source: Rand et al., LBNL, "Queued Up" 2025 Edition (data through end-2024).*
+    *Total generation and storage capacity in U.S. interconnection queues at year-end.
+    From 2000–2024 cohorts, {stats['queue_withdrawal_pct']}% of queued capacity was
+    withdrawn and {stats['queue_completion_pct']}% reached commercial operation
+    (Rand et al., LBNL, 2025, Table 3). Queue volume rose about {stats['queue_yoy_pct']}%
+    in 2024 to {stats['queue_total_gw']:,} GW. LBNL also tracked 100+ GW of large-load
+    requests — primarily data center connections — for the first time in the dataset's
+    history. Source: Rand et al., LBNL, "Queued Up" 2025 Edition (data through end-2024).*
     """)
     return
 
 
 @app.cell
-def _(COLORS, CONTEXT, FIGSIZE, FONTS, cfg, chart_title, plt, save_fig, stats):
-    import matplotlib.patches as _mp
-    import matplotlib.path as _mpath
-
-    _capex = round(stats["capex_2025"])  # data-driven from yfinance
-    _bea_total = round(stats["pnfi_bn"])  # FRED PNFI, latest quarterly SAAR
+def _(COLORS, CONTEXT, FIGSIZE, FONTS, cfg, chart_title, np, plt, save_fig, stats):
+    # Dot matrix: 10×10 grid of circles — each circle = 1% of US private
+    # nonresidential fixed investment. 10 filled (accent) = AI capex cohort.
+    _capex = round(stats["capex_2025"])
+    _bea_total = round(stats["pnfi_bn"])
     _pct = stats["pnfi_share_pct"]
+    _filled = round(_pct)        # number of accent circles (≈10)
+    _rows, _cols = 10, 10
+    _total = _rows * _cols       # 100 circles = 100%
 
-    # BEA categories ($B, approximate shares of PNFI) — bottom to top
-    # Shares from stats dict (sourced from BEA NIPA Table 5.3.5, 2024 annual)
-    _cats = [
-        ("Structures", round(_bea_total * stats["bea_structures_pct"] / 100)),
-        ("Equipment", round(_bea_total * stats["bea_equipment_pct"] / 100)),
-        ("Intellectual property", round(_bea_total * stats["bea_ip_pct"] / 100)),
-    ]
-    _cat_sum = sum(v for _, v in _cats)
+    # Grid coordinates — all 100 circles (full economy)
+    _all_xs = np.tile(np.arange(_cols), _rows)
+    _all_ys = np.repeat(np.arange(_rows), _cols)  # row 0 = bottom
 
-    fig_share, _ax = plt.subplots(figsize=FIGSIZE["wide"])
+    # Accent positions: first _filled dots in raster order (left→right, bottom→top)
+    # Dynamic — if pnfi_share_pct changes, the filled count updates automatically
+    _all_positions = [(c, r) for r in range(_rows) for c in range(_cols)]
+    _accent_positions = _all_positions[:_filled]
+    _accent_xs = np.array([p[0] for p in _accent_positions])
+    _accent_ys = np.array([p[1] for p in _accent_positions])
 
-    # --- Layout constants ---
-    _lx = 2.5    # left column right edge
-    _rx = 7.5    # right column left edge
-    _cw = 0.7    # column width
-    _gap = 50    # visual gap between right-side nodes ($B)
+    fig_share, _ax = plt.subplots(figsize=FIGSIZE["single"])
 
-    # --- Compute vertical positions ---
-    # Left: contiguous (no gaps)
-    _left_pos = []
-    _ly = 0.0
-    for _, _val in _cats:
-        _left_pos.append((_ly, _ly + _val))
-        _ly += _val
-
-    # Right: spaced with gaps
-    _right_pos = []
-    _ry = 0.0
-    for _i, (_, _val) in enumerate(_cats):
-        _right_pos.append((_ry, _ry + _val))
-        _ry += _val + _gap
-    _max_y = max(_ly, _ry)
-
-    # --- Left node ---
-    _ax.add_patch(_mp.Rectangle(
-        (_lx - _cw, 0), _cw, _cat_sum,
-        facecolor=CONTEXT, alpha=0.5, edgecolor="white", linewidth=1,
-    ))
-    # Hyperscaler slice at bottom (accent)
-    _ax.add_patch(_mp.Rectangle(
-        (_lx - _cw, 0), _cw, _capex,
-        facecolor=COLORS["accent"], alpha=0.75, edgecolor="white", linewidth=1,
-    ))
-
-    # --- Right nodes + flow bands ---
-    _xm = (_lx + _rx) / 2
-    for _i, (_name, _val) in enumerate(_cats):
-        _ly0, _ly1 = _left_pos[_i]
-        _ry0, _ry1 = _right_pos[_i]
-
-        # Right rectangle
-        _ax.add_patch(_mp.Rectangle(
-            (_rx, _ry0), _cw, _val,
-            facecolor=CONTEXT, alpha=0.5, edgecolor="white", linewidth=1,
-        ))
-
-        # S-curve flow band (cubic Bezier)
-        verts = [
-            (_lx, _ly0),
-            (_xm, _ly0), (_xm, _ry0), (_rx, _ry0),
-            (_rx, _ry1),
-            (_xm, _ry1), (_xm, _ly1), (_lx, _ly1),
-            (_lx, _ly0),
-        ]
-        codes = [
-            _mpath.Path.MOVETO,
-            _mpath.Path.CURVE4, _mpath.Path.CURVE4, _mpath.Path.CURVE4,
-            _mpath.Path.LINETO,
-            _mpath.Path.CURVE4, _mpath.Path.CURVE4, _mpath.Path.CURVE4,
-            _mpath.Path.CLOSEPOLY,
-        ]
-        _ax.add_patch(_mp.PathPatch(
-            _mpath.Path(verts, codes),
-            facecolor=CONTEXT, alpha=0.3,
-            edgecolor="none",
-        ))
-
-        # Right-side label
-        _ax.text(
-            _rx + _cw + 0.2, (_ry0 + _ry1) / 2,
-            f"{_name}\n${_val:,}B",
-            ha="left", va="center",
-            fontsize=FONTS["annotation"],
-            color=COLORS["text_dark"],
-        )
-
-    # --- Left-side labels ---
-    _ax.text(
-        _lx - _cw - 0.15, _cat_sum / 2,
-        f"US nonresidential\nfixed investment\n${_bea_total / 1000:.1f}T/year",
-        ha="right", va="center",
-        fontsize=FONTS["annotation"], fontweight="bold",
-        color=COLORS["text_dark"],
+    # Pass 1: all circles as outlines (context — the full economy)
+    _ax.scatter(
+        _all_xs, _all_ys, s=380,
+        facecolors="none", edgecolors=CONTEXT,
+        linewidths=1.5, zorder=1,
     )
-    _ax.text(
-        _lx - _cw - 0.15, _capex / 2,
-        f"AI capex cohort\n${_capex}B ({_pct:.0f}%)",
-        ha="right", va="center",
-        fontsize=FONTS["annotation"], fontweight="bold",
-        color=COLORS["accent"],
+    # Pass 2: filled circles for AI capex (accent — the story)
+    _ax.scatter(
+        _accent_xs, _accent_ys, s=380,
+        c=COLORS["accent"], linewidths=0, zorder=2,
     )
 
-    _ax.set_xlim(0, 10.5)
-    _ax.set_ylim(-120, _max_y + 120)
+    # Annotation: in left margin (outside grid), arrow pointing to block centre
+    _ax.annotate(
+        f"Hyperscaler capex — 6 companies\n\\${_capex:,}B ({_pct:.0f}% of total US\nprivate investment)",
+        xy=(0, 1.5),
+        xytext=(-0.5, 5),
+        va="center", ha="right",
+        fontsize=FONTS["annotation"], color=COLORS["accent"], fontweight="bold",
+        clip_on=False,
+        arrowprops=dict(
+            arrowstyle="->", color=COLORS["accent"],
+            connectionstyle="arc3,rad=-0.2", linewidth=1.5,
+            clip_on=False,
+        ),
+    )
+
+    # Footer: unit explanation (centred on the dot grid, not the full axes width)
+    _ax.text(
+        (_cols - 1) / 2, -1.1,
+        f"Each circle = ~\\${_bea_total // _total:,}B  "
+        f"(1% of \\${_bea_total / 1000:.1f}T US private nonresidential investment)",
+        ha="center", va="top",
+        fontsize=FONTS["annotation"], color=COLORS["text_light"],
+    )
+
+    _ax.set_xlim(-5.5, _cols + 0.5)  # left margin holds annotation text
+    _ax.set_ylim(-1.8, _rows - 0.2)
+    _ax.set_aspect("equal")
     _ax.axis("off")
 
     chart_title(
@@ -1159,22 +1185,17 @@ def _(cfg, mo, stats):
 
     {_chart}
 
-    *Total US private nonresidential fixed investment is ~\\${stats['pnfi_bn'] / 1000:.1f}T
-    SAAR (BEA NIPA Table 5.3.5, Q2 2025 via FRED series PNFI). Combined AI capex
-    (~\\${stats['capex_2025']:.0f}B in 2025) represents a significant and rapidly growing
-    share — concentrated in a handful of companies making infrastructure decisions that
-    normally take decades of utility planning. Category shares (structures ~{stats['bea_structures_pct']}%,
-    equipment ~{stats['bea_equipment_pct']}%, IP ~{stats['bea_ip_pct']}%) are approximate from BEA Table 5.3.5.*
+    *U.S. private nonresidential fixed investment is about \\${stats['pnfi_bn'] / 1000:.1f}T
+    SAAR (BEA/FRED PNFI, Q2 2025). Combined 2025 AI capex (~\\${stats['capex_2025']:.0f}B,
+    six companies) is roughly {stats['pnfi_share_pct']:.0f}% of that total — a
+    concentration signal: a small set of firms is deploying infrastructure at
+    macro-relevant scale.*
 
-    **Caveat:** This comparison overstates the US-specific share. AI infrastructure
-    capex is global (significant spending in Europe, Asia, and the Middle East), while
-    the BEA denominator is US-only. The true US share is lower, but no public data
-    cleanly separates domestic from international AI capex.
-
-    For context: total US data center construction spending is estimated at \\${stats['dc_construction_low_bn']}-{stats['dc_construction_high_bn']}B
-    annually (JLL, CBRE). The Census Bureau's C30 construction series does not
-    separately report data centers — they are buried in "commercial/warehouse"
-    categories. This is one of several critical data gaps.
+    **Caveat:** the numerator is global AI capex, while the denominator is U.S.-only
+    investment. The true U.S.-specific share is lower. For context, total U.S. data
+    center construction spending is estimated at \\${stats['dc_construction_low_bn']}–{stats['dc_construction_high_bn']}B
+    annually (JLL, CBRE), though the Census Bureau does not track data centers as a
+    separate construction category.
     """)
     return
 
@@ -1184,15 +1205,23 @@ def _(mo, stats):
     mo.md(f"""
     ---
 
-    ## The DeepSeek Test
+    ## Does AI Efficiency Reduce Infrastructure Demand?
 
-    DeepSeek's R1 model (January 2025) demonstrated competitive AI performance at
-    reportedly much lower training costs. Nvidia lost ~\\${stats['nvda_deepseek_loss_bn']}B in market cap in a
-    single day. It was the first real test of whether efficiency gains would reduce
-    infrastructure demand.
+    As AI models become more efficient to train and run, a central question opens up:
+    do efficiency gains compress the need for infrastructure, or do they expand it by
+    making AI cheaper and more broadly deployed? This is not an abstract question —
+    the answer determines whether the current buildout is appropriately sized or
+    structurally oversized.
 
-    **They didn't.** A year later, the 2025 actuals are in — every major AI
-    infrastructure builder *accelerated*:
+    DeepSeek R1 (January 2025) created the sharpest test of this question to date.
+    The reported ~$6M figure for DeepSeek-V3's final training run (arXiv:2412.19437,
+    December 2024) is self-reported and partial — one run, not full development costs —
+    but the directional claim is significant: frontier-capable models may be achievable
+    at costs far below the infrastructure buildout implies. Nvidia lost
+    ~\\${stats['nvda_deepseek_loss_bn']}B in market cap in a single day on the implication.
+
+    Through four quarters of data, the answer from actual spending is: no slowdown.
+    All major builders accelerated through 2025:
 
     | Company | 2024 actual | 2025 actual | 2026 guidance |
     | :--- | :--- | :--- | :--- |
@@ -1201,10 +1230,26 @@ def _(mo, stats):
     | Microsoft | ~\\${stats['msft_2024']:.0f}B | ~\\${stats['msft_2025']:.0f}B | ~\\${stats['msft_2026g']:.0f}B |
     | Meta | ~\\${stats['meta_2024']:.0f}B | ~\\${stats['meta_2025']:.0f}B | \\${stats['meta_2026g_low']}-{stats['meta_2026g_high']}B |
 
-    Management teams invoked the **Jevons paradox**: cheaper AI inference increases
-    adoption and ultimately increases total compute demand. Historical precedent
-    (LED lighting, Moore's Law, cloud computing) supports this — but it is not
-    guaranteed to apply. The combined 2026 guidance of ~\\${stats['guidance_2026']:.0f}B
+    Management teams reached for the **Jevons paradox** to explain this: lower AI
+    inference costs increase adoption, which increases total compute demand. Lower cost
+    per unit → more units → net increase in infrastructure required. Historical
+    precedent supports the mechanism — LED lighting, Moore's Law, and cloud computing
+    all followed this pattern. Whether it applies here is the open empirical question.
+
+    Efficiency gains are real and accelerating. Epoch AI documents ~3× annual
+    algorithmic efficiency gains in language models (roughly an 8-month doubling time,
+    *Algorithmic Progress in Language Models*, epochai.org). The Stanford HAI *AI
+    Index* 2024 (Ch. 2) documented a ~280× API price decline in 2022–2023, driven by
+    competitive dynamics as much as pure efficiency. If inference costs continue falling
+    at that rate, sustaining the current revenue-to-capex ratio requires demand to grow
+    ~10× over the same period. Cloud revenue is growing
+    ~{stats['cloud_yoy_min']:.0f}–{stats['cloud_yoy_max']:.0f}% YoY (Q4 2025). At that
+    rate, closing the gap takes roughly 4–6 years. Whether demand elasticity matches
+    that trajectory is what this research cannot yet answer. For precedent on how
+    productivity gains from general-purpose technologies manifest with a lag, see
+    Brynjolfsson, Rock, and Syverson's "Productivity J-Curve" *(AEJ Macroeconomics,
+    2021; NBER w25148)*. The combined 2026 guidance of ~\\${stats['guidance_2026_point']:.0f}B
+    (caveat band: \\${stats['guidance_2026_low']:.0f}-\\${stats['guidance_2026_high']:.0f}B)
     would consume ~{stats['capex_ocf_2026_pct']:.0f}% of these companies' trailing
     operating cash flow (~\\${stats['ocf_ttm']:.0f}B TTM), far exceeding the 10-year
     average of ~{stats['hist_capex_ocf_avg_pct']}% *(Bernstein Research, 2024)* and approaching the capex/OCF ratios
@@ -1216,18 +1261,20 @@ def _(mo, stats):
     been revised ±{stats['guidance_max_revision_pct']}% within a single year. Meta cut 2023 guidance {stats['meta_guidance_cut_pct']}% from its
     original \\${stats['meta_2023_guidance_low']}-{stats['meta_2023_guidance_high']}B range to \\${stats['meta_2023']:.0f}B actual (Meta Q3-Q4 2022, Q1 2023 earnings
     calls); Microsoft raised FY2025 guidance {stats['msft_guidance_raise_pct']}% in one quarter, from \\${stats['msft_fy25_initial_g']}B to
-    \\${stats['msft_fy25_revised_g']}B (MSFT Q1 FY2025 earnings call). The \\${stats['guidance_2026']:.0f}B total should be treated as
-    directionally correct but uncertain at the company level.
+    \\${stats['msft_fy25_revised_g']}B (MSFT Q1 FY2025 earnings call). The
+    \\${stats['guidance_2026_point']:.0f}B total should be treated as directionally
+    correct but uncertain at the company level. *Note: the ±{stats['guidance_band_pct']}%
+    band is derived from N=2 observed revision pairs — treat it as a directional bound,
+    not a statistically robust confidence interval.*
 
-    For infrastructure analysis, the DeepSeek episode reinforced a key finding:
-    **AI infrastructure capex is stickier than valuations.** Stock prices fluctuate
-    on sentiment; capital expenditure programs, once committed, roll forward on
-    multi-year procurement contracts, construction timelines, and competitive
-    pressure. This is not absolute — Meta held capex flat at ~\\${stats['meta_2022']:.0f}B
-    through its "year of efficiency" (2023) while cutting headcount by {stats['meta_headcount_cut_pct']}%
-    (Meta 10-K FY2022 → FY2023), and
-    the stock rallied — but the current competitive dynamic, where every company
-    fears falling behind on AI capacity, makes unilateral deceleration costly.
+    For infrastructure analysis, the DeepSeek episode is a test case worth watching:
+    **AI infrastructure capex may be stickier than valuations.** Stock prices fluctuated
+    on sentiment; capital expenditure programs rolled forward. One episode doesn't
+    establish the pattern — Meta held capex flat at ~\\${stats['meta_2022']:.0f}B through
+    its "year of efficiency" (2023) while cutting headcount by {stats['meta_headcount_cut_pct']}%
+    (Meta 10-K FY2022 → FY2023), showing that unilateral deceleration is possible. What
+    the current cycle adds is a competitive dynamic — every company fears falling behind
+    on capacity — that raises the cost of being the one that blinks first.
     """)
     return
 
@@ -1323,10 +1370,159 @@ def _(cfg, mo):
 
     {_chart}
 
-    *Quarterly capital expenditure for the four largest AI infrastructure spenders.
-    The red line marks DeepSeek R1's release (January 2025). Despite the efficiency
-    shock, all four accelerated capex through 2025. Data: yfinance (SEC filings,
-    through Q4 2025).*
+    *Quarterly capex for the four largest AI infrastructure spenders. The vertical
+    marker indicates DeepSeek R1's release (January 2025). Through Q4 2025, all four
+    firms increased spending rather than slowing deployment. Data: yfinance (SEC
+    filings, through Q4 2025).*
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo, stats):
+    _capex_low = stats["capex_2025"] * stats["analyst_const_pct_low"] / 100
+    mo.md("""
+    ---
+
+    ## What Persists: The Durability Taxonomy
+
+    Applying the project's analytical framework, AI infrastructure investments
+    fall into three durability categories. The distinction matters because financial
+    cycles are short, while some infrastructure consequences persist for decades:
+
+    | Category | What Gets Built | Life | Persists? |
+    | :--- | :--- | :--- | :--- |
+    | **Structural** | Grid upgrades, substations, DC shells | 20-50 yrs | Yes |
+    | **Policy-dependent** | Nuclear restarts, SMR, rate structures | Varies | If regime holds |
+    | **Demand-thesis-dependent** | GPU clusters, AI cooling, inference HW | 3-6 yrs | No |
+    """)
+    return
+
+
+@app.cell
+def _(
+    COLORS,
+    CONTEXT,
+    FONTS,
+    cfg,
+    chart_title,
+    legend_below,
+    plt,
+    save_fig,
+    stats,
+):
+    # Decomposition: shares from FY2024 10-K property schedules, base is 2025 actual
+    # Percentages from stats dict (sourced from 10-K filings — see stats cell)
+    _total_capex = round(stats["capex_2025"])  # $B, data-driven
+    _equip = _total_capex * stats["decomp_equip_pct"] / 100
+    _const = _total_capex * stats["decomp_const_pct"] / 100
+    _equip_life = 6   # max asset life (years)
+    _const_life = 40  # max asset life (years)
+
+    # Gantt timeline: x = calendar years 2025→2065; bar height ∝ capex.
+    # Life-span annotations to the right of each bar make both dimensions explicit.
+    # Vertical marker at 2031 (equipment end-of-life) + AI demand forecast horizon.
+    _h_equip = 1.0                   # reference height (equipment = larger-dollar tier)
+    _h_const = _const / _equip       # proportional to capex (~0.42 at 30/70 split)
+
+    fig_decomp, _ax = plt.subplots(figsize=FIGSIZE["wide"])
+
+    # Equipment bar: thick, gray, 6-year span from 2025
+    _ax.barh(
+        [1.6], [_equip_life], height=_h_equip,
+        color=CONTEXT, alpha=0.85, edgecolor="white", linewidth=0.5, left=2025,
+    )
+    # Construction bar: thin, accent, 40-year span from 2025
+    _ax.barh(
+        [0.6], [_const_life], height=_h_const,
+        color=COLORS["accent"], alpha=0.85, edgecolor="white", linewidth=0.5, left=2025,
+    )
+
+    # Shaded AI demand uncertainty zone (3-year horizon)
+    _ax.axvspan(2025, 2028, alpha=0.06, color=COLORS["accent"])
+    _ax.text(
+        2026.5, 2.3, "AI demand\nforecast\nhorizon",
+        ha="center", fontsize=FONTS["annotation"] - 1, color=COLORS["accent"], alpha=0.7,
+    )
+
+    # Vertical line: equipment end-of-life
+    _ax.axvline(2025 + _equip_life, color=CONTEXT, linewidth=1, linestyle="--", alpha=0.6)
+    _ax.text(
+        2025 + _equip_life + 0.3, 2.3, "Equipment\nfully replaced",
+        fontsize=FONTS["annotation"] - 1, color=CONTEXT, va="top",
+    )
+
+    # Equipment label: dark text inside bar — white had poor contrast against
+    # the gray bar + pink forecast shade overlap
+    _ax.text(
+        2025 + _equip_life / 2, 1.6,
+        f"Equipment  \\${_equip:.0f}B", va="center", ha="center",
+        fontsize=FONTS["annotation"] - 2, color=COLORS["text_dark"], fontweight="bold",
+    )
+    _ax.text(
+        2025 + _const_life / 2, 0.6,
+        f"Construction  \\${_const:.0f}B", va="center", ha="center",
+        fontsize=FONTS["annotation"], color="white", fontweight="bold",
+    )
+
+    # Life-span annotations to the right of each bar
+    _ax.text(
+        2025 + _equip_life + 0.5, 1.6, "~6 yr life",
+        va="center", fontsize=FONTS["annotation"], color=COLORS["text_dark"],
+        fontweight="bold",
+    )
+    _ax.text(
+        2025 + _const_life + 0.5, 0.6, "20\u201340 yr life",
+        va="center", fontsize=FONTS["annotation"], color=COLORS["accent"],
+        fontweight="bold",
+    )
+
+    _ax.set_xlim(2024, 2072)   # extra headroom for life-span labels
+    _ax.set_ylim(0.0, 2.6)
+    _ax.set_xlabel("Year", fontsize=FONTS["axis_label"])
+    _ax.get_yaxis().set_visible(False)
+    _ax.tick_params(axis="x", labelsize=FONTS["tick_label"])
+
+    chart_title(
+        fig_decomp,
+        f"{stats['decomp_const_pct']}% of capex creates 20\u201340 year assets \u2014 the rest depreciates in under 6",
+    )
+    plt.tight_layout()
+    save_fig(fig_decomp, cfg.img_dir / "dd001_capex_decomposition.png")
+    return
+
+
+@app.cell(hide_code=True)
+def _(cfg, mo, stats):
+    _chart = mo.image(
+        src=(cfg.img_dir / "dd001_capex_decomposition.png").read_bytes(), width=850
+    )
+    mo.md(f"""
+    # {stats['decomp_const_pct']}% of capex creates 20-40 year assets — the rest depreciates in under 6
+
+    {_chart}
+
+    *FY2024 10-K property schedules imply a cross-company midpoint near
+    ~{stats['decomp_const_pct']}% construction and ~{stats['decomp_equip_pct']}%
+    equipment. Construction assets — sites, buildings, substations, interconnects —
+    typically persist for 20–40 years. Equipment turns over much faster. In this
+    chart, horizontal span represents asset life and bar thickness represents 2025
+    capex scale. Note: Alphabet extended server useful life from 4 to 6 years in
+    2024, adding ~\\$3.9B to annual operating income — asset life assumptions
+    materially affect the economics (Alphabet 10-K FY2024, Note 1).*
+
+    This is the lock-in asymmetry. Investment risk is often evaluated on a 3–5 year
+    return horizon, but much of the physical footprint lasts far longer.
+
+    The path-dependency literature (Arthur 1989; David 1985) demonstrates how early
+    capital choices in technology platforms create self-reinforcing lock-in — the
+    QWERTY keyboard and VHS format are canonical cases. That literature applies
+    here with a physical-asset twist: the lock-in is not just technological but
+    geographic and infrastructural. Substations, transmission lines, and campus
+    foundations cannot be relocated or reallocated the way software platforms can.
+    *(Liebowitz & Margolis, 1990, argue the QWERTY case is weaker than David claims —
+    the counterargument is noted; physical infrastructure faces stronger path dependency
+    than keyboard layouts because relocation costs are genuinely prohibitive.)*
     """)
     return
 
@@ -1335,50 +1531,68 @@ def _(cfg, mo):
 def _(mo, stats):
     _capex_low = stats["capex_2025"] * stats["analyst_const_pct_low"] / 100
     mo.md(f"""
-    ---
-
-    ## What Persists: The Durability Taxonomy
-
-    Applying the project's analytical framework, AI infrastructure investments
-    fall into three durability categories:
-
-    | Category | What Gets Built | Life | Persists? |
-    | :--- | :--- | :--- | :--- |
-    | **Structural** | Grid upgrades, substations, DC shells | 20-50 yrs | Yes |
-    | **Policy-dependent** | Nuclear restarts, SMR, rate structures | Varies | If regime holds |
-    | **Demand-thesis-dependent** | GPU clusters, AI cooling, inference HW | 3-6 yrs | No |
-
-    The interesting cases are investments that **start as demand-thesis-dependent
-    but create structural demand through second-order effects.** A gas plant built
-    to power a data center campus is demand-thesis-dependent at inception. Once
-    built, it operates for 40 years regardless of whether the data center scales
-    as planned. The capital decision was AI-driven; the infrastructure consequence
-    is not.
+    Some investments begin as demand-thesis-dependent but become structural once
+    built. A gas plant built to power a data center campus is demand-thesis-dependent
+    at inception. Once built, it operates for 40 years regardless of whether the data
+    center scales as planned. The capital decision was AI-driven; the infrastructure
+    consequence is not.
 
     ### The historical parallel
 
-    The dot-com fiber overbuild (1998-2001) was called a bubble — and it was. But
-    the fiber stayed in the ground. Within a decade, traffic growth consumed the
-    excess capacity and then some. The physical infrastructure outlasted the
-    financial thesis that built it.
+    The dot-com fiber overbuild (1998-2001) is the natural reference point. Large
+    capital commitments, strong demand expectations, excess capacity — and then the
+    physical infrastructure stayed in the ground and ultimately supported a different
+    economic model.
 
-    **The analogy has limits.** Dark fiber requires near-zero maintenance — it sits
-    in conduit until someone lights it. Data centers are not passive assets. They
-    require continuous power, cooling, and maintenance. A stranded data center is
-    not a stranded fiber cable — it has ongoing operating costs even when idle.
-    The better parallel is the *grid infrastructure* built to serve data centers
-    (substations, transmission lines), which is closer to the fiber analogy:
-    durable, low-maintenance, and useful regardless of what the connected load does.
+    The fiber analogy is directionally helpful but incomplete. Fiber is passive once
+    deployed. Data centers are operating assets with ongoing power, cooling, and
+    maintenance requirements — the carrying cost of excess AI infrastructure is higher
+    than excess fiber. The better parallel is the *grid infrastructure* built to serve
+    data centers: substations, transmission lines, interconnects that are durable,
+    broadly reusable, and useful regardless of what the connected load does.
 
-    The question for AI infrastructure is whether the same pattern holds: **does
-    the grid modernization funded by AI capex retain value even if AI revenue
-    never reaches \\${stats['sequoia_rev_target_bn']}B?** The durability taxonomy says yes for the physical
-    construction layer and no for the equipment layer — and this qualitative
-    conclusion holds across plausible decomposition ranges. FY2024 10-K property
+    The question for AI infrastructure is whether the same pattern holds: does the
+    grid modernization funded by AI capex retain value even if AI revenue never
+    justifies ~\\${stats['capex_2025']:.0f}B+ in annual spending? Applying the durability
+    taxonomy: the physical construction layer looks structural — grid upgrades retain
+    value regardless of which compute paradigm wins. The equipment layer looks more
+    fragile — proprietary AI accelerators and single-purpose cooling systems are harder
+    to repurpose. Whether that classification holds depends on what "repurposed" means
+    in practice. The evidence so far: FY2024 10-K property
     schedules show construction at {stats['decomp_const_low']}-{stats['decomp_const_high']}% of gross PP&E for Meta, Amazon, and
     Alphabet — higher than the {stats['analyst_const_pct_low']}% often cited in analyst estimates. Even at
     the low end, {stats['analyst_const_pct_low']}% of ~\\${stats['capex_2025']:.0f}B is ~\\${_capex_low:.0f}B in
-    durable physical assets deployed in a single year.
+    durable physical assets deployed in a single year. Cumulated across the 2022–2025
+    AI buildout era, the six major builders committed ~\\${stats['ai_era_total_bn']:.0f}B in
+    total capex — of which approximately ~\\${stats['ai_era_const_bn']:.0f}B (applying the
+    {stats['decomp_const_pct']}% EDGAR-derived construction share) is now embedded in
+    physical infrastructure with 20–40 year asset lives, regardless of whether AI
+    revenue justifies the original investment thesis.
+
+    **Supply-side constraints: commitment ≠ execution.** The capex figures in this
+    notebook measure disclosed capital commitments. Converting those commitments to
+    deployed compute capacity faces three binding supply-side constraints not captured
+    in the capex numbers:
+
+    - **GPU allocation and advanced packaging:** TSMC's CoWoS (Chip-on-Wafer-on-Substrate)
+      packaging capacity is the proximate bottleneck on H100/H200/B200 AI accelerator
+      production. TSMC has been running CoWoS at capacity since mid-2023. GPU delivery
+      lags order placement by 12–18 months — announced equipment-tier capex and deployed
+      compute capacity therefore diverge by at least one procurement cycle.
+
+    - **Grid interconnection:** The median time from interconnection request to operation
+      is 4+ years (LBNL *Queued Up* 2025). Committed construction capex cannot be
+      energized until grid capacity is allocated. This constraint is analyzed in depth in
+      *DD-002: Grid Modernization*.
+
+    - **Transformer supply:** Lead times for large power transformers have extended to
+      2+ years. This is the binding constraint on the construction tier specifically —
+      data center buildings can be erected faster than the substation equipment needed
+      to power them (see archived *CS-1: Transformer Manufacturing*).
+
+    These constraints mean the durability taxonomy conclusions hold even if execution
+    lags the capex timeline by 2–4 years: the physical infrastructure gets built,
+    just slower than the financial commitments imply.
     """)
     return
 
@@ -1390,11 +1604,10 @@ def _(mo):
 
     ## Where This Research Goes Next
 
-    This notebook establishes the premise: AI capital is real and accelerating,
-    but the conversion from financial commitment to physical infrastructure is
-    lossy and slow. At every stage — valuations, revenue, physical buildout —
-    the gap between narrative and reality widens. We cannot take announcements
-    at face value.
+    This notebook maps the premise: AI capital is real and accelerating, but the
+    conversion from financial commitment to physical infrastructure is lossy and slow.
+    At each stage — valuations, revenue, physical buildout — questions open that the
+    announced numbers don't answer. We cannot take announcements at face value.
 
     The remaining deep dives trace what happens when capital *does* convert:
 
@@ -1427,6 +1640,22 @@ def _(mo):
     2024.
     See `research/ai_valuation_vs_infrastructure_reality.md` for full source list.*
     """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.callout(
+        mo.md(
+            """
+    ## Methods and Reproducibility
+
+    Detailed methods, source-date tables, and SQL hash registry are published in:
+    `notebooks/dd001_capital_reality/99_methods_and_sources.py`.
+    """
+        ),
+        kind="info",
+    )
     return
 
 
