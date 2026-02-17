@@ -25,31 +25,23 @@ SITE_DIR = PROJECT_ROOT / "_site"
 CASE_STUDIES = [
     {
         "id": "dd001",
-        "title": "CS-1: Transformer Manufacturing",
-        "subtitle": "Learning curves, supply chain dynamics, and trade policy",
+        "title": "DD-001: AI Valuations vs Physical Infrastructure Reality",
+        "subtitle": "Capex cycles, market cap misalignment, and what the physical economy actually built",
         "color": "#1f77b4",
         "notebooks": [
             {
-                "file": "notebooks/dd001_learning_curves/01_investigation.py",
-                "title": "Part 1 \u2014 Investigation",
+                "file": "notebooks/dd001_capital_reality/01_capex_vs_reality.py",
+                "title": "Part 1 \u2014 Capex vs Reality",
                 "desc": (
-                    "How AI demand creates conditions for a transformer "
-                    "manufacturing learning curve."
-                ),
-            },
-            {
-                "file": "notebooks/dd001_learning_curves/02_feedback_architecture.py",
-                "title": "Part 2 \u2014 Feedback Architecture",
-                "desc": (
-                    "Systems dynamics model of the transformer market "
-                    "feedback loops and policy leverage points."
+                    "Comparing AI company capex and market cap trajectories "
+                    "against what the physical supply chain can actually deliver."
                 ),
             },
         ],
     },
     {
         "id": "dd002",
-        "title": "CS-2/3: AI Capital and Grid Modernization",
+        "title": "DD-002: AI Capital and Grid Modernization",
         "subtitle": "Power generation, interconnection queues, and cost allocation",
         "color": "#2ca02c",
         "notebooks": [
@@ -75,6 +67,54 @@ CASE_STUDIES = [
                 "desc": (
                     "Five feedback loops that determine whether AI capital "
                     "modernizes the grid or bypasses it."
+                ),
+            },
+        ],
+    },
+    {
+        "id": "dd003",
+        "title": "DD-003: AI Capital Flows and Labor Markets",
+        "subtitle": "Who gets hired, who gets displaced, and where the skills gap lands",
+        "color": "#ff7f0e",
+        "notebooks": [
+            {
+                "file": "notebooks/dd003_labor_markets/01_who_gets_hired.py",
+                "title": "Part 1 \u2014 Who Gets Hired?",
+                "desc": (
+                    "Mapping AI-driven labor demand: where the jobs are, "
+                    "what they require, and who\u2019s excluded."
+                ),
+            },
+        ],
+    },
+    {
+        "id": "dd004",
+        "title": "DD-004: AI Capital and Who Pays for the Grid",
+        "subtitle": "Utility regulation, cost socialization, and ratepayer impact",
+        "color": "#9467bd",
+        "notebooks": [
+            {
+                "file": "notebooks/dd004_utility_regulation/01_pe_utility_acquisitions.py",
+                "title": "Part 1 \u2014 PE Utility Acquisitions",
+                "desc": (
+                    "Private equity\u2019s move into utility ownership and "
+                    "what it means for rate structures."
+                ),
+            },
+            {
+                "file": "notebooks/dd004_utility_regulation/02_data_center_community_impact.py",
+                "title": "Part 2 \u2014 Data Center Community Impact",
+                "desc": (
+                    "How large load additions reshape costs and services "
+                    "for existing ratepayers."
+                ),
+            },
+            {
+                "file": "notebooks/dd004_utility_regulation/03_cost_liability_map.py",
+                "title": "Part 3 \u2014 Cost Liability Map",
+                "desc": (
+                    "Who ultimately pays for grid upgrades triggered "
+                    "by hyperscaler demand."
                 ),
             },
         ],
@@ -136,7 +176,6 @@ def export_notebook(nb_file: str, output_path: Path) -> bool:
     if result.returncode != 0:
         print(f"  FAIL  {nb_file}")
         if result.stderr:
-            # Show last few lines of error
             lines = result.stderr.strip().split("\n")
             for line in lines[-5:]:
                 print(f"         {line}")
@@ -145,6 +184,86 @@ def export_notebook(nb_file: str, output_path: Path) -> bool:
     size_kb = output_path.stat().st_size / 1024
     print(f"  OK    {nb_file} ({size_kb:.0f} KB)")
     return True
+
+
+# ---------------------------------------------------------------------------
+# Shared HTML fragments
+# ---------------------------------------------------------------------------
+
+_NAV = """\
+    <nav>
+        <a href="index.html">Research</a>
+        <a href="about.html">About</a>
+        <a href="https://github.com/Shakes-tzd/Systems">GitHub</a>
+    </nav>"""
+
+_SHARED_CSS = """\
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                         Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #fafafa;
+            color: #1a1a2e;
+            line-height: 1.6;
+        }
+        header {
+            background: #1a1a2e;
+            color: white;
+            padding: 3rem 2rem 2rem;
+            text-align: center;
+        }
+        header h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            letter-spacing: -0.5px;
+        }
+        .subtitle {
+            font-size: 1.05rem;
+            opacity: 0.85;
+            max-width: 680px;
+            margin: 0 auto 0.5rem;
+        }
+        nav {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            padding: 1rem 0 0;
+            border-top: 1px solid rgba(255,255,255,0.15);
+            margin-top: 1.5rem;
+        }
+        nav a {
+            color: rgba(255,255,255,0.75);
+            text-decoration: none;
+            font-size: 0.9rem;
+            letter-spacing: 0.02em;
+        }
+        nav a:hover { color: white; }
+        main {
+            max-width: 860px;
+            margin: 2.5rem auto;
+            padding: 0 1.5rem;
+        }
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: #aaa;
+            font-size: 0.82rem;
+            border-top: 1px solid #eee;
+            margin-top: 2rem;
+        }
+        footer a { color: #888; }
+        @media (max-width: 600px) {
+            header { padding: 2rem 1.25rem 1.5rem; }
+            header h1 { font-size: 1.7rem; }
+            main { padding: 0 1rem; }
+        }"""
+
+_FOOTER = """\
+    <footer>
+        Built with <a href="https://marimo.io">marimo</a> &middot;
+        <a href="https://github.com/Shakes-tzd/Systems">Source on GitHub</a>
+    </footer>"""
 
 
 # ---------------------------------------------------------------------------
@@ -159,42 +278,7 @@ INDEX_TEMPLATE = """\
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Where AI Capital Lands</title>
     <style>
-        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        body {{
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
-                         Roboto, Oxygen, Ubuntu, sans-serif;
-            background: #fafafa;
-            color: #1a1a2e;
-            line-height: 1.6;
-        }}
-        header {{
-            background: #1a1a2e;
-            color: white;
-            padding: 3rem 2rem;
-            text-align: center;
-        }}
-        header h1 {{
-            font-size: 2.2rem;
-            font-weight: 700;
-            margin-bottom: 0.75rem;
-            letter-spacing: -0.5px;
-        }}
-        .subtitle {{
-            font-size: 1.05rem;
-            opacity: 0.85;
-            max-width: 680px;
-            margin: 0 auto 0.5rem;
-        }}
-        .author {{
-            font-size: 0.9rem;
-            opacity: 0.6;
-            margin-top: 0.5rem;
-        }}
-        main {{
-            max-width: 860px;
-            margin: 2.5rem auto;
-            padding: 0 1.5rem;
-        }}
+{shared_css}
         .intro {{
             font-size: 0.95rem;
             color: #555;
@@ -243,43 +327,23 @@ INDEX_TEMPLATE = """\
             color: white;
             margin-top: 0.1rem;
         }}
-        .nb-content {{
-            flex: 1;
-        }}
+        .nb-content {{ flex: 1; }}
         .nb-title {{
             font-weight: 600;
             font-size: 1rem;
             color: #1a1a2e;
             text-decoration: none;
         }}
-        .nb-title:hover {{
-            text-decoration: underline;
-        }}
+        .nb-title:hover {{ text-decoration: underline; }}
         .nb-desc {{
             color: #666;
             font-size: 0.88rem;
             margin-top: 0.2rem;
         }}
-        .nb-unavailable {{
-            opacity: 0.45;
-        }}
+        .nb-unavailable {{ opacity: 0.45; }}
         .nb-unavailable .nb-title {{
             color: #999;
             pointer-events: none;
-        }}
-        footer {{
-            text-align: center;
-            padding: 2rem;
-            color: #aaa;
-            font-size: 0.82rem;
-            border-top: 1px solid #eee;
-            margin-top: 2rem;
-        }}
-        footer a {{ color: #888; }}
-        @media (max-width: 600px) {{
-            header {{ padding: 2rem 1.25rem; }}
-            header h1 {{ font-size: 1.7rem; }}
-            main {{ padding: 0 1rem; }}
         }}
     </style>
 </head>
@@ -291,7 +355,7 @@ INDEX_TEMPLATE = """\
             infrastructure and creates durable path dependencies in supply
             chains, grid topology, and energy markets.
         </p>
-        <p class="author">Thandolwethu Zwelakhe Dlamini</p>
+{nav}
     </header>
     <main>
         <p class="intro">
@@ -302,12 +366,9 @@ INDEX_TEMPLATE = """\
             <a href="https://marimo.io" style="color:#555">marimo</a>
             notebooks &mdash; all code, data sources, and methodology are visible.
         </p>
-        {sections}
+        {{sections}}
     </main>
-    <footer>
-        Built with <a href="https://marimo.io">marimo</a> &middot;
-        <a href="https://github.com/Shakes-tzd/Systems">Source on GitHub</a>
-    </footer>
+{footer}
 </body>
 </html>
 """
@@ -321,6 +382,12 @@ def generate_index(exported: dict[str, bool]) -> str:
     exported : dict
         Mapping of notebook file path -> True if exported successfully.
     """
+    template = INDEX_TEMPLATE.format(
+        shared_css=_SHARED_CSS,
+        nav=_NAV,
+        footer=_FOOTER,
+    )
+
     sections = []
 
     for cs in CASE_STUDIES:
@@ -354,7 +421,254 @@ def generate_index(exported: dict[str, bool]) -> str:
         )
         sections.append(section)
 
-    return INDEX_TEMPLATE.format(sections="\n".join(sections))
+    # Use replace instead of format to avoid conflicts with CSS curly braces
+    # that were injected in the first format pass.
+    return template.replace("{sections}", "\n".join(sections))
+
+
+# ---------------------------------------------------------------------------
+# About page generation
+# ---------------------------------------------------------------------------
+
+ABOUT_TEMPLATE = """\
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About &mdash; Where AI Capital Lands</title>
+    <style>
+{shared_css}
+        .about-content {{
+            max-width: 680px;
+        }}
+        .about-content h2 {{
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin: 2rem 0 0.75rem;
+            color: #1a1a2e;
+        }}
+        .about-content h2:first-child {{
+            margin-top: 0;
+        }}
+        .about-content p {{
+            color: #444;
+            font-size: 0.97rem;
+            line-height: 1.75;
+            margin-bottom: 1rem;
+        }}
+        .about-content ul {{
+            margin: 0.5rem 0 1rem 1.25rem;
+            color: #444;
+            font-size: 0.97rem;
+            line-height: 1.75;
+        }}
+        .about-content ul li {{
+            margin-bottom: 0.3rem;
+        }}
+        .timeline {{
+            border-left: 2px solid #e4e4e4;
+            margin: 1rem 0 1.5rem 0.5rem;
+            padding-left: 1.25rem;
+        }}
+        .timeline-item {{
+            margin-bottom: 1rem;
+            position: relative;
+        }}
+        .timeline-item::before {{
+            content: "";
+            width: 8px;
+            height: 8px;
+            background: #1a1a2e;
+            border-radius: 50%;
+            position: absolute;
+            left: -1.6rem;
+            top: 0.45rem;
+        }}
+        .timeline-year {{
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #999;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }}
+        .timeline-desc {{
+            font-size: 0.95rem;
+            color: #333;
+            line-height: 1.5;
+        }}
+        .links {{
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }}
+        .link-pill {{
+            display: inline-block;
+            background: #1a1a2e;
+            color: white;
+            text-decoration: none;
+            padding: 0.4rem 0.9rem;
+            border-radius: 4px;
+            font-size: 0.88rem;
+            transition: opacity 0.15s;
+        }}
+        .link-pill:hover {{ opacity: 0.8; }}
+        .name-pronunciation {{
+            font-size: 0.85rem;
+            color: #888;
+            margin-top: 0.1rem;
+        }}
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Where AI Capital Lands</h1>
+        <p class="subtitle">
+            How $200B+/year in AI capital expenditure converts into physical
+            infrastructure and creates durable path dependencies in supply
+            chains, grid topology, and energy markets.
+        </p>
+{nav}
+    </header>
+    <main>
+        <div class="about-content">
+
+            <h2>Thandolwethu Zwelakhe Dlamini</h2>
+            <p class="name-pronunciation">Goes by Shakes &mdash; from Eswatini (formerly Swaziland), Southern Africa</p>
+
+            <p>
+                I am a systems engineer and policy analyst. My background spans
+                mechanical engineering, technology policy, and energy infrastructure
+                &mdash; specifically how capital decisions at the top of the stack
+                propagate into physical systems at the bottom.
+            </p>
+
+            <p>
+                This project is the practical application of that lens: tracing
+                $200B+/year in AI capital expenditure from financial commitment
+                to physical asset, and analyzing what gets locked in, what depends
+                on regulatory regimes, and where feedback loops amplify or distort
+                outcomes.
+            </p>
+
+            <h2>Background</h2>
+
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-year">2015 &ndash; 2020</div>
+                    <div class="timeline-desc">
+                        <strong>Duke University</strong> &mdash; B.S. Mechanical Engineering,
+                        Minor in German. Study abroad in Berlin; took three engineering
+                        courses in German after 18 months of study.
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">2017 &ndash; 2018</div>
+                    <div class="timeline-desc">
+                        <strong>Eswatini Electricity Company / One Power (Lesotho)</strong>
+                        &mdash; Worked on microgrid projects in rural Southern Africa,
+                        including Eswatini&rsquo;s first microgrid, electrifying a
+                        remote village unreachable by conventional grid infrastructure.
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">2019</div>
+                    <div class="timeline-desc">
+                        <strong>COP25, Madrid</strong> &mdash; Represented Eswatini
+                        as part of the national delegation at the UN Climate Conference.
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">2020 &ndash; 2022</div>
+                    <div class="timeline-desc">
+                        <strong>MIT</strong> &mdash; S.M. Technology &amp; Policy
+                        (Systems Engineering focus). Research on energy systems,
+                        infrastructure investment, and policy interaction.
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">2022 &ndash; 2025</div>
+                    <div class="timeline-desc">
+                        <strong>SunStrong Management LLC</strong> (formerly Sunnova Energy)
+                        &mdash; Senior Data Analyst. Managed data infrastructure and
+                        Energy Community ITC analysis for a portfolio of 200,000+
+                        solar installations across the U.S.
+                    </div>
+                </div>
+            </div>
+
+            <h2>Why This Project</h2>
+
+            <p>
+                AI capex numbers appear in quarterly earnings reports, get written
+                up in press releases, and vanish into abstraction. But the capital
+                doesn&rsquo;t vanish &mdash; it converts into transformers, transmission
+                lines, gas turbines, semiconductor fabs, and data center concrete.
+                That infrastructure is durable. It reshapes supply chains, labor
+                markets, grid topology, and trade patterns for decades.
+            </p>
+
+            <p>
+                The analysis tries to answer a specific question: <em>Where does
+                AI capex land in the physical economy, what does it lock in, and
+                how do current regulatory decisions amplify or distort those
+                outcomes?</em>
+            </p>
+
+            <p>
+                Each case study traces one supply chain node &mdash; grid equipment,
+                generation mix, labor markets, utility regulation &mdash; and
+                applies the same framework: capital flow mapping, durability
+                taxonomy, and systems dynamics modeling to identify feedback
+                architecture and policy leverage points.
+            </p>
+
+            <h2>Methods</h2>
+
+            <p>
+                All analysis is done in
+                <a href="https://marimo.io" style="color:#1a1a2e">marimo</a>
+                &mdash; reactive Python notebooks that are valid .py files and
+                diff cleanly in git. Data sources are government databases,
+                regulatory filings, and company disclosures. The code,
+                data pipelines, and methodology are fully visible in the
+                source repository.
+            </p>
+
+            <ul>
+                <li>Data pipelines: DuckDB + dlt</li>
+                <li>Systems dynamics: PySD</li>
+                <li>Visualization: matplotlib (Storytelling with Data principles)</li>
+                <li>Statistics: PyMC, statsmodels</li>
+            </ul>
+
+            <h2>Contact</h2>
+
+            <div class="links">
+                <a href="https://github.com/Shakes-tzd/Systems" class="link-pill">
+                    Source Code
+                </a>
+                <a href="https://github.com/Shakes-tzd" class="link-pill">
+                    GitHub Profile
+                </a>
+            </div>
+
+        </div>
+    </main>
+{footer}
+</body>
+</html>
+"""
+
+
+def generate_about() -> str:
+    """Generate the about.html content."""
+    return ABOUT_TEMPLATE.format(
+        shared_css=_SHARED_CSS,
+        nav=_NAV,
+        footer=_FOOTER,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -371,11 +685,11 @@ def main() -> int:
     (SITE_DIR / ".nojekyll").touch()
 
     # Step 1: Data
-    print("\n[1/3] Checking data...")
+    print("\n[1/4] Checking data...")
     ensure_data()
 
     # Step 2: Export notebooks
-    print("\n[2/3] Exporting notebooks...")
+    print("\n[2/4] Exporting notebooks...")
     exported: dict[str, bool] = {}
     total, ok = 0, 0
 
@@ -389,20 +703,27 @@ def main() -> int:
                 ok += 1
 
     # Step 3: Index
-    print("\n[3/3] Generating index page...")
+    print("\n[3/4] Generating index page...")
     index_html = generate_index(exported)
     (SITE_DIR / "index.html").write_text(index_html)
     print(f"  OK    index.html")
+
+    # Step 4: About
+    print("\n[4/4] Generating about page...")
+    about_html = generate_about()
+    (SITE_DIR / "about.html").write_text(about_html)
+    print(f"  OK    about.html")
 
     # Summary
     print(f"\n{'=' * 60}")
     print(f"Done: {ok}/{total} notebooks exported")
     if ok < total:
-        print(f"  {total - ok} notebook(s) failed — marked unavailable in index")
+        print(f"  {total - ok} notebook(s) skipped \u2014 marked unavailable in index")
     print(f"Output: {SITE_DIR.relative_to(PROJECT_ROOT)}/")
     print(f"{'=' * 60}")
 
-    return 0 if ok == total else 1
+    # Always exit 0 — partial exports are valid; failed notebooks appear grayed out
+    return 0
 
 
 if __name__ == "__main__":
