@@ -21,16 +21,18 @@ def _(mo, stats):
     for 2026. But how much of that capital is actually converting to physical
     infrastructure — and what does the grid get from the portion that does?
 
-    This notebook traces the **three-layer disconnect** between AI financial narratives
-    and physical outcomes:
+    The disconnect between financial narrative and physical outcome plays out at
+    every level. Markets added ~\\${stats['mkt_gain_t']:.1f}T in value on AI expectations
+    while actual annual infrastructure spending reached ~\\${stats['capex_2025']:.0f}B.
+    Cloud revenue is growing fast (~\\${stats['cloud_rev_q4_annual']:.0f}B annualized) but
+    capex-to-revenue ratios remain far above historical norms. And most of what gets
+    announced never gets built — the majority of queued projects are withdrawn before
+    reaching operation (LBNL, 2024).
 
-    1. **Valuations vs. Capex** — ~\\${stats['mkt_gain_t']:.1f}T in Mag 7 market cap gains vs. ~\\${stats['capex_2025']:.0f}B in annual spending (6 AI capex leaders)
-    2. **Capex vs. Revenue** — Cloud revenue growing fast (~\\${stats['cloud_rev_q4_annual']:.0f}B annualized) but capex-to-revenue ratios remain far above historical norms
-    3. **Announcements vs. Physical Reality** — most queued projects never reach operation (LBNL, 2024)
-
-    The key insight: ~{stats['decomp_const_pct']}% of capex funds physical construction that creates the most
-    durable assets (per FY2024 10-K data). Equipment (~{stats['decomp_equip_pct']}%) depreciates in 3-6 years.
-    **The grid gets lasting infrastructure even if the AI demand thesis falters.**
+    But here's what matters for the physical economy: ~{stats['decomp_const_pct']}% of
+    capex funds construction that creates 20-40 year assets (per FY2024 10-K data).
+    Equipment (~{stats['decomp_equip_pct']}%) depreciates in 3-6 years. **The grid gets
+    lasting infrastructure even if the AI demand thesis falters.**
     """)
     return
 
@@ -119,7 +121,7 @@ def _(pd, query):
     mkt_cap["gain_t"] = mkt_cap["mkt_cap_2026_t"] - mkt_cap["mkt_cap_2023_t"]
     mkt_cap = mkt_cap.reset_index()
 
-    # Cloud revenue (quarterly) for Layer 2 analysis
+    # Cloud revenue (quarterly) for revenue question analysis
     cloud_rev = query("""
         SELECT ticker, segment, quarter, revenue_bn, yoy_growth_pct
         FROM energy_data.cloud_revenue
@@ -195,7 +197,7 @@ def _(bea_nipa, capex_annual, citations, cloud_rev, guidance_2026, mkt_cap, ocf_
         "mkt_gain_t": mkt_cap["gain_t"].sum(),
         # BEA PNFI from FRED (quarterly SAAR, $B)
         "pnfi_bn": pnfi_bn,
-        # Cloud revenue (Layer 2)
+        # Cloud revenue
         "cloud_rev_q4": _cloud_q4["revenue_bn"].sum(),
         "cloud_rev_q4_annual": _cloud_q4["revenue_bn"].sum() * 4,
         "cloud_rev_2024": _cloud_2024.groupby("ticker")["revenue_bn"].sum().sum(),
@@ -582,12 +584,12 @@ def _(cfg, mo, stats):
     even as capex accelerated — the valuation gap is narrowing but remains extreme.
     Sources: Yahoo Finance (market cap, Feb 14 2026), SEC filings via yfinance (capex).*
 
-    This is Layer 1 of the disconnect. Market capitalization reflects discounted
-    future earnings expectations, not current asset values — so comparing a stock of
-    expected value to a flow of annual spending is a scale comparison, not a like-for-like
-    equivalence. Still, the magnitude of the gap reveals how much future revenue
-    growth is already priced in, and how little of that expected value has been
-    converted to physical infrastructure so far.
+    Market capitalization reflects discounted future earnings expectations, not
+    current asset values — so comparing a stock of expected value to a flow of
+    annual spending is a scale comparison, not a like-for-like equivalence. Still,
+    the magnitude of the gap reveals how much future revenue growth is already
+    priced in, and how little of that expected value has been converted to physical
+    infrastructure so far.
     """)
     return
 
@@ -628,7 +630,7 @@ def _(mo, stats):
     mo.md(f"""
     ---
 
-    ## Layer 2: The Revenue Question
+    ## The Revenue Question
 
     Sequoia Capital's David Cahn estimated (September 2024) that the AI industry
     needs ~\\${stats['sequoia_rev_target_bn']}B in annual revenue to justify the infrastructure buildout. As of
@@ -895,7 +897,7 @@ def _(mo, stats):
     mo.md(f"""
     ---
 
-    ## Layer 3: Announcements vs. Physical Reality
+    ## Announcements vs. Physical Reality
 
     The gap between what's announced and what gets built is enormous:
 
@@ -1391,8 +1393,9 @@ def _(mo):
 
     This notebook establishes the premise: AI capital is real and accelerating,
     but the conversion from financial commitment to physical infrastructure is
-    lossy and slow. The three-layer disconnect — valuations, revenue, physical
-    reality — means we cannot take announcements at face value.
+    lossy and slow. At every stage — valuations, revenue, physical buildout —
+    the gap between narrative and reality widens. We cannot take announcements
+    at face value.
 
     The remaining deep dives trace what happens when capital *does* convert:
 
