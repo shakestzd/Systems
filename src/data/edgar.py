@@ -14,6 +14,7 @@ from __future__ import annotations
 import logging
 import re
 import time
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -45,12 +46,18 @@ XBRL_CONCEPTS: dict[str, str] = {
     # Aggregate PP&E (for cross-validation)
     "PropertyPlantAndEquipmentGross": "us-gaap",
     "PropertyPlantAndEquipmentNet": "us-gaap",
-    "PropertyPlantAndEquipmentAndFinanceLeaseRightOfUseAsset"
-    "BeforeAccumulatedDepreciationAndAmortization": "us-gaap",
-    "PropertyPlantAndEquipmentAndFinanceLeaseRightOfUseAsset"
-    "AfterAccumulatedDepreciationAndAmortization": "us-gaap",
-    "PropertyPlantAndEquipmentAndFinanceLeaseRightOfUseAsset"
-    "AccumulatedDepreciationAndAmortization": "us-gaap",
+    (
+        "PropertyPlantAndEquipmentAndFinanceLeaseRightOfUseAsset"
+        "BeforeAccumulatedDepreciationAndAmortization"
+    ): "us-gaap",
+    (
+        "PropertyPlantAndEquipmentAndFinanceLeaseRightOfUseAsset"
+        "AfterAccumulatedDepreciationAndAmortization"
+    ): "us-gaap",
+    (
+        "PropertyPlantAndEquipmentAndFinanceLeaseRightOfUseAsset"
+        "AccumulatedDepreciationAndAmortization"
+    ): "us-gaap",
     "AccumulatedDepreciationDepletionAndAmortizationPropertyPlantAndEquipment": "us-gaap",
     # Capex
     "PaymentsToAcquirePropertyPlantAndEquipment": "us-gaap",
@@ -180,8 +187,6 @@ def extract_annual_facts(
             start = entry.get("start")
             end = entry.get("end", "")
             if start and end:
-                from datetime import datetime
-
                 try:
                     d_start = datetime.strptime(start, "%Y-%m-%d")
                     d_end = datetime.strptime(end, "%Y-%m-%d")

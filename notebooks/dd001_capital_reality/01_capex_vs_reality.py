@@ -281,8 +281,7 @@ def _(bea_nipa, capex_annual, citations, cloud_rev, guidance_2026, mkt_cap, ocf_
     stats["meta_servers_pct"] = stats["meta_equip_pct"]
     stats["googl_tech_pct"] = stats["googl_equip_pct"]
     stats["amzn_equipment_pct"] = stats["amzn_equip_pct"]
-    stats["googl_buildings_pct"] = stats["googl_buildings_pct"]
-    stats["amzn_buildings_pct"] = stats["amzn_buildings_pct"]
+    # googl_buildings_pct and amzn_buildings_pct already set by the loop above
     # Cross-company midpoints and ranges
     _bld_pcts = [stats["meta_buildings_pct"], stats["amzn_buildings_pct"], stats["googl_buildings_pct"]]
     _eqp_pcts = [stats["meta_servers_pct"], stats["amzn_equipment_pct"], stats["googl_tech_pct"]]

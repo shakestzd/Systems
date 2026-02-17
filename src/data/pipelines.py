@@ -66,7 +66,9 @@ _FUEL_MAP: dict[str, str] = {
 def _fuel_category(energy_source: str, prime_mover: str) -> str:
     """Map EIA energy source code + prime mover to analysis category."""
     if energy_source == "NG":
-        # CA/CS = combined cycle steam/combustion parts; CT = simple combustion turbine
+        # CA/CS = combined cycle steam/combustion parts.
+        # CT = simple-cycle combustion turbine (intentionally classified as gas_ct,
+        # not gas_cc — corrected from earlier misclassification per EIA definitions).
         if prime_mover in ("CA", "CS"):
             return "gas_cc"
         return "gas_ct"
