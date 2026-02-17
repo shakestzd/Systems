@@ -372,7 +372,7 @@ def _(cfg, save_fig, waterfall_chart):
     # $4.36B is sourced; the breakdown by category is not from the UCS report.
     fig_cost = waterfall_chart(
         _items,
-        "$4.36B in PJM data center grid costs shifted to ratepayers in 2024 (estimated breakdown)",
+        "\\$4.36B in PJM data center grid costs shifted to ratepayers in 2024 (estimated breakdown)",
         total_label="Total\nsocialized",
     )
     save_fig(fig_cost, cfg.img_dir / "dd002_cost_allocation.png")
@@ -386,9 +386,9 @@ def _(cfg, mo, stats):
     )
     mo.md(
         f"""
-    ## The ${stats['ucs_cost_bn']:.2f} Billion Question
+    ## The \\${stats['ucs_cost_bn']:.2f} Billion Question
 
-    # ${stats['ucs_cost_bn']:.2f}B in PJM data center grid costs shifted to ratepayers in 2024 (estimated breakdown)
+    # \\${stats['ucs_cost_bn']:.2f}B in PJM data center grid costs shifted to ratepayers in 2024 (estimated breakdown)
 
     {_cost_chart}
 
@@ -398,7 +398,7 @@ def _(cfg, mo, stats):
 
     The Union of Concerned Scientists identified more than {stats['ucs_projects']}
     local transmission projects from 2022 to 2024, with
-    **${stats['ucs_cost_bn']:.2f} billion** in data center transmission connection
+    **\\${stats['ucs_cost_bn']:.2f} billion** in data center transmission connection
     costs approved in **2024 alone** and passed to PJM ratepayers. Over
     {stats['ucs_socialized_pct']}% of projects socialized their costs to all
     utility customers — meaning residential customers in Virginia, Ohio, and
@@ -406,7 +406,7 @@ def _(cfg, mo, stats):
     data centers.
 
     The chart above breaks this total into estimated categories based on
-    typical transmission project cost structures. The $4.36B total is
+    typical transmission project cost structures. The \\$4.36B total is
     sourced from UCS; the category-level breakdown is illustrative.
 
     "Socialized costs" means that grid upgrades triggered by data center
@@ -467,7 +467,7 @@ def _(mo, stats):
             mo.callout(
                 mo.md(
                     f"**What this does NOT change:** Standard grid interconnection "
-                    f"cost allocation. The ${stats['ucs_cost_bn']:.2f}B UCS finding "
+                    f"cost allocation. The \\${stats['ucs_cost_bn']:.2f}B UCS finding "
                     f"covers projects that connect through the normal process, not "
                     f"co-location. The broader cost allocation question remains unresolved."
                 ),
@@ -497,8 +497,8 @@ def _(mo, stats):
     - Data center load growth is driving **billions in grid upgrades** that
       will be socialized across Dominion Energy's residential rate base.
     - Under high-growth scenarios, residential electricity bills could
-      increase by approximately **${stats['va_bill_annual']} per year
-      (${stats['va_bill_monthly']} per month) by 2040**.
+      increase by approximately **\\${stats['va_bill_annual']} per year
+      (\\${stats['va_bill_monthly']} per month) by 2040**.
     - The Virginia Clean Economy Act's 100% clean energy mandate by 2045
       is in tension with the pace of data center demand — it may not be
       possible to build clean generation fast enough.
@@ -560,16 +560,16 @@ def _(cfg, mo, stats):
     )
     mo.md(
         f"""
-    # Virginia residential bills could rise ${stats['va_bill_annual']}/year by 2040 under high data center growth
+    # Virginia residential bills could rise \\${stats['va_bill_annual']}/year by 2040 under high data center growth
 
     {_va_chart}
 
     *Illustrative trajectory based on the E3/JLARC high-growth scenario endpoint
-    of ${stats['va_bill_annual']}/year by 2040. The curve shape (t^1.5) assumes
+    of \\${stats['va_bill_annual']}/year by 2040. The curve shape (t^1.5) assumes
     faster-than-linear growth as data center load compounds; the actual path
     depends on Dominion Energy rate cases and regulatory decisions. The 10%
     reference line uses the current national average residential bill
-    (~${stats['avg_monthly_bill']}/month from BLS data). Virginia bills differ
+    (~\\${stats['avg_monthly_bill']}/month from BLS data). Virginia bills differ
     from the national average.*
     """
     )
@@ -618,7 +618,7 @@ def _(FONTS, growth_slider, mo, np, plt, stats, years_slider):
     _ax.plot(_x_labels, _annual_costs, color=COLORS["accent"], linewidth=2.5)
     _ax.axhline(y=_annual_base, color=COLORS["reference"], linestyle="--", linewidth=1, alpha=0.7)
     _ax.annotate(
-        f"2024 baseline: ${_annual_base:.1f}B",
+        f"2024 baseline: \\${_annual_base:.1f}B",
         xy=(2024, _annual_base), xytext=(2024 + _years * 0.3, _annual_base * 0.85),
         fontsize=FONTS["annotation"], color=COLORS["reference"],
         arrowprops=dict(arrowstyle="->", color=COLORS["reference"], lw=0.8),
@@ -627,7 +627,7 @@ def _(FONTS, growth_slider, mo, np, plt, stats, years_slider):
     # Annotate final year
     _final = _annual_costs[-1]
     _ax.annotate(
-        f"${_final:,.1f}B/yr",
+        f"\\${_final:,.1f}B/yr",
         xy=(_x_labels[-1], _final),
         xytext=(_x_labels[-1] - _years * 0.2, _final * 1.1),
         fontsize=FONTS["annotation"], fontweight="bold", color=COLORS["accent"],
@@ -645,16 +645,16 @@ def _(FONTS, growth_slider, mo, np, plt, stats, years_slider):
     mo.vstack([
         mo.md(
             f"# At {_rate:.0%} annual growth, socialized grid costs reach "
-            f"${_final:,.1f}B/year by {int(_x_labels[-1])}"
+            f"\\${_final:,.1f}B/year by {int(_x_labels[-1])}"
         ),
         mo.as_html(_fig),
         mo.md(
             f"**Cumulative socialized cost over {_years} years: "
-            f"${_projected:,.1f} billion.** "
+            f"\\${_projected:,.1f} billion.** "
             f"This is a rough compound projection from a single year's PJM data. "
             f"It assumes costs grow at the data center load rate, which ignores "
             f"regulatory responses (like the FERC order above), cost non-linearity, "
-            f"and the fact that the ${stats['ucs_cost_bn']:.2f}B baseline is "
+            f"and the fact that the \\${stats['ucs_cost_bn']:.2f}B baseline is "
             f"PJM-specific, not national. Treat as directional, not predictive."
         ),
     ])
@@ -734,7 +734,7 @@ def _(cfg, mo):
 
     - LBNL "Queued Up: 2025 Edition" — U.S. interconnection queue data through 2024
     - Union of Concerned Scientists (September 2025), "Connection Costs Loophole
-      Costs Customers Over $4 Billion" — PJM data center cost socialization study
+      Costs Customers Over \\$4 Billion" — PJM data center cost socialization study
     - JLARC / E3 (December 2024), "Data Centers in Virginia" — grid infrastructure
       and customer rate impact analysis
     - FERC Docket EL25-49-000 (December 18, 2025) — cost allocation order for

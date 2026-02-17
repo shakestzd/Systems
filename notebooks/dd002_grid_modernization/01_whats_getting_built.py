@@ -1101,8 +1101,8 @@ def _(cfg, mo, stats):
     electricity costs" narrative suggests. The 2022 price spike was driven
     by the Ukraine war and the European energy crisis, not by data center
     demand. Since then, gas prices have declined sharply from their 2022 peaks
-    (the Henry Hub spot price is currently ~${stats['current_gas_price']:.2f}/MMBtu,
-    down from a peak of ~${stats['peak_gas_price']:.0f}/MMBtu) — but the
+    (the Henry Hub spot price is currently ~\\${stats['current_gas_price']:.2f}/MMBtu,
+    down from a peak of ~\\${stats['peak_gas_price']:.0f}/MMBtu) — but the
     electricity PPI (blue) tells a different story: electricity prices rose
     with gas and have not fully come back down. The divergence reflects grid
     congestion, capacity costs, and growing demand.

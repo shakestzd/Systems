@@ -16,7 +16,7 @@ def _(mo):
 
     Part 1 showed that new generation capacity is predominantly clean — solar
     and battery storage dominate additions since 2020. Part 2 showed that the
-    interconnection queue is the binding constraint, and that an estimated $4.36 billion in
+    interconnection queue is the binding constraint, and that an estimated \\$4.36 billion in
     grid upgrade costs were identified for socialization to ratepayers in 2024
     alone (UCS, September 2025).
 
@@ -416,12 +416,12 @@ def _(CATEGORICAL, COLORS, FONTS, baseline, cfg, multi_panel, save_fig):
     # Panel 2: Renewable cost — annotate start and end (well clear of line)
     _cost_start = baseline["Renewable Cost Index"].iloc[0]
     _cost_end = baseline["Renewable Cost Index"].iloc[-1]
-    _axes[2].annotate(f"${_cost_start:.0f}", xy=(_t0, _cost_start),
+    _axes[2].annotate(f"\\${_cost_start:.0f}", xy=(_t0, _cost_start),
                       xytext=(8, 18), textcoords="offset points",
                       fontsize=FONTS["value_label"], color=COLORS["positive"],
                       fontweight="bold", ha="left",
                       arrowprops=dict(arrowstyle="->", color=COLORS["positive"], lw=0.8))
-    _axes[2].annotate(f"${_cost_end:.0f}", xy=(_tf, _cost_end),
+    _axes[2].annotate(f"\\${_cost_end:.0f}", xy=(_tf, _cost_end),
                       xytext=(-8, -20), textcoords="offset points",
                       fontsize=FONTS["value_label"], color=COLORS["positive"],
                       fontweight="bold", ha="right",
@@ -455,7 +455,7 @@ def _(cfg, mo, stats):
        assumes current queue processing rates hold as demand grows.
 
     3. **Renewable costs keep falling.** The learning curve drives
-       solar+storage LCOE from ${stats['cost_start']}/MWh to ~${stats['cost_end']}/MWh by 2040. This
+       solar+storage LCOE from \\${stats['cost_start']}/MWh to ~\\${stats['cost_end']}/MWh by 2040. This
        proceeds regardless of regulatory choices.
 
     The baseline tells a cautious story: the grid modernizes, but
@@ -759,7 +759,7 @@ def _(mo):
 
     **Regulatory and cost allocation:**
     - FERC Docket EL25-49-000 (December 18, 2025). Order on co-located load cost allocation in PJM.
-    - UCS (September 2025). *Data Center Demand and the Grid: Quantifying Cost Socialization in PJM.* Union of Concerned Scientists. Estimates $4.36B in grid upgrade costs identified for socialization in 2024.
+    - UCS (September 2025). *Data Center Demand and the Grid: Quantifying Cost Socialization in PJM.* Union of Concerned Scientists. Estimates \\$4.36B in grid upgrade costs identified for socialization in 2024.
     - JLARC / E3 (December 2024). *Review of Data Center Impacts on Virginia's Electric Grid.* Joint Legislative Audit and Review Commission.
 
     **Renewable energy costs and learning curves:**
