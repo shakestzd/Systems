@@ -185,13 +185,18 @@ data/external/*
 !data/external/.gitkeep
 
 # DuckDB pipeline state
+data/research.duckdb
 data/research.duckdb.wal
 data/.dlt/
 
 # GitHub Pages build output
 _site/
 
+# Transient debug artifacts
+debug_*.png
+
 # API keys
+.env
 .env.local
 secrets.json
 

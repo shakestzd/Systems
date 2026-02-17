@@ -1,12 +1,17 @@
 from __future__ import annotations
-from typing import Optional
+
 import pandas as pd
 import requests
 
 BASE = "https://api.worldbank.org/v2"
 
 
-def wb_indicator(indicator: str, country: str = "all", date: Optional[str] = None, per_page: int = 10000) -> pd.DataFrame:
+def wb_indicator(
+    indicator: str,
+    country: str = "all",
+    date: str | None = None,
+    per_page: int = 10000,
+) -> pd.DataFrame:
     """Fetch a World Bank indicator for a country (or all). Returns tidy DataFrame.
     date format example: "2000:2024"
     """

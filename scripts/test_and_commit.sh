@@ -86,8 +86,10 @@ if [[ "$DO_COMMIT" == true ]]; then
         echo "Error: --commit requires -m \"message\""
         exit 1
     fi
-    echo "All checks passed. Committing..."
-    git add -A
+    echo "All checks passed. Committing staged and tracked changes..."
+    git add -u
+    git status --short
+    echo ""
     git commit -m "$COMMIT_MSG"
     echo "Committed successfully."
 else
