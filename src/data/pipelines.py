@@ -1,12 +1,14 @@
 """dlt data pipelines for the Systems research project.
 
-Loads data from EIA, LBNL, and FRED into a centralized DuckDB database
-at data/research.duckdb. Run with:
+Loads data from EIA, LBNL, FRED, SEC EDGAR, BEA, and reference CSVs
+into a centralized DuckDB database at data/research.duckdb. Run with:
 
     uv run python -m src.data.pipelines          # all sources
     uv run python -m src.data.pipelines --eia     # EIA Form 860 only
     uv run python -m src.data.pipelines --lbnl    # LBNL queue only
     uv run python -m src.data.pipelines --fred    # FRED series only
+    uv run python -m src.data.pipelines --edgar   # SEC EDGAR only
+    uv run python -m src.data.pipelines --ref     # Reference + citations
 """
 
 from __future__ import annotations
@@ -64,8 +66,8 @@ _FUEL_MAP: dict[str, str] = {
 def _fuel_category(energy_source: str, prime_mover: str) -> str:
     """Map EIA energy source code + prime mover to analysis category."""
     if energy_source == "NG":
-        # Distinguish combined cycle from combustion turbine
-        if prime_mover in ("CA", "CS", "CT"):
+        # CA/CS = combined cycle steam/combustion parts; CT = simple combustion turbine
+        if prime_mover in ("CA", "CS"):
             return "gas_cc"
         return "gas_ct"
     return _FUEL_MAP.get(energy_source, "other")
@@ -274,6 +276,8 @@ FRED_SERIES = {
     "PCU335311335311": "Transformer PPI",
     "CPIENGSL": "Energy CPI",
     "APU000072610": "Average electricity price (cents/kWh)",
+    # Macro (DD-001)
+    "PNFI": "Private Nonresidential Fixed Investment",
     # Employment (DD-003)
     "USCONS": "All Employees, Construction",
     "CES4422000001": "All Employees, Utilities",
@@ -558,6 +562,289 @@ def hyperscaler_capex(
 
 
 # ---------------------------------------------------------------------------
+# Capex Guidance (forward-looking management estimates)
+# ---------------------------------------------------------------------------
+
+
+@dlt.resource(write_disposition="replace")
+def capex_guidance() -> dlt.sources.DltResource:
+    """Load forward-looking capex guidance from CSV.
+
+    These are management estimates from earnings calls, not audited actuals.
+    Kept separate from hyperscaler_capex (which is historical/actual).
+    Source: data/external/hyperscaler_capex_guidance.csv
+    """
+    path = PROJECT_ROOT / "data" / "external" / "hyperscaler_capex_guidance.csv"
+    if not path.exists():
+        logger.warning("Capex guidance CSV not found at %s", path)
+        return
+
+    df = pd.read_csv(path)
+    for _, row in df.iterrows():
+        yield {
+            "ticker": str(row["ticker"]),
+            "year": int(row["year"]),
+            "capex_bn": float(row["capex_bn"]),
+            "source": str(row.get("source", "")),
+        }
+
+
+# ---------------------------------------------------------------------------
+# Market Capitalizations (reference snapshots)
+# ---------------------------------------------------------------------------
+
+
+@dlt.resource(write_disposition="replace")
+def mag7_market_caps() -> dlt.sources.DltResource:
+    """Load market cap reference snapshots from CSV.
+
+    Point-in-time market capitalizations for valuation-vs-capex analysis.
+    Source: data/external/mag7_market_caps.csv
+    """
+    path = PROJECT_ROOT / "data" / "external" / "mag7_market_caps.csv"
+    if not path.exists():
+        logger.warning("Market cap CSV not found at %s", path)
+        return
+
+    df = pd.read_csv(path)
+    for _, row in df.iterrows():
+        yield {
+            "ticker": str(row["ticker"]),
+            "company": str(row["company"]),
+            "date": str(row["date"]),
+            "market_cap_t": float(row["market_cap_t"]),
+            "source": str(row.get("source", "")),
+        }
+
+
+# ---------------------------------------------------------------------------
+# Cloud Revenue (quarterly, from CSV)
+# ---------------------------------------------------------------------------
+
+
+@dlt.resource(write_disposition="replace")
+def cloud_revenue() -> dlt.sources.DltResource:
+    """Load quarterly cloud revenue from CSV.
+
+    Tracks AWS, Microsoft Intelligent Cloud, and Google Cloud Platform
+    revenue for the capex-vs-revenue analysis (DD-001 Layer 2).
+    Source: data/external/cloud_revenue_quarterly.csv
+    """
+    path = PROJECT_ROOT / "data" / "external" / "cloud_revenue_quarterly.csv"
+    if not path.exists():
+        logger.warning("Cloud revenue CSV not found at %s", path)
+        return
+
+    df = pd.read_csv(path)
+    for _, row in df.iterrows():
+        yield {
+            "ticker": str(row["ticker"]),
+            "segment": str(row["segment"]),
+            "quarter": str(row["quarter"]),
+            "revenue_bn": float(row["revenue_bn"]),
+            "yoy_growth_pct": float(row.get("yoy_growth_pct", 0)),
+            "source": str(row.get("source", "")),
+        }
+
+
+@dlt.resource(write_disposition="replace")
+def hyperscaler_ocf() -> dlt.sources.DltResource:
+    """Load hyperscaler trailing twelve-month operating cash flow from CSV.
+
+    Used to compute capex/OCF ratios for the guidance reliability analysis.
+    Source: data/external/hyperscaler_ocf.csv (from SEC 10-Q filings).
+    """
+    path = PROJECT_ROOT / "data" / "external" / "hyperscaler_ocf.csv"
+    if not path.exists():
+        logger.warning("Hyperscaler OCF CSV not found at %s", path)
+        return
+
+    df = pd.read_csv(path)
+    for _, row in df.iterrows():
+        yield {
+            "ticker": str(row["ticker"]),
+            "period": str(row["period"]),
+            "ocf_bn": float(row["ocf_bn"]),
+            "source": str(row.get("source", "")),
+        }
+
+
+@dlt.resource(write_disposition="replace")
+def lbnl_queue_summary() -> dlt.sources.DltResource:
+    """Load LBNL interconnection queue summary data from CSV.
+
+    Year-end queue capacity by fuel type, plus completion/withdrawal rates.
+    Source: data/external/lbnl_queue_summary.csv
+    Data: Rand et al., LBNL "Queued Up" editions (emp.lbl.gov/queues).
+    """
+    path = PROJECT_ROOT / "data" / "external" / "lbnl_queue_summary.csv"
+    if not path.exists():
+        logger.warning("LBNL queue summary CSV not found at %s", path)
+        return
+
+    df = pd.read_csv(path)
+    for _, row in df.iterrows():
+        rec: dict = {
+            "year": int(row["year"]),
+            "generation_gw": float(row["generation_gw"]),
+            "storage_gw": float(row["storage_gw"]),
+            "total_gw": float(row["total_gw"]),
+            "source": str(row.get("source", "")),
+        }
+        # Optional fuel-type breakdown columns
+        for col in ("solar_gw", "wind_gw", "gas_gw", "nuclear_gw", "other_gw",
+                     "completion_pct", "withdrawal_pct"):
+            val = row.get(col)
+            if pd.notna(val):
+                rec[col] = float(val)
+        yield rec
+
+
+# ---------------------------------------------------------------------------
+# SEC EDGAR XBRL & PP&E Extraction
+# ---------------------------------------------------------------------------
+
+
+@dlt.resource(write_disposition="replace")
+def edgar_xbrl_facts(
+    tickers: list[str] | None = None,
+) -> dlt.sources.DltResource:
+    """Extract structured XBRL financial facts from SEC EDGAR.
+
+    Fetches PP&E totals, capex, and depreciation from the Company Concept API.
+    No API key required. Rate-limited to 10 req/sec per SEC policy.
+    """
+    from src.data.edgar import (
+        COMPANIES,
+        XBRL_CONCEPTS,
+        extract_annual_facts,
+        get_company_concept,
+    )
+
+    tickers = tickers or ["META", "AMZN", "GOOGL"]
+
+    for ticker in tickers:
+        if ticker not in COMPANIES:
+            logger.warning("Unknown ticker %s — skipping", ticker)
+            continue
+        cik, company_name = COMPANIES[ticker]
+        for tag, taxonomy in XBRL_CONCEPTS.items():
+            try:
+                data = get_company_concept(cik, taxonomy, tag)
+            except Exception:
+                logger.warning("Failed to fetch %s/%s for %s", taxonomy, tag, ticker)
+                continue
+            for fact in extract_annual_facts(data, ticker):
+                yield {
+                    "ticker": ticker,
+                    "company": company_name,
+                    "concept": fact["concept"],
+                    "fiscal_year": fact["fiscal_year"],
+                    "value": fact["value"],
+                    "unit": fact["unit"],
+                    "filed": fact["filed"],
+                    "form": fact["form"],
+                }
+
+
+@dlt.resource(write_disposition="replace")
+def edgar_ppe_schedule(
+    tickers: list[str] | None = None,
+    fiscal_years: list[int] | None = None,
+) -> dlt.sources.DltResource:
+    """Extract PP&E decomposition from 10-K property schedule notes.
+
+    Downloads raw 10-K HTML filings, caches in data/raw/edgar/,
+    and parses the property schedule table using BeautifulSoup.
+    """
+    from src.data.edgar import (
+        COMPANIES,
+        download_10k_html,
+        extract_ppe_schedule,
+    )
+
+    tickers = tickers or ["META", "AMZN", "GOOGL"]
+    fiscal_years = fiscal_years or [2024]
+    save_dir = RAW_DIR / "edgar"
+
+    for ticker in tickers:
+        if ticker not in COMPANIES:
+            logger.warning("Unknown ticker %s — skipping", ticker)
+            continue
+        cik, _name = COMPANIES[ticker]
+        for fy in fiscal_years:
+            html_path = download_10k_html(ticker, cik, fy, save_dir)
+            if html_path is None:
+                continue
+            yield from extract_ppe_schedule(html_path, ticker, fy)
+
+
+# ---------------------------------------------------------------------------
+# Source Citations Registry
+# ---------------------------------------------------------------------------
+
+
+@dlt.resource(write_disposition="replace")
+def source_citations() -> dlt.sources.DltResource:
+    """Load cited constants from the structured source document registry.
+
+    Every numerical constant used in notebooks that isn't computed from
+    database data gets a row here with full provenance: source name, date,
+    URL, and paywall status.
+
+    Source: data/external/source_citations.csv
+    """
+    path = PROJECT_ROOT / "data" / "external" / "source_citations.csv"
+    if not path.exists():
+        logger.warning("Source citations CSV not found at %s", path)
+        return
+
+    df = pd.read_csv(path)
+    for _, row in df.iterrows():
+        yield {
+            "key": str(row["key"]),
+            "value": float(row["value"]),
+            "unit": str(row.get("unit", "")),
+            "source_type": str(row.get("source_type", "")),
+            "source_name": str(row.get("source_name", "")),
+            "source_date": str(row.get("source_date", "")),
+            "source_detail": str(row.get("source_detail", "")),
+            "url": str(row.get("url", "")),
+            "paywalled": str(row.get("paywalled", "false")).lower() == "true",
+        }
+
+
+# ---------------------------------------------------------------------------
+# BEA NIPA Investment Data
+# ---------------------------------------------------------------------------
+
+
+@dlt.resource(write_disposition="replace")
+def bea_nipa_investment() -> dlt.sources.DltResource:
+    """Load BEA NIPA private fixed investment by type.
+
+    Falls back to data/external/bea_nipa_reference.csv if BEA_API_KEY
+    is not set. The CSV approach is the default for zero-budget operation.
+
+    Source: BEA NIPA Table 5.3.5 "Private Fixed Investment by Type"
+    """
+    path = PROJECT_ROOT / "data" / "external" / "bea_nipa_reference.csv"
+    if not path.exists():
+        logger.warning("BEA NIPA reference CSV not found at %s", path)
+        return
+
+    df = pd.read_csv(path)
+    for _, row in df.iterrows():
+        yield {
+            "year": int(row["year"]),
+            "line_number": int(row.get("line_number", 0)),
+            "line_description": str(row["line_description"]),
+            "value_bn": float(row["value_bn"]),
+            "table_name": str(row.get("table_name", "T50305")),
+        }
+
+
+# ---------------------------------------------------------------------------
 # Pipeline Runner
 # ---------------------------------------------------------------------------
 
@@ -614,6 +901,34 @@ def run_capex() -> None:
     logger.info("Hyperscaler CapEx: %s", info)
 
 
+def run_reference() -> None:
+    """Run reference data pipelines (guidance, market caps, cloud revenue, LBNL queue)."""
+    pipeline = _make_pipeline()
+    info = pipeline.run(capex_guidance())
+    logger.info("Capex guidance: %s", info)
+    info = pipeline.run(mag7_market_caps())
+    logger.info("Market caps: %s", info)
+    info = pipeline.run(cloud_revenue())
+    logger.info("Cloud revenue: %s", info)
+    info = pipeline.run(lbnl_queue_summary())
+    logger.info("LBNL queue summary: %s", info)
+    info = pipeline.run(hyperscaler_ocf())
+    logger.info("Hyperscaler OCF: %s", info)
+    info = pipeline.run(source_citations())
+    logger.info("Source citations: %s", info)
+    info = pipeline.run(bea_nipa_investment())
+    logger.info("BEA NIPA: %s", info)
+
+
+def run_edgar() -> None:
+    """Run SEC EDGAR pipeline (XBRL facts + PP&E schedule extraction)."""
+    pipeline = _make_pipeline()
+    info = pipeline.run(edgar_xbrl_facts())
+    logger.info("EDGAR XBRL facts: %s", info)
+    info = pipeline.run(edgar_ppe_schedule())
+    logger.info("EDGAR PP&E schedule: %s", info)
+
+
 def run_all() -> None:
     """Run all pipelines."""
     run_fred()
@@ -622,6 +937,8 @@ def run_all() -> None:
     run_bls()
     run_census()
     run_capex()
+    run_reference()
+    run_edgar()
 
 
 if __name__ == "__main__":
@@ -636,9 +953,15 @@ if __name__ == "__main__":
     parser.add_argument("--bls", action="store_true", help="BLS QCEW only")
     parser.add_argument("--census", action="store_true", help="Census CBP only")
     parser.add_argument("--capex", action="store_true", help="Hyperscaler CapEx only")
+    parser.add_argument("--ref", action="store_true", help="Reference data only")
+    parser.add_argument("--edgar", action="store_true", help="SEC EDGAR only")
     args = parser.parse_args()
 
-    if not any([args.eia, args.lbnl, args.fred, args.bls, args.census, args.capex]):
+    flags = [
+        args.eia, args.lbnl, args.fred, args.bls,
+        args.census, args.capex, args.ref, args.edgar,
+    ]
+    if not any(flags):
         run_all()
     else:
         if args.fred:
@@ -653,3 +976,7 @@ if __name__ == "__main__":
             run_census()
         if args.capex:
             run_capex()
+        if args.ref:
+            run_reference()
+        if args.edgar:
+            run_edgar()

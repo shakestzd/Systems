@@ -370,9 +370,144 @@ def _(lbnl_btn, mo, query):
         )
         _display = mo.ui.table(_df, label="Queue by Fuel Type (Top 10)")
     except Exception:
-        _display = mo.callout(mo.md("LBNL table not found — is the Excel file present?"), kind="warn")
+        _msg = "LBNL table not found — is the Excel file present?"
+        _display = mo.callout(mo.md(_msg), kind="warn")
 
     mo.md(f"**LBNL pipeline complete.**\n\n{_display}")
+    return
+
+
+# ---------------------------------------------------------------------------
+# Reference Data Pipeline (Guidance + Market Caps)
+# ---------------------------------------------------------------------------
+
+
+@app.cell
+def _(mo):
+    ref_btn = mo.ui.run_button(label="Run Reference Data Pipeline")
+    mo.md(
+        f"""
+    ### Reference Data (Guidance + Market Caps + Citations + BEA)
+
+    Loads static reference CSVs from `data/external/`:
+    - `hyperscaler_capex_guidance.csv` — Forward-looking management estimates
+    - `mag7_market_caps.csv` — Point-in-time market capitalizations
+    - `source_citations.csv` — Structured provenance for all cited constants
+    - `bea_nipa_reference.csv` — BEA NIPA private fixed investment breakdown
+
+    {ref_btn}
+    """
+    )
+    return (ref_btn,)
+
+
+@app.cell
+def _(mo, query, ref_btn):
+    mo.stop(not ref_btn.value, mo.md("*Click Run to load reference data.*"))
+
+    from src.data.pipelines import run_reference
+
+    run_reference()
+
+    _df1 = query(
+        "SELECT ticker, year, capex_bn, source "
+        "FROM energy_data.capex_guidance ORDER BY capex_bn DESC"
+    )
+    _df2 = query(
+        "SELECT ticker, company, date, market_cap_t "
+        "FROM energy_data.mag7_market_caps ORDER BY ticker, date"
+    )
+    _df3 = query(
+        "SELECT key, value, unit, source_type, source_name "
+        "FROM energy_data.source_citations ORDER BY source_type, key"
+    )
+    _df4 = query(
+        "SELECT line_description, value_bn "
+        "FROM energy_data.bea_nipa_investment ORDER BY line_number"
+    )
+    mo.md(
+        f"""
+    **Reference data loaded successfully.**
+
+    {mo.ui.table(_df1, label="Capex Guidance")}
+
+    {mo.ui.table(_df2, label="Market Caps")}
+
+    {mo.ui.table(_df3, label="Source Citations")}
+
+    {mo.ui.table(_df4, label="BEA NIPA Private Fixed Investment (2024)")}
+    """
+    )
+    return
+
+
+# ---------------------------------------------------------------------------
+# EDGAR Pipeline (XBRL Facts + PP&E Schedules)
+# ---------------------------------------------------------------------------
+
+
+@app.cell
+def _(mo):
+    edgar_btn = mo.ui.run_button(label="Run EDGAR Pipeline")
+    mo.md(
+        f"""
+    ### SEC EDGAR — XBRL Facts + PP&E Decomposition
+
+    Extracts structured financial data from SEC EDGAR filings:
+
+    **XBRL Structured Data** (Company Concept API):
+    - PP&E gross/net values, accumulated depreciation, capex
+    - Historical data back to first XBRL filing
+
+    **PP&E Schedule** (10-K HTML parsing):
+    - Downloads 10-K filings and parses property schedule tables
+    - Extracts per-category breakdown: equipment, buildings, land, CIP
+    - Covers: META, AMZN, GOOGL (calendar FY2024)
+
+    Rate limit: 10 req/sec per SEC policy. No API key required.
+
+    {edgar_btn}
+    """
+    )
+    return (edgar_btn,)
+
+
+@app.cell
+def _(edgar_btn, mo, pd, query):
+    mo.stop(not edgar_btn.value, mo.md("*Click Run to fetch EDGAR data.*"))
+
+    from src.data.pipelines import run_edgar
+
+    run_edgar()
+
+    _xbrl = query(
+        "SELECT ticker, concept, fiscal_year, "
+        "ROUND(value / 1e9, 1) as value_bn "
+        "FROM energy_data.edgar_xbrl_facts "
+        "WHERE fiscal_year >= 2022 "
+        "ORDER BY ticker, concept, fiscal_year"
+    )
+
+    _ppe = query(
+        "SELECT ticker, category, category_raw, "
+        "ROUND(gross_value_m / 1000, 1) as gross_bn, "
+        "ROUND(gross_value_m * 100.0 / "
+        "  SUM(gross_value_m) OVER (PARTITION BY ticker), 1) as pct "
+        "FROM energy_data.edgar_ppe_schedule "
+        "ORDER BY ticker, gross_value_m DESC"
+    )
+
+    mo.md(
+        f"""
+    **EDGAR pipeline loaded successfully.**
+
+    #### XBRL Structured Facts
+    {mo.ui.table(_xbrl, label="XBRL Facts (FY2022+)")}
+
+    #### PP&E Decomposition (FY2024)
+    {mo.ui.table(_ppe, label="PP&E Schedule by Company")}
+    """
+    )
     return
 
 
