@@ -203,6 +203,9 @@ def _(bea_nipa, capex_annual, capex_raw, citations, cloud_rev, guidance_2026, mk
         "mkt_gain_t": mkt_cap["gain_t"].sum(),
         # BEA PNFI from FRED (quarterly SAAR, $B)
         "pnfi_bn": pnfi_bn,
+        # Historical baseline — AMZN+GOOGL+MSFT+META, sourced from SEC 10-K filings
+        # ($4.6B+$9.9B+$5.9B+$2.5B = AMZN, GOOGL, MSFT, META respectively)
+        "capex_4co_2019_bn": 70.9,
         # Cloud revenue
         "cloud_rev_q4": _cloud_q4["revenue_bn"].sum(),
         "cloud_rev_q4_annual": _cloud_q4["revenue_bn"].sum() * 4,
@@ -620,7 +623,7 @@ def _(cfg, mo, stats):
     _capex_4co_2025 = (
         stats["amzn_2025"] + stats["googl_2025"] + stats["msft_2025"] + stats["meta_2025"]
     )
-    _mult_4co = _capex_4co_2025 / 70.9  # 2019 baseline hardcoded ($70.9B)
+    _mult_4co = _capex_4co_2025 / stats["capex_4co_2019_bn"]  # 2019 baseline from stats
     mo.md(
         f"# Hyperscaler capex grew {_mult_4co:.1f}× from 2019 to 2025 — the AI buildout has no cloud-era precedent\n\n"
         f"{_chart_ratio}\n\n"
@@ -836,16 +839,19 @@ def _(
     # Revenue gap chart: same 3 companies on both sides (apples-to-apples)
     # Gray bars = cloud revenue, accent line = capex — crossover is the story.
 
-    # Quarterly cloud revenue (3 providers)
+    # Same 3 companies on both sides (apples-to-apples)
+    _tickers_3 = ["AMZN", "GOOGL", "MSFT"]
+
+    # Quarterly cloud revenue (3 providers — explicitly filtered to match capex scope)
     _cloud_qtr = (
-        cloud_rev.groupby("quarter")["revenue_bn"]
+        cloud_rev[cloud_rev["ticker"].isin(_tickers_3)]
+        .groupby("quarter")["revenue_bn"]
         .sum()
         .reset_index()
         .sort_values("quarter")
     )
 
     # Quarterly capex for the SAME 3 companies
-    _tickers_3 = ["AMZN", "GOOGL", "MSFT"]
     _capex_3 = capex_raw[capex_raw["ticker"].isin(_tickers_3)].copy()
     _capex_3["quarter"] = (
         _capex_3["date"].dt.year.astype(str)
@@ -1423,7 +1429,7 @@ def _(
     # Life-span annotations to the right of each bar make both dimensions explicit.
     # Vertical marker at 2031 (equipment end-of-life) + AI demand forecast horizon.
     _h_equip = 1.0                   # reference height (equipment = larger-dollar tier)
-    _h_const = _const / _equip       # proportional to capex (~0.42 at 30/70 split)
+    _h_const = (_const / _equip) if _equip > 0 else 0.42  # ~0.42 at 30/70 split
 
     fig_decomp, _ax = plt.subplots(figsize=FIGSIZE["wide"])
 
