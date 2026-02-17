@@ -365,6 +365,118 @@ def _(bea_nipa, capex_annual, citations, cloud_rev, guidance_2026, mkt_cap, ocf_
 @app.cell
 def _(
     COLORS,
+    FIGSIZE,
+    FONTS,
+    cfg,
+    chart_title,
+    company_color,
+    company_label,
+    legend_below,
+    mkt_cap,
+    plt,
+    save_fig,
+    stats,
+):
+    # Single stacked horizontal bar — the TOTAL length vs. the capex reference
+    # line tells the scale-mismatch story far better than individual bars.
+    _sorted = mkt_cap.sort_values("gain_t", ascending=False)
+    _total = _sorted["gain_t"].sum()
+    _capex_t = stats["capex_2025"] / 1000  # $B → $T
+
+    fig_mktcap, _ax = plt.subplots(figsize=FIGSIZE["wide"])
+
+    _left = 0.0
+    for _, _row in _sorted.iterrows():
+        _ticker = _row["ticker"]
+        _gain = _row["gain_t"]
+        _clr = company_color(_ticker)
+        _ax.barh(
+            0, _gain, left=_left, height=0.55,
+            color=_clr, edgecolor="white", linewidth=1.5,
+            label=company_label(_ticker),
+        )
+        # Direct label on segments wide enough to hold text
+        if _gain >= 0.8:
+            _ax.text(
+                _left + _gain / 2, 0,
+                f"{company_label(_ticker)}\n+${_gain:.1f}T",
+                ha="center", va="center",
+                fontsize=FONTS["annotation"] - 1, fontweight="bold",
+                color="white",
+            )
+        _left += _gain
+
+    # Reference line: the punchline — capex is a sliver of the total
+    _ax.axvline(
+        _capex_t, color=COLORS["accent"], linestyle="-", linewidth=2.5, alpha=0.9,
+    )
+    _ax.text(
+        _capex_t, 0.38,
+        f"  2025 capex: ${stats['capex_2025']:.0f}B",
+        fontsize=FONTS["annotation"], fontweight="bold",
+        color=COLORS["accent"], va="bottom",
+    )
+
+    # Total at right end
+    _ax.text(
+        _total + 0.12, 0,
+        f"${_total:.1f}T",
+        ha="left", va="center",
+        fontsize=FONTS["value_label"], fontweight="bold",
+        color=COLORS["text_dark"],
+    )
+
+    _ax.set_yticks([])
+    _ax.set_xlabel(
+        "Market cap gain, Jan 2023 \u2192 Feb 2026 ($T)", fontsize=FONTS["axis_label"]
+    )
+    _ax.tick_params(axis="x", labelsize=FONTS["tick_label"])
+
+    legend_below(_ax, ncol=len(_sorted))
+    chart_title(
+        fig_mktcap,
+        f"~{stats['ratio_vs_2025']:.0f}x gap between market cap gains and annual capex",
+    )
+    plt.tight_layout()
+    save_fig(fig_mktcap, cfg.img_dir / "dd001_valuation_disconnect.png")
+    return
+
+
+@app.cell(hide_code=True)
+def _(cfg, mo, stats):
+    _chart = mo.image(
+        src=(cfg.img_dir / "dd001_valuation_disconnect.png").read_bytes(), width=850
+    )
+    mo.md(
+        "# Markets added ~\\${mkt:.1f}T in value against ~\\${capex:.0f}B in annual spending"
+        .format(mkt=stats['mkt_gain_t'], capex=stats['capex_2025'])
+        + f"""
+
+    {_chart}
+
+    *The Magnificent Seven gained ~\\${stats['mkt_gain_t']:.1f}T in market capitalization
+    over three years (Jan 2023 - Feb 2026). Combined 2025 capex for the six AI
+    infrastructure builders was ~\\${stats['capex_2025']:.0f}B — markets priced in
+    ~{stats['ratio_vs_2025']:.0f}x the annual infrastructure investment. The red line
+    shows total 2025 capex for scale. Tesla is included in market cap but its capex
+    (~\\$11B, primarily automotive) is excluded from the AI capex total; see callout
+    below. Note: some companies (AMZN, MSFT) saw mkt cap dip or flatten in early 2026
+    even as capex accelerated — the valuation gap is narrowing but remains extreme.
+    Sources: Yahoo Finance (market cap, Feb 14 2026), SEC filings via yfinance (capex).*
+
+    Market capitalization reflects discounted future earnings expectations, not
+    current asset values — so comparing a stock of expected value to a flow of
+    annual spending is a scale comparison, not a like-for-like equivalence. Still,
+    the magnitude of the gap reveals how much future revenue growth is already
+    priced in, and how little of that expected value has been converted to physical
+    infrastructure so far.
+    """)
+    return
+
+
+@app.cell
+def _(
+    COLORS,
     CONTEXT,
     FIGSIZE,
     FONTS,
@@ -477,118 +589,6 @@ def _(cfg, mo, stats):
     providers (Equinix, Digital Realty) and does not appear in the lessee's capex line.
     Total AI infrastructure investment is higher than what corporate capex alone shows.
     Sources: SEC 10-K/10-Q filings via yfinance, earnings call transcripts (Jan-Feb 2026).*
-    """)
-    return
-
-
-@app.cell
-def _(
-    COLORS,
-    FIGSIZE,
-    FONTS,
-    cfg,
-    chart_title,
-    company_color,
-    company_label,
-    legend_below,
-    mkt_cap,
-    plt,
-    save_fig,
-    stats,
-):
-    # Single stacked horizontal bar — the TOTAL length vs. the capex reference
-    # line tells the scale-mismatch story far better than individual bars.
-    _sorted = mkt_cap.sort_values("gain_t", ascending=False)
-    _total = _sorted["gain_t"].sum()
-    _capex_t = stats["capex_2025"] / 1000  # $B → $T
-
-    fig_mktcap, _ax = plt.subplots(figsize=FIGSIZE["wide"])
-
-    _left = 0.0
-    for _, _row in _sorted.iterrows():
-        _ticker = _row["ticker"]
-        _gain = _row["gain_t"]
-        _clr = company_color(_ticker)
-        _ax.barh(
-            0, _gain, left=_left, height=0.55,
-            color=_clr, edgecolor="white", linewidth=1.5,
-            label=company_label(_ticker),
-        )
-        # Direct label on segments wide enough to hold text
-        if _gain >= 0.8:
-            _ax.text(
-                _left + _gain / 2, 0,
-                f"{company_label(_ticker)}\n+${_gain:.1f}T",
-                ha="center", va="center",
-                fontsize=FONTS["annotation"] - 1, fontweight="bold",
-                color="white",
-            )
-        _left += _gain
-
-    # Reference line: the punchline — capex is a sliver of the total
-    _ax.axvline(
-        _capex_t, color=COLORS["accent"], linestyle="-", linewidth=2.5, alpha=0.9,
-    )
-    _ax.text(
-        _capex_t, 0.38,
-        f"  2025 capex: ${stats['capex_2025']:.0f}B",
-        fontsize=FONTS["annotation"], fontweight="bold",
-        color=COLORS["accent"], va="bottom",
-    )
-
-    # Total at right end
-    _ax.text(
-        _total + 0.12, 0,
-        f"${_total:.1f}T",
-        ha="left", va="center",
-        fontsize=FONTS["value_label"], fontweight="bold",
-        color=COLORS["text_dark"],
-    )
-
-    _ax.set_yticks([])
-    _ax.set_xlabel(
-        "Market cap gain, Jan 2023 \u2192 Feb 2026 ($T)", fontsize=FONTS["axis_label"]
-    )
-    _ax.tick_params(axis="x", labelsize=FONTS["tick_label"])
-
-    legend_below(_ax, ncol=len(_sorted))
-    chart_title(
-        fig_mktcap,
-        f"~{stats['ratio_vs_2025']:.0f}x gap between market cap gains and annual capex",
-    )
-    plt.tight_layout()
-    save_fig(fig_mktcap, cfg.img_dir / "dd001_valuation_disconnect.png")
-    return
-
-
-@app.cell(hide_code=True)
-def _(cfg, mo, stats):
-    _chart = mo.image(
-        src=(cfg.img_dir / "dd001_valuation_disconnect.png").read_bytes(), width=850
-    )
-    mo.md(
-        "# Markets added ~\\${mkt:.1f}T in value against ~\\${capex:.0f}B in annual spending"
-        .format(mkt=stats['mkt_gain_t'], capex=stats['capex_2025'])
-        + f"""
-
-    {_chart}
-
-    *The Magnificent Seven gained ~\\${stats['mkt_gain_t']:.1f}T in market capitalization
-    over three years (Jan 2023 - Feb 2026). Combined 2025 capex for the six AI
-    infrastructure builders was ~\\${stats['capex_2025']:.0f}B — markets priced in
-    ~{stats['ratio_vs_2025']:.0f}x the annual infrastructure investment. The red line
-    shows total 2025 capex for scale. Tesla is included in market cap but its capex
-    (~\\$11B, primarily automotive) is excluded from the AI capex total; see callout
-    below. Note: some companies (AMZN, MSFT) saw mkt cap dip or flatten in early 2026
-    even as capex accelerated — the valuation gap is narrowing but remains extreme.
-    Sources: Yahoo Finance (market cap, Feb 14 2026), SEC filings via yfinance (capex).*
-
-    Market capitalization reflects discounted future earnings expectations, not
-    current asset values — so comparing a stock of expected value to a flow of
-    annual spending is a scale comparison, not a like-for-like equivalence. Still,
-    the magnitude of the gap reveals how much future revenue growth is already
-    priced in, and how little of that expected value has been converted to physical
-    infrastructure so far.
     """)
     return
 
