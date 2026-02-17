@@ -194,3 +194,9 @@ _site/
 # API keys
 .env.local
 secrets.json
+
+# Marimo cache
+__marimo__/
+
+# HTMLGraph artifacts
+.htmlgraph/
