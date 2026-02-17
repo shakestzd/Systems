@@ -45,8 +45,9 @@ notebook directory, then run the sync script. Do NOT edit PROJECT_STATUS.md by h
   If a value appears in more than one place, extract it to a shared module.
 - `src/plotting.py` — dataviz design system (colors, fonts, sizing, chart helpers)
   - `COLORS` (semantic roles), `FUEL_COLORS`, `COMPANY_COLORS`, `CATEGORICAL` (palettes)
-  - `FONTS` (text hierarchy), `FIGSIZE` (figure presets), `BAR_DEFAULTS`, `SCATTER_DEFAULTS`
-  - `legend_below()`, `annotate_point()`, `reference_line()`, lookup helpers
+  - `CONTEXT` (SWD gray for non-focus elements), `FONTS`, `FIGSIZE`, `BAR_DEFAULTS`
+  - `focus_colors()` (SWD gray+accent pattern), `legend_below()`, `annotate_point()`
+  - Company colors are redistributed across hue bands for chart legibility (not raw brand blues)
 - `src/notebook.py:setup()` — single entry point for notebook configuration
 - `research/deep_dives.csv` — single source for case study metadata
 - `scripts/sync_project_status.py` — generates PROJECT_STATUS.md from the above
@@ -113,11 +114,51 @@ notebook directory, then run the sync script. Do NOT edit PROJECT_STATUS.md by h
   non-zero on failure. Add new notebooks to the `NOTEBOOKS` array in the script.
 - **Run `bash scripts/test_notebooks.sh` before committing notebook or `src/` changes.**
 
+### Chart Review (Storytelling with Data)
+
+Every chart must pass this checklist before committing. Based on Cole Nussbaumer
+Knaflic's *Storytelling with Data* methodology.
+
+**Before creating a chart — answer these:**
+1. What is the ONE insight this chart communicates?
+2. What action should the reader take after seeing it?
+3. Can you state the insight as a sentence? (That sentence is your H1 title.)
+
+**Color strategy (gray + accent):**
+- Start with everything in `CONTEXT` gray
+- Add color ONLY to the element that carries the story
+- Use `focus_colors()` to apply this pattern to any color mapping
+- Never use color decoratively — every color must encode meaning
+- Company charts: use `COMPANY_COLORS` (redistributed across hue bands)
+- Semantic meaning: use `COLORS["positive"]` / `COLORS["negative"]` ONLY for
+  genuinely good/bad values — NOT for arbitrary categories
+
+**Declutter checklist:**
+- [ ] No gridlines (or very light, opt-in via `ax.grid(True, ...)`)
+- [ ] No chart title (use marimo markdown H1 above the chart instead)
+- [ ] Direct labels on data where feasible (reduce legend dependency)
+- [ ] No 3D effects, ever
+- [ ] Sorted meaningfully (by value, not alphabetically)
+- [ ] White background, no borders
+
+**Post-creation validation:**
+- [ ] Can someone understand the main point in 5 seconds?
+- [ ] Is there anything you can remove without losing meaning?
+- [ ] Does every visual element serve the story?
+- [ ] Are colors distinguishable? (check for adjacent similar hues)
+- [ ] Does the insight title match what the chart actually shows?
+
+**Visual review workflow:**
+1. Regenerate charts: `bash scripts/test_notebooks.sh`
+2. Open all images: `open notebooks/images/dd00*.png`
+3. Check for: color consistency, font sizing, visual family across charts
+4. Verify no hex colors in notebook code: `rg '#[0-9a-fA-F]{6}' notebooks/`
+
 ---
 
 ## Agent Workflow
 
-Four specialized agents handle distinct phases of the research-to-publication pipeline.
+Five specialized agents handle distinct phases of the research-to-publication pipeline.
 Delegate to them using the Task tool with `subagent_type` matching the agent name.
 
 ### Agents
@@ -126,23 +167,24 @@ Delegate to them using the Task tool with `subagent_type` matching the agent nam
 | :--- | :--- | :--- |
 | **researcher** | cyan | Finds and validates primary data sources (government databases, academic repos, company filings). Actively searches for contradictory evidence. Zero-budget aware. |
 | **critic** | red | Rigorous intellectual review. Evaluates logical structure, evidence quality, structural omissions, and reference strength. Does not soften criticism. |
+| **notebook-qa** | blue | Data integrity auditor. Verifies every number in prose against the database, identifies hardcoded values that should be data-driven, checks internal consistency between chart code and captions. |
 | **writer** | green | Transforms draft analysis into accessible, rigorous narrative. Applies storytelling principles (inverted pyramid, insight-driven chart titles, Tufte, Knaflic). |
 | **fact-checker** | yellow | Final gate before publication. Verifies every number, citation, date, and entity. Flags unsourced claims and stale data. |
 
 ### Publication Pipeline
 
 ```
-1. RESEARCH    (researcher)  Find primary data, validate existing references
+1. RESEARCH    (researcher)    Find primary data, validate existing references
        ↓
-2. DRAFT       (you)         Write the analysis in a Marimo notebook
+2. DRAFT       (you)           Write the analysis in a Marimo notebook
        ↓
-3. CRITIQUE    (critic)      Identify logical gaps, weak evidence, omissions
+3. REVIEW      (critic ∥ qa)   Run critic + notebook-qa IN PARALLEL
        ↓
-4. REVISE      (you)         Address the critic's findings
+4. REVISE      (you)           Address findings from both reviews
        ↓
-5. POLISH      (writer)      Rewrite prose for clarity, fix chart titles, structure
+5. POLISH      (writer)        Rewrite prose for clarity, structure
        ↓
-6. VERIFY      (fact-checker) Check every claim against its source
+6. VERIFY      (fact-checker)  Check every claim against its source
        ↓
 7. PUBLISH
 ```
@@ -150,11 +192,72 @@ Delegate to them using the Task tool with `subagent_type` matching the agent nam
 Steps 3-6 may iterate. The critic and fact-checker may surface issues that require
 returning to the researcher for additional data.
 
+### Notebook Review Process (Step 3 Detail)
+
+When reviewing a notebook, **always launch both agents in parallel**:
+
+```
+Task(critic):      "Review notebooks/ddXXX/.../notebook.py for logical gaps and evidence quality"
+Task(notebook-qa): "Run data QA on notebooks/ddXXX/.../notebook.py"
+```
+
+The **critic** produces: logical gaps, missing evidence, structural omissions, weak
+references, section ratings, priority fixes.
+
+The **notebook-qa** agent produces: numerical verification table, hardcoded value
+inventory, internal consistency checks, missing caveats, data-grounding recommendations.
+
+**After receiving both reports, the revision checklist is:**
+
+1. **Fix numerical errors** — Correct any values that don't match the database
+2. **Data-ground all values** — Create/update a `stats` cell that computes all key
+   summary values from data. Replace hardcoded numbers in `mo.md()` cells with
+   f-string interpolation from `stats`. Pattern:
+   ```python
+   @app.cell
+   def _(capex_annual, guidance_2025, mkt_cap):
+       stats = {
+           "capex_2024": annual[annual["year"] == 2024]["capex_bn"].sum(),
+           # ... all data-derived values used in prose ...
+       }
+       return (stats,)
+   ```
+3. **Add missing citations** — Replace vague references with specific sources
+   (report name, year, table/page number)
+4. **Add methodology caveats** — Disclose fiscal year misalignment, definition
+   scope, geographic scope, estimate uncertainty
+5. **Address logical gaps** — Fix reasoning issues identified by the critic
+6. **Validate** — `uv run ruff check` + `bash scripts/test_notebooks.sh` +
+   visual inspection of regenerated charts
+
+### How to Delegate
+
+**Full notebook review (most common):**
+> "Run the critic and notebook-qa agents in parallel on notebooks/dd001.../01_capex.py"
+
+**Data-only check (after data refresh):**
+> "Use the notebook-qa agent to verify all prose claims in DD-001 against the updated data"
+
+**Research a topic:**
+> "Use the researcher agent to find primary data on U.S. transformer imports"
+
+**Polish prose:**
+> "Use the writer agent to improve the narrative structure in the generation mix analysis"
+
+**Pre-publication check:**
+> "Use the fact-checker agent to verify all claims in CS-1 before publishing"
+
+**Parallel delegation** works when agents don't depend on each other's output:
+- critic + notebook-qa should run simultaneously (they review different dimensions)
+- researcher + critic can run simultaneously on different content
+- writer and fact-checker should run sequentially (writer first, then fact-checker)
+
 ### Agent Design Principles
 
 - Each agent has a single, clear responsibility — no overlap
 - Agents read project context (`CLAUDE.md`, `research-framework.md`, notebooks) before acting
 - The critic does not hedge or soften — it identifies what does not hold up
+- The notebook-qa agent verifies data, not arguments — it queries the database
 - The writer preserves analytical substance while improving prose
 - The fact-checker does not evaluate arguments — only verifiable facts
 - All agents respect the zero-budget constraint (flag paywalls, suggest free alternatives)
