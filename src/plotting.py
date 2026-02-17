@@ -5,17 +5,33 @@ colors, typography, figure sizing, and chart helpers. Notebooks import
 constants and functions from here — no hex colors, font sizes, or
 figure dimensions should appear as magic numbers in notebooks.
 
-Design principles (inspired by Cara Thompson's dataviz design system):
-- Parametrize everything through named constants
-- Semantic color mapping: colors encode meaning, not just aesthetics
-- Text hierarchy: clear visual levels from title to caption
-- Accessibility: colorblind-safe palettes, sufficient contrast
-- Consistency: same visual language across all notebooks
+Design principles:
+
+1. Parametrize everything (Cara Thompson)
+   Named constants for every visual decision. No magic numbers.
+
+2. Story first (Knaflic — Storytelling with Data)
+   Every chart tells ONE story. Color directs attention to that story.
+   Start everything gray, then add color only where the audience must look.
+   Use insight-driven titles ("X increased 30%") not labels ("X by year").
+
+3. Gray + accent (SWD core pattern)
+   Context data → CONTEXT gray. Focus data → accent color.
+   Use focus_colors() to apply this pattern to any color mapping.
+
+4. Declutter (SWD / Tufte)
+   No gridlines by default. No borders. No 3D. Direct labels over legends
+   where feasible. Every pixel earns its place.
+
+5. Accessibility
+   Colorblind-safe palettes (Paul Tol). Sufficient contrast ratios.
+   Company colors redistributed across distinct hue bands.
 
 All functions return matplotlib Figure objects (never call plt.show()).
 Style is applied via src.notebook.setup() which loads shakes.mplstyle.
-Titles are NOT rendered on charts — use Marimo markdown H1 headings
-above the chart instead.
+Titles use Marimo markdown H1 headings in the notebook. For standalone
+PNG use, chart_title() adds a subtle, italic caption-sized title that
+coexists with the H1 without visual interference.
 """
 
 from __future__ import annotations
@@ -44,10 +60,10 @@ if TYPE_CHECKING:
 # ---------------------------------------------------------------------------
 
 COLORS: dict[str, str] = {
-    "positive": "#2ca02c",      # growth, increase, good
-    "negative": "#d62728",      # decline, decrease, bad
+    "positive": "#228833",      # growth, increase, good (Paul Tol green)
+    "negative": "#EE6677",      # decline, decrease, bad (Paul Tol red)
     "neutral": "#888888",       # neither good nor bad
-    "accent": "#e74c3c",        # highlight, call attention
+    "accent": "#c44e52",        # highlight, call attention (warm red)
     "muted": "#cccccc",         # de-emphasized, fallback
     "reference": "#999999",     # reference lines, thresholds
     "text_dark": "#323034",     # primary text on white bg
@@ -55,6 +71,11 @@ COLORS: dict[str, str] = {
     "background": "#f5f5f5",    # map fills, chart backgrounds
     "grid": "#e0e0e0",          # gridlines
 }
+
+# SWD gray+accent base color — use for non-focus data elements.
+# The storytelling pattern: everything starts CONTEXT gray, then only
+# the story element gets color. See focus_colors() helper.
+CONTEXT: str = "#c0c0c0"
 
 
 # ---------------------------------------------------------------------------
@@ -77,17 +98,29 @@ FUEL_COLORS: dict[str, str] = {
 
 
 # ---------------------------------------------------------------------------
-# Company colors — hyperscaler brand identity
+# Company colors — hyperscaler identity (chart-legible)
+#
+# Brand colors for MSFT/GOOGL/META are all blue, making them
+# indistinguishable in charts. We redistribute across hue bands
+# using each company's secondary brand palette:
+#   MSFT  = sky blue (primary brand)
+#   AMZN  = orange (primary brand)
+#   GOOGL = forest green (from the four-color Google logo)
+#   META  = purple (metaverse/VR branding)
+#   NVDA  = lime green (primary brand)
+#   ORCL  = red (primary brand)
+#   AAPL  = dark grey (primary brand)
 # ---------------------------------------------------------------------------
 
 COMPANY_COLORS: dict[str, str] = {
-    "MSFT": "#00a4ef",
-    "AMZN": "#ff9900",
-    "GOOGL": "#4285f4",
-    "META": "#0668e1",
-    "NVDA": "#76b900",
-    "ORCL": "#f80000",
-    "AAPL": "#a2aaad",
+    "MSFT": "#00a4ef",      # sky blue
+    "AMZN": "#ff9900",      # orange
+    "GOOGL": "#34a853",     # Google green
+    "META": "#7b1fa2",      # purple
+    "NVDA": "#76b900",      # lime green
+    "ORCL": "#ea4335",      # red (Google-red tone, less aggressive)
+    "AAPL": "#555555",      # dark grey
+    "TSLA": "#cc0000",      # Tesla red
 }
 
 COMPANY_LABELS: dict[str, str] = {
@@ -98,6 +131,7 @@ COMPANY_LABELS: dict[str, str] = {
     "NVDA": "Nvidia",
     "ORCL": "Oracle",
     "AAPL": "Apple",
+    "TSLA": "Tesla",
 }
 
 
@@ -167,6 +201,11 @@ SCATTER_DEFAULTS: dict[str, object] = {
     "linewidth": 0.5,
 }
 
+LEGEND_DEFAULTS: dict[str, object] = {
+    "handlelength": 1.5,
+    "handleheight": 1.5,
+}
+
 
 # ═══════════════════════════════════════════════════════════════════════════
 # HELPER FUNCTIONS — Color lookups, annotations, reference lines
@@ -186,6 +225,85 @@ def company_color(ticker: str) -> str:
 def company_label(ticker: str) -> str:
     """Look up display name for a company ticker."""
     return COMPANY_LABELS.get(ticker, ticker)
+
+
+def focus_colors(
+    items: Sequence[str],
+    focus: str | set[str],
+    color_map: dict[str, str],
+    *,
+    context: str | None = None,
+) -> list[str]:
+    """Apply SWD gray+accent pattern to a list of items.
+
+    Items in *focus* get their mapped color; everything else gets
+    context gray. Works with any color mapping (COMPANY_COLORS,
+    FUEL_COLORS, CATEGORICAL by index, etc.).
+
+    Parameters
+    ----------
+    items : sequence of str
+        Item keys in the order they appear on the chart.
+    focus : str or set of str
+        Which items should be colored (the "story").
+    color_map : dict
+        Mapping from item key to color hex string.
+    context : str, optional
+        Override the default CONTEXT gray.
+
+    Returns
+    -------
+    list[str]
+        One color per item — accent for focus, gray for context.
+
+    Example
+    -------
+    >>> focus_colors(
+    ...     ["MSFT", "AMZN", "GOOGL", "META"],
+    ...     focus="AMZN",
+    ...     color_map=COMPANY_COLORS,
+    ... )
+    ['#c0c0c0', '#ff9900', '#c0c0c0', '#c0c0c0']
+    """
+    ctx = context or CONTEXT
+    if isinstance(focus, str):
+        focus = {focus}
+    return [
+        color_map.get(item, ctx) if item in focus else ctx
+        for item in items
+    ]
+
+
+def chart_title(
+    fig: plt.Figure,
+    title: str,
+    *,
+    fontsize: int | None = None,
+    color: str | None = None,
+) -> None:
+    """Add a subtle, left-aligned insight title to a figure.
+
+    Designed to coexist with Marimo H1 headings: small enough not to
+    dominate in the notebook, but present for standalone PNG use.
+    Positioned above the axes area using fig.text().
+
+    Parameters
+    ----------
+    fig : matplotlib Figure
+    title : str
+        Insight-driven title (e.g., "Capex doubled in two years").
+    fontsize : int, optional
+        Override default (FONTS["caption"]).
+    color : str, optional
+        Override default (COLORS["text_light"]).
+    """
+    fig.suptitle(
+        title,
+        fontsize=fontsize or FONTS["caption"],
+        color=color or COLORS["text_light"],
+        fontstyle="italic",
+        x=0.02, ha="left",
+    )
 
 
 def annotate_point(
@@ -354,6 +472,8 @@ def legend_below(
     if old:
         old.remove()
     _anchor = kwargs.pop("bbox_to_anchor", (0.5, -0.15))
+    # Apply legend defaults (square patches, etc.) — callers can still override
+    _merged = {**LEGEND_DEFAULTS, **kwargs}
     ax.legend(
         handles, labels,
         loc="upper center",
@@ -361,7 +481,7 @@ def legend_below(
         ncol=ncol,
         fontsize=FONTS["legend"],
         frameon=False,
-        **kwargs,
+        **_merged,
     )
 
 

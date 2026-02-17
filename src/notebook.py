@@ -74,6 +74,6 @@ def save_fig(fig: plt.Figure, path: Path, *, close: bool = True) -> None:
         mo.md(f"# Insight-driven title\\n\\n{chart}")
     """
     path.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(path, dpi=150, bbox_inches="tight", facecolor="white")
+    fig.savefig(path, dpi=300, bbox_inches="tight", facecolor="white")
     if close:
         plt.close(fig)
