@@ -98,6 +98,52 @@ notebook directory, then run the sync script. Do NOT edit PROJECT_STATUS.md by h
 - Follow existing patterns in `src/`
 - Tests go in `tests/` using `pytest`
 
+### Notebook Theme
+
+All notebooks share a consistent typography that matches the published site. The theme
+files live in `src/notebook_theme/` and must be wired into every new notebook via
+`marimo.App()`.
+
+**Required `marimo.App()` pattern for every notebook:**
+
+```python
+import marimo
+
+__generated_with = "0.19.11"
+app = marimo.App(
+    width="medium",                                        # omit if not needed
+    app_title="DD-XXX Notebook Title",                    # human-readable title
+    css_file="../../src/notebook_theme/custom.css",
+    html_head_file="../../src/notebook_theme/head.html",
+)
+```
+
+**Critical rules:**
+- Paths MUST be string literals — marimo parses `App()` kwargs from the AST and does
+  NOT execute Python expressions at parse time. `css_file=str(Path(...))` will NOT work.
+- The relative path `../../src/notebook_theme/` is correct for any notebook at depth
+  `notebooks/ddXXX/notebook.py`. Do not use absolute paths.
+- Both files are required: `custom.css` sets the three stable CSS variables
+  (`--marimo-text-font`, `--marimo-monospace-font`, `--marimo-heading-font`);
+  `head.html` injects the Google Fonts `<link>` tags.
+
+**What the theme sets:**
+- `--marimo-text-font` → DM Sans (body text)
+- `--marimo-monospace-font` → DM Mono (code, IDs)
+- `--marimo-heading-font` → Cormorant Garamond (headings)
+
+**Verification after adding theme to a notebook:**
+```bash
+bash scripts/test_notebooks.sh notebooks/ddXXX/notebook.py
+# Then grep for font fingerprint in exported HTML:
+grep -c "Cormorant\|DM Mono\|marimo-text-font" _site/ddXXX/notebook.html
+# Should return > 0
+```
+
+**Do NOT modify `src/notebook_theme/` files** to change fonts for a single notebook.
+Those files are shared across all notebooks. Typographic changes belong in a project-wide
+update that touches both theme files and `build.py` simultaneously.
+
 ### Notebook Testing
 - **Always validate notebooks after changes** to `src/` or notebook files
 - Test all active notebooks headlessly:

@@ -444,8 +444,8 @@ def btm_cost_advantage():
     comp_subtype="Normal",
     depends_on={
         "regulatory_favorability": 1,
-        "reference_queue_time": 1,
         "queue_wait_time": 1,
+        "reference_queue_time": 1,
         "grid_reliability_premium": 1,
     },
 )

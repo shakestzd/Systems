@@ -13,6 +13,7 @@ REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 # Active notebooks — add new notebooks here as they are created.
 # Archived notebooks (notebooks/_archive/) are excluded.
 NOTEBOOKS=(
+    "notebooks/source_tracker.py"
     "notebooks/dd001_capital_reality/01_capex_vs_reality.py"
     "notebooks/dd001_capital_reality/99_methods_and_sources.py"
     "notebooks/dd002_grid_modernization/01_whats_getting_built.py"

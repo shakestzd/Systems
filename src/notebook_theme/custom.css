@@ -1,0 +1,21 @@
+/*
+ * Notebook typography — The Physical Economy of AI
+ *
+ * Sets the three guaranteed-stable marimo CSS variables to match the site
+ * design system. Only these three are targeted; internal class names and
+ * other variables are intentionally avoided as they are not stable across
+ * marimo versions.
+ *
+ * Reference: https://docs.marimo.io/guides/configuration/theming/
+ *
+ * Font stack:
+ *   Headings  — Cormorant Garamond (loaded via head.html)
+ *   Body      — DM Sans
+ *   Monospace — DM Mono
+ */
+
+:root {
+    --marimo-text-font: 'DM Sans', sans-serif;
+    --marimo-monospace-font: 'DM Mono', monospace;
+    --marimo-heading-font: 'Cormorant Garamond', serif;
+}

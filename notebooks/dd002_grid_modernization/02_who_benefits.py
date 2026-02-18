@@ -1,7 +1,11 @@
 import marimo
 
 __generated_with = "0.19.11"
-app = marimo.App(width="medium")
+app = marimo.App(
+    width="medium",
+    css_file="../../src/notebook_theme/custom.css",
+    html_head_file="../../src/notebook_theme/head.html",
+)
 
 
 @app.cell(hide_code=True)
