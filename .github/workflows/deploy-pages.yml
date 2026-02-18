@@ -1,18 +1,13 @@
-name: Deploy to GitHub Pages
+name: Build check
+
+# This workflow verifies notebooks export cleanly in CI.
+# It does NOT deploy -- deployment is done locally via scripts/deploy.sh,
+# which builds from the full local database and pushes to the gh-pages branch.
 
 on:
-  push:
+  pull_request:
     branches: ["main"]
   workflow_dispatch:
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: false
 
 jobs:
   build:
@@ -32,19 +27,3 @@ jobs:
 
       - name: Build site
         run: uv run python .github/scripts/build.py
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v4
-        with:
-          path: _site
-
-  deploy:
-    needs: build
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
