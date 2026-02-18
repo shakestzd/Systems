@@ -154,6 +154,49 @@ Knaflic's *Storytelling with Data* methodology.
 3. Check for: color consistency, font sizing, visual family across charts
 4. Verify no hex colors in notebook code: `rg '#[0-9a-fA-F]{6}' notebooks/`
 
+### Writing Style
+
+This project is investigative, not academic. The voice is a curious person working through
+a question in public. Write as if explaining to a smart colleague who is not a specialist.
+
+**What AI-generated prose sounds like (avoid all of these):**
+
+*Structural tells:*
+- Em-dashes used to splice clauses mid-sentence: "The data shows X — which means Y"
+- Three-item lists when prose flows better: "X, Y, and Z" repeated throughout
+- Overly parallel sentence structure across an entire section
+- Bullet points for things that should just be sentences
+- Topic sentences that announce themselves: "This section will cover X, Y, and Z"
+
+*Lexical tells — these words flag AI authorship:*
+- "delve into", "dive into"
+- "it is worth noting", "notably", "importantly" (as throat-clearing openers)
+- "moreover", "furthermore", "additionally" (as sentence starters)
+- "leverage" as a verb (in non-financial contexts)
+- "robust", "comprehensive", "holistic" (vague intensifiers)
+- "landscape", "ecosystem", "paradigm" (overused abstractions)
+- "cutting-edge", "state-of-the-art"
+- "in conclusion", "to summarize"
+- "this demonstrates", "this shows", "this indicates" (as repeated openers)
+
+*Voice tells:*
+- Hedging everything: "somewhat", "fairly", "quite", "rather"
+- Passive voice as the default construction
+- Over-explaining what is already obvious from context
+
+**What to do instead:**
+- Use em-dashes sparingly, only as genuine parenthetical asides (one per paragraph max)
+- Prefer short sentences when making a key point
+- State numbers and claims directly without pre-signposting them
+- Let data speak; do not over-narrate the chart before the reader sees it
+- Use active constructions: "AI capex converted into..." not "was converted by..."
+- When in doubt, cut the sentence. Most prose is 20% longer than it needs to be.
+
+**Check before committing prose:**
+- [ ] Search for ` — ` (space-dash-dash-space): flag any sentence with more than one
+- [ ] Search for "worth noting", "notably", "moreover", "furthermore", "delve"
+- [ ] Read one paragraph aloud. If it sounds like a presentation, rewrite it.
+
 ---
 
 ## Agent Workflow

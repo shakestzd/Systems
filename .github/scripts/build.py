@@ -20,6 +20,21 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 SITE_DIR = PROJECT_ROOT / "_site"
 
 # ---------------------------------------------------------------------------
+# Site identity — single source of truth for title, subtitle, and URLs
+# ---------------------------------------------------------------------------
+
+SITE = {
+    "title": "The Physical Economy of AI",
+    "subtitle_html": (
+        "An independent investigation into the short, medium, and long-term "
+        "impacts of accelerated AI capital investment on physical infrastructure "
+        "&mdash; from grid topology and supply chains to labor markets and "
+        "regulatory regimes."
+    ),
+    "github_url": "https://github.com/Shakes-tzd/Systems",
+}
+
+# ---------------------------------------------------------------------------
 # Notebook registry — add new case studies here
 # ---------------------------------------------------------------------------
 
@@ -156,18 +171,19 @@ def ensure_data() -> bool:
 # ---------------------------------------------------------------------------
 
 
-_NOTEBOOK_NAV = """\
-<div style="background:#1a1a2e;padding:0.7rem 1.5rem;display:flex;\
-align-items:center;gap:1.5rem;\
-font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;\
-position:sticky;top:0;z-index:9999;box-shadow:0 1px 4px rgba(0,0,0,0.25);">\
-<a href="../index.html" style="color:rgba(255,255,255,0.8);text-decoration:none;\
-font-size:0.88rem;letter-spacing:0.02em;">&#8592; Research</a>\
-<a href="../about.html" style="color:rgba(255,255,255,0.65);text-decoration:none;\
-font-size:0.88rem;letter-spacing:0.02em;">About</a>\
-<a href="https://github.com/Shakes-tzd/Systems" style="color:rgba(255,255,255,0.65);\
-text-decoration:none;font-size:0.88rem;letter-spacing:0.02em;">GitHub</a>\
-</div>"""
+_NOTEBOOK_NAV = (
+    '<div style="background:#1a1a2e;padding:0.7rem 1.5rem;display:flex;'
+    'align-items:center;gap:1.5rem;'
+    'font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;'
+    'position:sticky;top:0;z-index:9999;box-shadow:0 1px 4px rgba(0,0,0,0.25);">'
+    '<a href="../index.html" style="color:rgba(255,255,255,0.8);text-decoration:none;'
+    'font-size:0.88rem;letter-spacing:0.02em;">&#8592; Research</a>'
+    '<a href="../about.html" style="color:rgba(255,255,255,0.65);text-decoration:none;'
+    'font-size:0.88rem;letter-spacing:0.02em;">About</a>'
+    f'<a href="{SITE["github_url"]}" style="color:rgba(255,255,255,0.65);'
+    'text-decoration:none;font-size:0.88rem;letter-spacing:0.02em;">GitHub</a>'
+    '</div>'
+)
 
 
 def inject_site_nav(html_path: Path) -> None:
@@ -238,11 +254,11 @@ def export_notebook(nb_file: str, output_path: Path) -> bool:
 # Shared HTML fragments
 # ---------------------------------------------------------------------------
 
-_NAV = """\
+_NAV = f"""\
     <nav>
         <a href="index.html">Research</a>
         <a href="about.html">About</a>
-        <a href="https://github.com/Shakes-tzd/Systems">GitHub</a>
+        <a href="{SITE['github_url']}">GitHub</a>
     </nav>"""
 
 _SHARED_CSS = """\
@@ -307,10 +323,10 @@ _SHARED_CSS = """\
             main { padding: 0 1rem; }
         }"""
 
-_FOOTER = """\
+_FOOTER = f"""\
     <footer>
         Built with <a href="https://marimo.io">marimo</a> &middot;
-        <a href="https://github.com/Shakes-tzd/Systems">Source on GitHub</a>
+        <a href="{SITE['github_url']}">Source on GitHub</a>
     </footer>"""
 
 
@@ -324,7 +340,7 @@ INDEX_TEMPLATE = """\
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Physical Economy of AI</title>
+    <title>{site_title}</title>
     <style>
 {shared_css}
         .intro {{
@@ -397,25 +413,20 @@ INDEX_TEMPLATE = """\
 </head>
 <body>
     <header>
-        <h1>The Physical Economy of AI</h1>
-        <p class="subtitle">
-            An independent investigation into the short, medium, and long-term
-            impacts of accelerated AI capital investment on physical infrastructure
-            &mdash; from grid topology and supply chains to labor markets and
-            regulatory regimes.
-        </p>
+        <h1>{site_title}</h1>
+        <p class="subtitle">{site_subtitle}</p>
 {nav}
     </header>
     <main>
         <p class="intro">
             AI companies are deploying over $200B/year in capital expenditure.
-            I&rsquo;m trying to understand where that money actually goes &mdash;
+            I&rsquo;m trying to understand where that money actually lands:
             what it builds, what it locks in, and what the consequences are
             across different time horizons. Each case study traces one channel
             through which AI capital reaches the physical economy, using data
-            analysis, visualization, and systems dynamics modeling to map the
-            feedback loops and leverage points. Full source on
-            <a href="https://github.com/Shakes-tzd/Systems" style="color:#555">GitHub</a>.
+            analysis, visualization, and systems dynamics modeling to map
+            feedback loops and leverage points. Source on
+            <a href="{github_url}" style="color:#555">GitHub</a>.
         </p>
         {{sections}}
     </main>
@@ -437,6 +448,9 @@ def generate_index(exported: dict[str, bool]) -> str:
         shared_css=_SHARED_CSS,
         nav=_NAV,
         footer=_FOOTER,
+        site_title=SITE["title"],
+        site_subtitle=SITE["subtitle_html"],
+        github_url=SITE["github_url"],
     )
 
     sections = []
@@ -487,7 +501,7 @@ ABOUT_TEMPLATE = """\
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About &mdash; The Physical Economy of AI</title>
+    <title>About &mdash; {site_title}</title>
     <style>
 {shared_css}
         .about-content {{
@@ -574,13 +588,8 @@ ABOUT_TEMPLATE = """\
 </head>
 <body>
     <header>
-        <h1>The Physical Economy of AI</h1>
-        <p class="subtitle">
-            An independent investigation into the short, medium, and long-term
-            impacts of accelerated AI capital investment on physical infrastructure
-            &mdash; from grid topology and supply chains to labor markets and
-            regulatory regimes.
-        </p>
+        <h1>{site_title}</h1>
+        <p class="subtitle">{site_subtitle}</p>
 {nav}
     </header>
     <main>
@@ -590,23 +599,20 @@ ABOUT_TEMPLATE = """\
             <p class="name-pronunciation">Goes by Shakes &mdash; from Eswatini (formerly Swaziland), Southern Africa</p>
 
             <p>
-                I&rsquo;m a mechanical engineer and systems thinker with a
-                background in energy access and infrastructure policy. This
-                project isn&rsquo;t coming from a position of expertise in AI
-                or finance &mdash; it&rsquo;s driven by curiosity about a question
-                I haven&rsquo;t seen answered rigorously: what does accelerated
-                AI capital investment actually do to the physical economy, and
-                what are the consequences across short, medium, and long time
-                horizons?
+                I&rsquo;m a mechanical engineer with a background in energy
+                access and infrastructure policy. This project started from a
+                question I couldn&rsquo;t find a good answer to: what does
+                $200B+ in annual AI capital expenditure actually do to the
+                physical economy, and what does it lock in across short, medium,
+                and long time horizons?
             </p>
 
             <p>
-                The approach is investigative. Each case study follows AI capex
-                from financial commitment into a specific physical system &mdash;
-                the grid, generation infrastructure, labor markets, utility
-                regulation &mdash; and uses data analysis, visualization, and
-                systems dynamics modeling to understand what gets built, what
-                gets locked in, and where the feedback loops are.
+                The approach is investigative. Each case study picks one channel
+                through which AI capital reaches the physical world and follows
+                it: what gets built, what gets locked in, where the feedback
+                loops are. The methods are data analysis, visualization, and
+                systems dynamics modeling.
             </p>
 
             <h2>Background</h2>
@@ -673,27 +679,25 @@ ABOUT_TEMPLATE = """\
             <h2>Why This Project</h2>
 
             <p>
-                AI capex numbers appear in quarterly earnings reports, get written
-                up in press releases, and vanish into abstraction. But the capital
-                doesn&rsquo;t vanish &mdash; it converts into transformers, transmission
-                lines, gas turbines, semiconductor fabs, and data center concrete.
-                That infrastructure is durable. It reshapes supply chains, labor
-                markets, grid topology, and trade patterns for decades.
+                AI capex numbers appear in quarterly earnings reports and get
+                written up in press releases. But the capital itself converts
+                into transformers, transmission lines, gas turbines, semiconductor
+                fabs, and data center concrete. That infrastructure is durable.
+                It reshapes supply chains, labor markets, grid topology, and
+                trade patterns for decades.
             </p>
 
             <p>
-                The analysis tries to answer a specific question: <em>Where does
-                AI capex land in the physical economy, what does it lock in, and
-                how do current regulatory decisions amplify or distort those
-                outcomes?</em>
+                The question driving the analysis: <em>Where does AI capex land
+                in the physical economy, what does it lock in, and how do current
+                regulatory decisions amplify or distort those outcomes?</em>
             </p>
 
             <p>
-                Each case study traces one supply chain node &mdash; grid equipment,
-                generation mix, labor markets, utility regulation &mdash; and
-                applies the same framework: capital flow mapping, durability
-                taxonomy, and systems dynamics modeling to identify feedback
-                architecture and policy leverage points.
+                Each case study traces one supply chain node and applies the same
+                framework: capital flow mapping, durability taxonomy, and systems
+                dynamics modeling to identify feedback architecture and policy
+                leverage points.
             </p>
 
             <h2>Methods</h2>
@@ -740,6 +744,8 @@ def generate_about() -> str:
         shared_css=_SHARED_CSS,
         nav=_NAV,
         footer=_FOOTER,
+        site_title=SITE["title"],
+        site_subtitle=SITE["subtitle_html"],
     )
 
 
