@@ -26,4 +26,6 @@ jobs:
           restore-keys: research-db-
 
       - name: Build site
+        env:
+          STRICT_BUILD: "1"
         run: uv run python .github/scripts/build.py

@@ -12,7 +12,7 @@ Source: `research/deep_dives.csv`
 | DD-001 | Capital Reality | AI Valuations vs Physical Infrastructure Reality | Active |
 | DD-002 | Grid Modernization | AI Capital and Grid Modernization | Active |
 | CS-1 | Grid Equipment | Transformer Manufacturing | Archived |
-| DD-003 | Labor Markets | AI Capital Flows and Labor Impact | Scoping |
+| DD-003 | Labor Markets | AI Capital Flows and Labor Impact | Active |
 | DD-004 | Utility Regulation | AI Capital and Who Pays for the Grid | Scoping |
 | CS-4 | Materials | Material Supply Chains | Not Started |
 
@@ -28,6 +28,11 @@ Source: `research/deep_dives.csv`
 - `01_whats_getting_built.py`
 - `02_who_benefits.py`
 - `03_feedback_architecture.py`
+- `99_methods_and_sources.py`
+
+### `notebooks/dd003_labor_markets/` — AI Capital Flows and Labor Impact
+
+- `01_who_gets_hired.py`
 - `99_methods_and_sources.py`
 
 ### `notebooks/dd004_utility_regulation/` — AI Capital and Who Pays for the Grid
@@ -112,6 +117,9 @@ Systems/
 │   │   ├── 01_whats_getting_built.py
 │   │   ├── 02_who_benefits.py
 │   │   ├── 03_feedback_architecture.py
+│   │   ├── 99_methods_and_sources.py
+│   ├── dd003_labor_markets/
+│   │   ├── 01_who_gets_hired.py
 │   │   ├── 99_methods_and_sources.py
 │   ├── dd004_utility_regulation/
 │   │   ├── 01_pe_utility_acquisitions.py

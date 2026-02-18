@@ -10,6 +10,7 @@ Usage:
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from html import escape
@@ -155,6 +156,36 @@ def ensure_data() -> bool:
 # ---------------------------------------------------------------------------
 
 
+_NOTEBOOK_NAV = """\
+<div style="background:#1a1a2e;padding:0.7rem 1.5rem;display:flex;\
+align-items:center;gap:1.5rem;\
+font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;\
+position:sticky;top:0;z-index:9999;box-shadow:0 1px 4px rgba(0,0,0,0.25);">\
+<a href="../index.html" style="color:rgba(255,255,255,0.8);text-decoration:none;\
+font-size:0.88rem;letter-spacing:0.02em;">&#8592; Research</a>\
+<a href="../about.html" style="color:rgba(255,255,255,0.65);text-decoration:none;\
+font-size:0.88rem;letter-spacing:0.02em;">About</a>\
+<a href="https://github.com/Shakes-tzd/Systems" style="color:rgba(255,255,255,0.65);\
+text-decoration:none;font-size:0.88rem;letter-spacing:0.02em;">GitHub</a>\
+</div>"""
+
+
+def inject_site_nav(html_path: Path) -> None:
+    """Inject a sticky nav bar into a marimo-exported notebook HTML file.
+
+    Inserts the nav immediately after <body> so readers can return to the
+    index from any notebook page.
+    """
+    html = html_path.read_text(encoding="utf-8")
+    marker = "<body>"
+    idx = html.find(marker)
+    if idx == -1:
+        return  # unexpected structure — leave untouched
+    insert_at = idx + len(marker)
+    html = html[:insert_at] + "\n" + _NOTEBOOK_NAV + "\n" + html[insert_at:]
+    html_path.write_text(html, encoding="utf-8")
+
+
 def export_notebook(nb_file: str, output_path: Path) -> bool:
     """Export a single marimo notebook to static HTML (code hidden).
 
@@ -169,6 +200,9 @@ def export_notebook(nb_file: str, output_path: Path) -> bool:
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
+    # Remove any stale output so existence-check after the run is unambiguous.
+    output_path.unlink(missing_ok=True)
+
     result = subprocess.run(
         [sys.executable, "-m", "marimo", "export", "html",
          "--no-include-code",
@@ -180,6 +214,7 @@ def export_notebook(nb_file: str, output_path: Path) -> bool:
     )
 
     if output_path.exists():
+        inject_site_nav(output_path)
         size_kb = output_path.stat().st_size / 1024
         if result.returncode != 0:
             # Marimo exits 1 when some cells fail but still writes the HTML.
@@ -289,7 +324,7 @@ INDEX_TEMPLATE = """\
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Where AI Capital Lands</title>
+    <title>The Physical Economy of AI</title>
     <style>
 {shared_css}
         .intro {{
@@ -362,22 +397,25 @@ INDEX_TEMPLATE = """\
 </head>
 <body>
     <header>
-        <h1>Where AI Capital Lands</h1>
+        <h1>The Physical Economy of AI</h1>
         <p class="subtitle">
-            How $200B+/year in AI capital expenditure converts into physical
-            infrastructure and creates durable path dependencies in supply
-            chains, grid topology, and energy markets.
+            An independent investigation into the short, medium, and long-term
+            impacts of accelerated AI capital investment on physical infrastructure
+            &mdash; from grid topology and supply chains to labor markets and
+            regulatory regimes.
         </p>
 {nav}
     </header>
     <main>
         <p class="intro">
-            Each case study traces a specific channel through which AI capital
-            reaches the physical economy. The analysis combines empirical data,
-            systems dynamics modeling, and regulatory analysis. Notebooks are
-            static exports of interactive
-            <a href="https://marimo.io" style="color:#555">marimo</a>
-            notebooks &mdash; all code, data sources, and methodology are visible.
+            AI companies are deploying over $200B/year in capital expenditure.
+            I&rsquo;m trying to understand where that money actually goes &mdash;
+            what it builds, what it locks in, and what the consequences are
+            across different time horizons. Each case study traces one channel
+            through which AI capital reaches the physical economy, using data
+            analysis, visualization, and systems dynamics modeling to map the
+            feedback loops and leverage points. Full source on
+            <a href="https://github.com/Shakes-tzd/Systems" style="color:#555">GitHub</a>.
         </p>
         {{sections}}
     </main>
@@ -449,7 +487,7 @@ ABOUT_TEMPLATE = """\
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About &mdash; Where AI Capital Lands</title>
+    <title>About &mdash; The Physical Economy of AI</title>
     <style>
 {shared_css}
         .about-content {{
@@ -536,11 +574,12 @@ ABOUT_TEMPLATE = """\
 </head>
 <body>
     <header>
-        <h1>Where AI Capital Lands</h1>
+        <h1>The Physical Economy of AI</h1>
         <p class="subtitle">
-            How $200B+/year in AI capital expenditure converts into physical
-            infrastructure and creates durable path dependencies in supply
-            chains, grid topology, and energy markets.
+            An independent investigation into the short, medium, and long-term
+            impacts of accelerated AI capital investment on physical infrastructure
+            &mdash; from grid topology and supply chains to labor markets and
+            regulatory regimes.
         </p>
 {nav}
     </header>
@@ -551,53 +590,73 @@ ABOUT_TEMPLATE = """\
             <p class="name-pronunciation">Goes by Shakes &mdash; from Eswatini (formerly Swaziland), Southern Africa</p>
 
             <p>
-                I am a systems engineer and policy analyst. My background spans
-                mechanical engineering, technology policy, and energy infrastructure
-                &mdash; specifically how capital decisions at the top of the stack
-                propagate into physical systems at the bottom.
+                I&rsquo;m a mechanical engineer and systems thinker with a
+                background in energy access and infrastructure policy. This
+                project isn&rsquo;t coming from a position of expertise in AI
+                or finance &mdash; it&rsquo;s driven by curiosity about a question
+                I haven&rsquo;t seen answered rigorously: what does accelerated
+                AI capital investment actually do to the physical economy, and
+                what are the consequences across short, medium, and long time
+                horizons?
             </p>
 
             <p>
-                This project is the practical application of that lens: tracing
-                $200B+/year in AI capital expenditure from financial commitment
-                to physical asset, and analyzing what gets locked in, what depends
-                on regulatory regimes, and where feedback loops amplify or distort
-                outcomes.
+                The approach is investigative. Each case study follows AI capex
+                from financial commitment into a specific physical system &mdash;
+                the grid, generation infrastructure, labor markets, utility
+                regulation &mdash; and uses data analysis, visualization, and
+                systems dynamics modeling to understand what gets built, what
+                gets locked in, and where the feedback loops are.
             </p>
 
             <h2>Background</h2>
 
             <div class="timeline">
                 <div class="timeline-item">
-                    <div class="timeline-year">2015 &ndash; 2020</div>
+                    <div class="timeline-year">2015 &ndash; 2018</div>
                     <div class="timeline-desc">
                         <strong>Duke University</strong> &mdash; B.S. Mechanical Engineering,
-                        Minor in German. Study abroad in Berlin; took three engineering
-                        courses in German after 18 months of study.
+                        Minor in German. Study abroad in Berlin (Spring 2017); took three
+                        engineering courses in German after 18 months of study. Conducted
+                        research with the Duke University Center for Water, Sanitation, Hygiene
+                        and Infectious Disease (WaSH-AID), developing a methodology to design
+                        an off-grid solar PV system for one of the center&rsquo;s novel
+                        sanitation technologies.
                     </div>
                 </div>
                 <div class="timeline-item">
-                    <div class="timeline-year">2017 &ndash; 2018</div>
+                    <div class="timeline-year">Aug 2018 &ndash; Mar 2019</div>
                     <div class="timeline-desc">
-                        <strong>Eswatini Electricity Company / One Power (Lesotho)</strong>
-                        &mdash; Worked on microgrid projects in rural Southern Africa,
-                        including Eswatini&rsquo;s first microgrid, electrifying a
-                        remote village unreachable by conventional grid infrastructure.
+                        <strong>OnePower, Lesotho</strong> &mdash; Energy Access Fellow.
+                        Designed powerhouses for mini-grids serving rural communities
+                        without grid access.
                     </div>
                 </div>
                 <div class="timeline-item">
-                    <div class="timeline-year">2019</div>
+                    <div class="timeline-year">Mar 2019 &ndash; Aug 2019</div>
                     <div class="timeline-desc">
-                        <strong>COP25, Madrid</strong> &mdash; Represented Eswatini
-                        as part of the national delegation at the UN Climate Conference.
+                        <strong>Eswatini Electricity Company (EEC)</strong> &mdash;
+                        Engineering Trainee. Coordinated EEC&rsquo;s US&nbsp;$230,000
+                        off-grid electrification project &mdash; the company&rsquo;s
+                        first microgrid, electrifying a remote village unreachable
+                        by conventional grid infrastructure.
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">Aug 2019 &ndash; May 2020</div>
+                    <div class="timeline-desc">
+                        <strong>Duke University</strong> &mdash; Final year. Represented
+                        Eswatini at COP25 in Madrid (Dec 2019) as part of the national
+                        delegation to the UN Climate Conference.
                     </div>
                 </div>
                 <div class="timeline-item">
                     <div class="timeline-year">2020 &ndash; 2022</div>
                     <div class="timeline-desc">
-                        <strong>MIT</strong> &mdash; S.M. Technology &amp; Policy
-                        (Systems Engineering focus). Research on energy systems,
-                        infrastructure investment, and policy interaction.
+                        <strong>MIT</strong> &mdash; S.M. Technology &amp; Policy.
+                        Research applied quantitative techniques to estimate mercury
+                        emissions to the atmosphere from artisanal and small-scale
+                        gold mining (ASGM), globally and regionally.
                     </div>
                 </div>
                 <div class="timeline-item">
@@ -735,7 +794,13 @@ def main() -> int:
     print(f"Output: {SITE_DIR.relative_to(PROJECT_ROOT)}/")
     print(f"{'=' * 60}")
 
-    # Always exit 0 — partial exports are valid; failed notebooks appear grayed out
+    # In strict mode (CI), fail if any notebook couldn't be exported.
+    # Locally, partial exports are fine — failed notebooks appear grayed out.
+    # Set STRICT_BUILD=1 in CI to enable strict mode.
+    strict = os.environ.get("STRICT_BUILD", "0") == "1"
+    if strict and ok < total:
+        print(f"  STRICT_BUILD=1: returning non-zero (use locally without STRICT_BUILD to allow partial exports)")
+        return 1
     return 0
 
 

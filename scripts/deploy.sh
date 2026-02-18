@@ -46,6 +46,10 @@ echo "==> Pushing to gh-pages..."
   git init -b gh-pages
   git remote add origin "$REMOTE"
   git add -A
+  if git diff --cached --quiet; then
+    echo "Nothing changed in _site/ — skipping push."
+    exit 0
+  fi
   git commit -m "$DEPLOY_MSG"
   git push --force origin gh-pages
 )

@@ -6,7 +6,7 @@ Translated using PySD
 from pathlib import Path
 import numpy as np
 
-from pysd.py_backend.statefuls import Delay, Integ
+from pysd.py_backend.statefuls import Integ, Delay
 from pysd import Component
 
 __pysd_version__ = "3.14.3"

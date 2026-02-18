@@ -397,6 +397,33 @@ def _(bea_nipa, capex_annual, capex_raw, citations, cloud_rev, guidance_2026, mk
     stats["nvda_deepseek_loss_bn"] = int(citations["nvda_deepseek_loss_bn"])
     stats["stargate_announced_bn"] = int(citations["stargate_announced_bn"])
     stats["stargate_initial_bn"] = int(citations["stargate_initial_bn"])
+
+    # --- NYT articles: risk offloading, demand thesis, Project Rainier ---
+    # Weise & Tan, "How Tech's Biggest Companies Are Offloading the Risks of the A.I. Boom"
+    # NYT, Dec 15, 2025
+    stats["meta_beignet_financing_bn"] = int(citations["meta_beignet_financing_bn"])
+    stats["meta_beignet_exit_year"] = int(citations["meta_beignet_exit_year"])
+    stats["beignet_bond_maturity"] = int(citations["beignet_bond_maturity"])
+    stats["msft_neocloud_total_bn"] = int(citations["msft_neocloud_total_bn"])
+    stats["openai_coreweave_commitment_bn"] = float(citations["openai_coreweave_commitment_bn"])
+    stats["coreweave_interest_rate_pct"] = int(citations["coreweave_interest_rate_pct"])
+    # Metz & Weise, "What Exactly Are A.I. Companies Trying to Build?"
+    # NYT, Sep 16, 2025
+    stats["chatgpt_monthly_users_m"] = int(citations["chatgpt_monthly_users_m"])
+    stats["openai_paid_subscriber_pct"] = int(citations["openai_paid_subscriber_pct"])
+    stats["google_search_ad_rev_qtr_bn"] = int(citations["google_search_ad_rev_qtr_bn"])
+    stats["mckinsey_no_impact_pct"] = int(citations["mckinsey_no_impact_pct"])
+    # Weise & Metz, "At Amazon's Biggest Data Center, Everything Is Supersized for A.I."
+    # NYT, Jun 24, 2025
+    stats["rainier_gw"] = float(citations["rainier_gw"])
+    stats["rainier_dc_planned"] = int(citations["rainier_dc_planned"])
+    stats["rainier_dc_built_jun2025"] = int(citations["rainier_dc_built_jun2025"])
+    stats["rainier_tax_break_sales_bn"] = int(citations["rainier_tax_break_sales_bn"])
+    stats["rainier_tax_break_property_bn"] = int(citations["rainier_tax_break_property_bn"])
+    stats["aep_indiana_peak_2024_gw"] = float(citations["aep_indiana_peak_2024_gw"])
+    stats["aep_indiana_peak_2030_gw"] = int(citations["aep_indiana_peak_2030_gw"])
+    stats["aep_gas_share_pct"] = int(citations["aep_gas_share_pct"])
+    stats["rainier_workers_weekly"] = int(citations["rainier_workers_weekly"])
     return (stats,)
 
 
@@ -756,6 +783,37 @@ def _(cfg, mo, stats):
 @app.cell(hide_code=True)
 def _(mo, stats):
     mo.md(f"""
+    > **What these numbers miss: infrastructure commitments not captured in reported capex.**
+    > The capex figures above capture capital expenditures as reported in SEC filings.
+    > They exclude a parallel — and growing — channel: leased and SPV-financed
+    > infrastructure that shows up as operating expenses, not capital investments.
+    >
+    > In September–November 2025 alone, Microsoft signed over \\${stats['msft_neocloud_total_bn']}B in 3-5 year
+    > neocloud leases (Nebius \\$17B, Nscale \\$23B, Iren \\$10B, Lambda multi-billion) —
+    > none of which appears in its capex line (NYT, Dec 2025). Meta structured
+    > ~\\${stats['meta_beignet_financing_bn']}B in Louisiana data center financing through a special purpose vehicle
+    > (Beignet Investor LLC), with Blue Owl Capital providing 80% of the funding
+    > and Pimco selling the underlying bonds. The deal is classified as an operating
+    > lease — so it flows through operating expenses rather than capex, and therefore
+    > does not appear in the capital expenditure figures tracked here. (Note: under
+    > FASB ASC 842, effective 2019, operating leases over 12 months do appear on the
+    > balance sheet as right-of-use assets and lease liabilities — the critical
+    > accounting distinction is between *capex* and *opex*, not on- vs. off-balance-sheet.)
+    >
+    > This means the true infrastructure commitment is **materially higher** than
+    > the ~\\${stats['capex_2025']:.0f}B in reported capex. It also means the risk
+    > distribution is different from what the balance sheets show — a dynamic traced
+    > in the risk distribution section below.
+    >
+    > *Sources: NYT, "How Tech's Biggest Companies Are Offloading the Risks of the
+    > A.I. Boom," Dec 15, 2025 (Weise & Tan).*
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo, stats):
+    mo.md(f"""
     ---
 
     ## The Revenue Question
@@ -815,6 +873,55 @@ def _(mo, stats):
     ("Gen AI: Too Much Spend, Too Little Return?", September 2024). It differs
     in using auditable EDGAR data for capex actuals and company-reported cloud
     segments for revenue, rather than extrapolations from NVIDIA data center revenue.*
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo, stats):
+    mo.md(f"""
+    ### The Demand Thesis Diversity Problem
+
+    The revenue gap is compounded by a structural issue: the companies building this
+    infrastructure cannot articulate a single demand thesis that justifies the spend.
+    A September 2025 industry survey (NYT, Metz & Weise) identified at least six
+    overlapping visions being pursued simultaneously:
+
+    1. **Better search** — replacing Google's \\${stats['google_search_ad_rev_qtr_bn']}B/quarter ad engine with chatbots
+       (but fewer than {stats['openai_paid_subscriber_pct']}% of ChatGPT's {stats['chatgpt_monthly_users_m']}M+ users pay, and chatbot economics
+       don't naturally support advertising)
+    2. **Productivity tools** — AI for office workers, code generation, document
+       summarization (but McKinsey found ~{stats['mckinsey_no_impact_pct']}% of businesses that tried gen AI
+       reported no significant bottom-line impact)
+    3. **Everything assistant** — AI embedded in glasses, smart speakers, shopping
+       (Meta's AI glasses remain a niche product; Alexa has been a money-loser
+       for over a decade)
+    4. **AI companions** — synthetic friends on social networks (\\$300/month
+       subscription, growing criticism of social harms)
+    5. **Scientific breakthroughs** — drug discovery, materials science (real but
+       narrow; Google's AlphaFold won a Nobel Prize but revenue model is indirect)
+    6. **AGI / superintelligence** — matching or exceeding human cognition (no
+       articulated revenue model; timeline is decades, not years)
+
+    Each vision implies a different revenue trajectory, infrastructure requirement,
+    and risk profile. The capex figures aggregate across all six. The revenue figures
+    currently reflect mainly #1 and #2 — productivity and search. If #3-#6 don't
+    materialize as revenue-generating products, the infrastructure built for them
+    becomes capacity in search of demand.
+
+    Amazon's CEO offered the most concrete breakdown: roughly 10% of AI
+    infrastructure is used for training (building) AI systems, while 80-90% is
+    for delivering them to customers (NYT, Sep 2025). That split implies the
+    buildout is demand-driven, not research-driven — which makes the revenue
+    question even more central to whether the infrastructure gets utilized.
+
+    One Sequoia Capital partner described the dynamic as a chess game among a
+    handful of executives with implications for everyone else (NYT, Sep 2025).
+    The Allen Institute's founding CEO offered a simpler explanation for the
+    spending: FOMO.
+
+    *Sources: NYT, "What Exactly Are A.I. Companies Trying to Build?" Sep 16, 2025
+    (Metz & Weise); McKinsey Global Survey on AI (2025); OpenAI public statements.*
     """)
     return
 
@@ -1025,6 +1132,62 @@ def _(mo, stats):
     real, but the evidence so far suggests the conversion from announcement to operating
     infrastructure is slower and more contingent than headlines imply. How much slower
     is a question the data can start to answer — but not yet close.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo, stats):
+    mo.md(f"""
+    ### Case Study: Project Rainier (Amazon/Anthropic, Indiana)
+
+    The most detailed public record of AI infrastructure conversion comes from
+    Amazon's Project Rainier campus near New Carlisle, Indiana — a facility built
+    specifically for Anthropic and documented by the NYT in June 2025.
+
+    **Scale and timeline:**
+    - 1,200 acres of former cornfield, 15 miles west of South Bend
+    - {stats['rainier_gw']} GW planned capacity — enough to power a million homes
+    - ~{stats['rainier_dc_planned']} data centers planned; {stats['rainier_dc_built_jun2025']} built by June 2025 (each larger than a football
+      stadium), with four construction firms working simultaneously
+    - ~{stats['rainier_workers_weekly']:,} construction workers on site weekly
+    - Hundreds of thousands of Amazon Trainium 2 chips, connected by hundreds of
+      thousands of miles of fiber
+
+    **Public subsidy and cost:**
+    - Indiana legislature: 50-year sales tax break (~\\${stats['rainier_tax_break_sales_bn']}B, per Citizens Action
+      Coalition estimate)
+    - County property/technology tax breaks: ~\\${stats['rainier_tax_break_property_bn']}B additional over 35 years
+    - Total public subsidy: **~\\${stats['rainier_tax_break_sales_bn'] + stats['rainier_tax_break_property_bn']}B** for one campus
+    - Amazon paid \\$7M for road improvements + \\$120K for traffic enforcement overtime
+
+    **Grid impact (the DD-002 connection):**
+    - AEP (local utility) told regulators that data centers will more than double
+      Indiana's peak power demand: from {stats['aep_indiana_peak_2024_gw']} GW (2024) to {stats['aep_indiana_peak_2030_gw']}+ GW by ~2030
+    - **Amazon's campus alone accounts for about half of the additional load**
+    - AEP plans to meet ~{stats['aep_gas_share_pct']}% of additional power demand with natural gas — directly
+      connecting AI infrastructure to fossil fuel expansion
+    - The facility will use millions of gallons of water annually for cooling
+
+    **Community externalities:**
+    - State investigating whether Amazon's dewatering (2.2M gallons/hour for 730
+      days to install underground infrastructure) caused neighbors' wells to run dry
+    - Increased traffic congestion and accidents
+    - Community opposition to construction on a 10-acre wetland
+
+    **The conversion lesson:** Project Rainier shows what "announcement → infrastructure"
+    actually requires: utility negotiations begun months after ChatGPT launched
+    (early 2023), land acquired by early 2024, first buildings up by mid-2025. That's
+    roughly a 2-year timeline from site selection to initial operation — and the
+    campus is still less than a quarter built. The constraint isn't capital. It's the
+    physical sequence: land → permits → utility interconnection → construction →
+    equipment installation → energization.
+
+    The 2.2 GW grid interconnection and the natural gas plants built to serve it
+    remain regardless of what the chips ultimately do.
+
+    *Source: NYT, "At Amazon's Biggest Data Center, Everything Is Supersized for
+    A.I.," Jun 24, 2025 (Weise & Metz).*
     """)
     return
 
@@ -1604,6 +1767,106 @@ def _(mo, stats):
 
 
 @app.cell(hide_code=True)
+def _(mo, stats):
+    mo.md(f"""
+    ---
+
+    ## Who Holds the Downside? Risk Distribution in the AI Buildout
+
+    The durability taxonomy above classifies *what* persists. This section traces
+    *who bears the downside* when long-lived assets outlast the demand thesis that
+    justified them. The answer has shifted significantly through 2025: the companies
+    making the investment decisions have systematically moved financial exposure to
+    entities further from the decision.
+
+    The mechanisms fall into three categories:
+
+    **1. Special Purpose Vehicles (SPVs)**
+
+    Meta's Louisiana data center is the clearest case. Meta created Beignet Investor
+    LLC and worked with Blue Owl Capital to borrow ~\\${stats['meta_beignet_financing_bn']}B for the project. Blue Owl
+    provided 80% of the financing; Pimco sold bonds maturing in **{stats['beignet_bond_maturity']}** to its
+    clients — insurers, pension funds, endowments, and financial advisers. Meta
+    agreed to "rent" the facility through a series of 4-year leases, classifying the
+    arrangement as operating cost rather than debt.
+
+    The risk asymmetry: Meta can walk away as early as {stats['meta_beignet_exit_year']}. The bondholders are
+    committed through {stats['beignet_bond_maturity']}. If AI demand underwhelms, the data center's value
+    depreciates — and that loss lands on pension fund portfolios and insurance
+    company balance sheets, not Meta's.
+
+    A Columbia Business School accounting professor drew explicit parallels to the
+    off-balance-sheet vehicles that preceded the dot-com bust (NYT, Dec 2025). The
+    comparison is directional, not exact — Meta has provided protections that future
+    deals may not require — but the structural pattern is recognizable.
+
+    **2. Neocloud Leases**
+
+    Microsoft signed over \\${stats['msft_neocloud_total_bn']}B in 3-5 year data center leases in a single quarter
+    (Sep–Nov 2025), spread across at least four neocloud providers. These shorter
+    contracts give Microsoft flexibility: computing power that shows up as day-to-day
+    operating expense rather than decades-long capital commitment.
+
+    The counterparties — Nebius (ex-Yandex founder), Nscale (privately held, British),
+    Iren (former bitcoin miner), Lambda — are building the data centers with their
+    own capital. If Microsoft's demand shifts after the lease terms end, these
+    smaller companies and their lenders absorb the stranded-asset risk.
+
+    **3. Downstream Concentration: The CoreWeave–OpenAI Chain**
+
+    CoreWeave, the largest neocloud, has tied its future to a small number of
+    customers — borrowing billions at {stats['coreweave_interest_rate_pct']}%+ interest rates to build capacity
+    that OpenAI has committed to purchase (up to \\${stats['openai_coreweave_commitment_bn']}B). Microsoft is
+    CoreWeave's dominant customer, representing ~62% of 2024 revenue (CoreWeave
+    S-1/A, March 2025, EDGAR CIK 2051911). OpenAI has separately promised to route
+    \\$250B in computing through Microsoft — creating a dependency chain that runs
+    CoreWeave → OpenAI → Microsoft's continued AI investment.
+
+    This creates a concentration risk: CoreWeave's viability depends on OpenAI's
+    growth, which depends on consumer and enterprise adoption of AI products that
+    — as the revenue section documented — haven't yet generated returns matching
+    the infrastructure investment.
+
+    ### What This Means for the Analysis
+
+    The risk distribution pattern has a directional implication for the durability
+    question: **the entities best positioned to evaluate AI demand (the tech giants)
+    are systematically reducing their exposure, while entities with less visibility
+    into demand trajectories (private credit, pension funds, neocloud startups)
+    are absorbing it.**
+
+    This doesn't mean the investments are wrong. It means the market structure is
+    pricing risk asymmetrically — and if the demand thesis proves incorrect, the
+    consequences will be distributed across the financial system in ways that the
+    companies' own balance sheets won't fully reflect.
+
+    | Risk bearer | Mechanism | Exposure window | Visibility into AI demand |
+    | :--- | :--- | :--- | :--- |
+    | Tech giants (Meta, MSFT) | SPVs, short-term leases | 3-5 years (can exit) | **High** (own the products) |
+    | Neoclouds (CoreWeave, Nebius) | Debt-funded capacity build | 10-20 years (debt terms) | Medium (contracted, not owned) |
+    | Private credit / bondholders | Bond purchases, loans | 20-25 years (bond maturity) | **Low** (financial instruments) |
+    | Pension funds / endowments | Bond portfolios | Indefinite (asset allocation) | **None** (downstream investors) |
+    | Rural communities | Tax incentives, grid load | **Permanent** (infrastructure) | **None** |
+
+    **Regulatory context:** FERC's AD24-11 Policy Statement (May 2024) directly
+    addresses the cost allocation question: the Commission affirmed that
+    cost-causation principles apply to large loads like data centers and that upgrade
+    costs "may be inappropriately socialized" across existing ratepayers if not
+    allocated to the triggering customer. The Policy Statement is non-binding; no
+    Final Rule has been issued. FERC Order 2023 (July 2023) is distinct — it governs
+    *generator* (supply-side) interconnection reform and does not apply to large-load
+    data center interconnection. The gap between the AD24-11 policy intent and any
+    binding rule means cost allocation for the Rainier-scale load additions remains
+    an open regulatory question that will shape who ultimately pays for grid upgrades.
+
+    *Sources: NYT, "How Tech's Biggest Companies Are Offloading the Risks of the
+    A.I. Boom," Dec 15, 2025 (Weise & Tan); CoreWeave S-1/A, March 2025 (EDGAR CIK
+    2051911); FERC AD24-11 Policy Statement, May 2024.*
+    """)
+    return
+
+
+@app.cell(hide_code=True)
 def _(mo):
     mo.md("""
     ---
@@ -1620,6 +1883,13 @@ def _(mo):
     - **DD-002: Grid Modernization** (active) — What generation mix is getting
       built? Which fuel types? Where geographically? Who benefits from the
       cost allocation? What feedback loops shape the buildout trajectory?
+      The Project Rainier case provides an anchor: one campus in Indiana
+      accounts for ~half of the state's projected load growth through 2030,
+      with the utility planning 75% natural gas to meet that demand. Meta's
+      Louisiana data center (2 GW) and OpenAI's Texas facility (1.2 GW)
+      are comparable in scale. DD-002 traces whether these facility-level
+      patterns aggregate into a grid-wide shift in generation mix and
+      emissions trajectory.
     - **DD-003: Labor Markets** (scoping) — Who gets hired and displaced? What
       are the temporal dynamics of build-phase construction employment vs.
       long-term operations staffing vs. knowledge-work displacement?
@@ -1644,6 +1914,12 @@ def _(mo):
     Interconnection — As of the End of 2024," LBNL, April 2025 (emp.lbl.gov/queues),
     Palmer et al., "Reforming Electricity Interconnection," Resources for the Future,
     2024.
+    NYT, "At Amazon's Biggest Data Center, Everything Is Supersized for A.I.,"
+    Jun 24, 2025 (Karen Weise & Cade Metz).
+    NYT, "What Exactly Are A.I. Companies Trying to Build? Here's a Guide,"
+    Sep 16, 2025 (Cade Metz & Karen Weise).
+    NYT, "How Tech's Biggest Companies Are Offloading the Risks of the A.I. Boom,"
+    Dec 15, 2025 (Karen Weise & Eli Tan).
     See `research/ai_valuation_vs_infrastructure_reality.md` for full source list.*
     """)
     return

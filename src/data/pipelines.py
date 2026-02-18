@@ -1,14 +1,18 @@
 """dlt data pipelines for the Systems research project.
 
-Loads data from EIA, LBNL, FRED, SEC EDGAR, BEA, and reference CSVs
+Loads data from EIA, LBNL, FRED, BLS, SEC EDGAR, BEA, and reference CSVs
 into a centralized DuckDB database at data/research.duckdb. Run with:
 
     uv run python -m src.data.pipelines          # all sources
     uv run python -m src.data.pipelines --eia     # EIA Form 860 only
     uv run python -m src.data.pipelines --lbnl    # LBNL queue only
     uv run python -m src.data.pipelines --fred    # FRED series only
+    uv run python -m src.data.pipelines --bls     # BLS QCEW only
+    uv run python -m src.data.pipelines --oews    # BLS OEWS wage data only
     uv run python -m src.data.pipelines --edgar   # SEC EDGAR only
     uv run python -m src.data.pipelines --ref     # Reference + citations
+
+BLS data access functions (for direct notebook use) are in src/data/bls.py.
 """
 
 from __future__ import annotations
@@ -419,6 +423,51 @@ def bls_qcew(
 
 
 # ---------------------------------------------------------------------------
+# BLS OEWS — Occupational Employment and Wage Statistics
+# ---------------------------------------------------------------------------
+
+
+@dlt.resource(write_disposition="replace")
+def oews_wages(
+    soc_codes: dict[str, str] | None = None,
+    years: list[int] | None = None,
+) -> dlt.sources.DltResource:
+    """Load BLS OEWS wage data for key occupations (DD-003 labor analysis).
+
+    Downloads and caches annual OEWS national flat files via src.data.bls.
+    No API key required. Files are cached to data/raw/bls/ after first download.
+
+    Covers both the AI/technical stack (software developers, data scientists,
+    electrical engineers) and the construction trades (electricians, line
+    installers) that the public discourse systematically undercounts.
+    """
+    from src.data.bls import SOC_CODES_DD003, fetch_oews_soc
+
+    codes = soc_codes or SOC_CODES_DD003
+    years_list = years or list(range(2019, 2025))
+
+    logger.info("OEWS: fetching %d SOC codes for %d years", len(codes), len(years_list))
+    df = fetch_oews_soc(codes, years_list)
+
+    if df.empty:
+        logger.warning("OEWS: no data returned")
+        return
+
+    for _, row in df.iterrows():
+        record: dict = {
+            "year": int(row["year"]),
+            "occ_code": str(row.get("occ_code", "")),
+            "occ_title": str(row.get("occ_title", "")),
+            "label": str(row.get("label", "")),
+            "o_group": str(row.get("o_group", "")),
+        }
+        for col in ["tot_emp", "h_mean", "a_mean", "h_median", "a_median", "a_pct25", "a_pct75"]:
+            val = row.get(col)
+            record[col] = float(val) if pd.notna(val) else None
+        yield record
+
+
+# ---------------------------------------------------------------------------
 # Census County Business Patterns
 # ---------------------------------------------------------------------------
 
@@ -702,6 +751,131 @@ def lbnl_queue_summary() -> dlt.sources.DltResource:
         yield rec
 
 
+@dlt.resource(write_disposition="replace")
+def dd002_queue_region_backlog() -> dlt.sources.DltResource:
+    """Load DD-002 queue backlog splits by region.
+
+    Source: data/external/dd002_queue_region_backlog.csv
+    """
+    path = PROJECT_ROOT / "data" / "external" / "dd002_queue_region_backlog.csv"
+    if not path.exists():
+        logger.warning("DD-002 queue region CSV not found at %s", path)
+        return
+
+    df = pd.read_csv(path)
+    for _, row in df.iterrows():
+        yield {
+            "year": int(row["year"]),
+            "region": str(row["region"]),
+            "queue_gw": float(row["queue_gw"]),
+            "is_major_dc_region": str(row.get("is_major_dc_region", "false")).lower() == "true",
+            "source": str(row.get("source", "")),
+            "source_detail": str(row.get("source_detail", "")),
+        }
+
+
+@dlt.resource(write_disposition="replace")
+def dd002_cost_allocation() -> dlt.sources.DltResource:
+    """Load DD-002 cost-allocation records.
+
+    Source: data/external/dd002_cost_allocation.csv
+    """
+    path = PROJECT_ROOT / "data" / "external" / "dd002_cost_allocation.csv"
+    if not path.exists():
+        logger.warning("DD-002 cost allocation CSV not found at %s", path)
+        return
+
+    df = pd.read_csv(path)
+    for _, row in df.iterrows():
+        yield {
+            "year": int(row["year"]),
+            "region": str(row["region"]),
+            "cost_category": str(row["cost_category"]),
+            "cost_bn": float(row["cost_bn"]),
+            "sort_order": int(row.get("sort_order", 0)),
+            "is_total": str(row.get("is_total", "false")).lower() == "true",
+            "project_count": int(row.get("project_count", 0)),
+            "socialized_pct": float(row.get("socialized_pct", 0)),
+            "is_estimate": str(row.get("is_estimate", "false")).lower() == "true",
+            "source": str(row.get("source", "")),
+            "source_detail": str(row.get("source_detail", "")),
+        }
+
+
+@dlt.resource(write_disposition="replace")
+def dd002_policy_events() -> dlt.sources.DltResource:
+    """Load DD-002 policy and regulatory event timeline.
+
+    Source: data/external/dd002_policy_events.csv
+    """
+    path = PROJECT_ROOT / "data" / "external" / "dd002_policy_events.csv"
+    if not path.exists():
+        logger.warning("DD-002 policy events CSV not found at %s", path)
+        return
+
+    df = pd.read_csv(path)
+    for _, row in df.iterrows():
+        yield {
+            "event_date": str(row["event_date"]),
+            "jurisdiction": str(row.get("jurisdiction", "")),
+            "docket": str(row.get("docket", "")),
+            "event_name": str(row.get("event_name", "")),
+            "event_type": str(row.get("event_type", "")),
+            "status": str(row.get("status", "")),
+            "effective_or_due_date": str(row.get("effective_or_due_date", "")),
+            "description": str(row.get("description", "")),
+            "source_name": str(row.get("source_name", "")),
+            "source_url": str(row.get("source_url", "")),
+        }
+
+
+@dlt.resource(write_disposition="replace")
+def dd002_hyperscaler_region_weights() -> dlt.sources.DltResource:
+    """Load DD-002 hyperscaler capex allocation weights by grid region.
+
+    Source: data/external/dd002_hyperscaler_region_weights.csv
+    """
+    path = PROJECT_ROOT / "data" / "external" / "dd002_hyperscaler_region_weights.csv"
+    if not path.exists():
+        logger.warning("DD-002 hyperscaler region weights CSV not found at %s", path)
+        return
+
+    df = pd.read_csv(path)
+    for _, row in df.iterrows():
+        yield {
+            "ticker": str(row["ticker"]),
+            "region": str(row["region"]),
+            "allocation_weight": float(row["allocation_weight"]),
+            "source": str(row.get("source", "")),
+            "source_detail": str(row.get("source_detail", "")),
+        }
+
+
+@dlt.resource(write_disposition="replace")
+def dd002_projection_priors() -> dlt.sources.DltResource:
+    """Load DD-002 probabilistic projection priors.
+
+    Source: data/external/dd002_projection_priors.csv
+    """
+    path = PROJECT_ROOT / "data" / "external" / "dd002_projection_priors.csv"
+    if not path.exists():
+        logger.warning("DD-002 projection priors CSV not found at %s", path)
+        return
+
+    df = pd.read_csv(path)
+    for _, row in df.iterrows():
+        yield {
+            "parameter": str(row["parameter"]),
+            "base_value": float(row["base_value"]),
+            "low_value": float(row["low_value"]),
+            "high_value": float(row["high_value"]),
+            "units": str(row.get("units", "")),
+            "source": str(row.get("source", "")),
+            "source_date": str(row.get("source_date", "")),
+            "source_detail": str(row.get("source_detail", "")),
+        }
+
+
 # ---------------------------------------------------------------------------
 # SEC EDGAR XBRL & PP&E Extraction
 # ---------------------------------------------------------------------------
@@ -889,6 +1063,13 @@ def run_bls() -> None:
     logger.info("BLS QCEW: %s", info)
 
 
+def run_oews() -> None:
+    """Run BLS OEWS occupational wage pipeline."""
+    pipeline = _make_pipeline()
+    info = pipeline.run(oews_wages())
+    logger.info("BLS OEWS: %s", info)
+
+
 def run_census() -> None:
     """Run Census CBP pipeline."""
     pipeline = _make_pipeline()
@@ -914,6 +1095,16 @@ def run_reference() -> None:
     logger.info("Cloud revenue: %s", info)
     info = pipeline.run(lbnl_queue_summary())
     logger.info("LBNL queue summary: %s", info)
+    info = pipeline.run(dd002_queue_region_backlog())
+    logger.info("DD-002 queue region backlog: %s", info)
+    info = pipeline.run(dd002_cost_allocation())
+    logger.info("DD-002 cost allocation: %s", info)
+    info = pipeline.run(dd002_policy_events())
+    logger.info("DD-002 policy events: %s", info)
+    info = pipeline.run(dd002_hyperscaler_region_weights())
+    logger.info("DD-002 hyperscaler region weights: %s", info)
+    info = pipeline.run(dd002_projection_priors())
+    logger.info("DD-002 projection priors: %s", info)
     info = pipeline.run(hyperscaler_ocf())
     logger.info("Hyperscaler OCF: %s", info)
     info = pipeline.run(source_citations())
@@ -937,6 +1128,7 @@ def run_all() -> None:
     run_eia()
     run_lbnl()
     run_bls()
+    run_oews()
     run_census()
     run_capex()
     run_reference()
@@ -953,6 +1145,7 @@ if __name__ == "__main__":
     parser.add_argument("--lbnl", action="store_true", help="LBNL queue only")
     parser.add_argument("--fred", action="store_true", help="FRED series only")
     parser.add_argument("--bls", action="store_true", help="BLS QCEW only")
+    parser.add_argument("--oews", action="store_true", help="BLS OEWS wage data only")
     parser.add_argument("--census", action="store_true", help="Census CBP only")
     parser.add_argument("--capex", action="store_true", help="Hyperscaler CapEx only")
     parser.add_argument("--ref", action="store_true", help="Reference data only")
@@ -960,7 +1153,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     flags = [
-        args.eia, args.lbnl, args.fred, args.bls,
+        args.eia, args.lbnl, args.fred, args.bls, args.oews,
         args.census, args.capex, args.ref, args.edgar,
     ]
     if not any(flags):
@@ -974,6 +1167,8 @@ if __name__ == "__main__":
             run_lbnl()
         if args.bls:
             run_bls()
+        if args.oews:
+            run_oews()
         if args.census:
             run_census()
         if args.capex:

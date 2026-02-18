@@ -77,58 +77,180 @@ def _():
 
 
 @app.cell
-def _(query):
-    # --- External source constants ---
-    # LBNL "Queued Up: 2025 Edition" — https://emp.lbl.gov/queues
-    _queue_total = 2_300  # GW, active queue as of end-2024
-    _queue_gen = 1_400  # GW, generation projects
-    _queue_storage = 890  # GW, standalone storage
-    _median_years = 4  # years, median interconnection time (projects built since 2018)
-    _completion_pct = 13  # %, projects that enter queue and are eventually built
-    _yoy_decrease_pct = 12  # %, decrease in active queue volume (2025 vs 2024 edition)
+def _(pd, query):
+    # Database-backed inputs for the narrative notebook.
+    queue_summary = query(
+        """
+        SELECT year, generation_gw, storage_gw, total_gw, completion_pct, withdrawal_pct,
+               solar_gw, wind_gw, gas_gw, other_gw
+        FROM energy_data.lbnl_queue_summary
+        ORDER BY year
+        """
+    )
+    queue_region = query(
+        """
+        SELECT year, region, queue_gw, is_major_dc_region, source, source_detail
+        FROM energy_data.dd002_queue_region_backlog
+        WHERE year = (SELECT MAX(year) FROM energy_data.dd002_queue_region_backlog)
+        ORDER BY queue_gw DESC
+        """
+    )
+    cost_alloc = query(
+        """
+        SELECT year, region, cost_category, cost_bn, sort_order, is_total, project_count,
+               socialized_pct, is_estimate, source, source_detail
+        FROM energy_data.dd002_cost_allocation
+        ORDER BY year, sort_order
+        """
+    )
+    policy_events = query(
+        """
+        SELECT event_date, jurisdiction, docket, event_name, event_type, status,
+               effective_or_due_date, description, source_name, source_url
+        FROM energy_data.dd002_policy_events
+        ORDER BY event_date
+        """
+    )
+    projection_priors = query(
+        """
+        SELECT parameter, base_value, low_value, high_value, units, source, source_date, source_detail
+        FROM energy_data.dd002_projection_priors
+        ORDER BY parameter
+        """
+    )
+    region_weights = query(
+        """
+        SELECT ticker, region, allocation_weight, source, source_detail
+        FROM energy_data.dd002_hyperscaler_region_weights
+        """
+    )
+    capex_annual = query(
+        """
+        SELECT ticker, YEAR(CAST(date AS DATE)) AS year, SUM(capex_bn) AS capex_bn
+        FROM energy_data.hyperscaler_capex
+        GROUP BY ticker, YEAR(CAST(date AS DATE))
+        """
+    )
+    in_service_state_year = query(
+        """
+        SELECT operating_year AS year, state,
+               SUM(nameplate_capacity_mw) / 1000.0 AS in_service_gw
+        FROM energy_data.eia860_generators
+        WHERE status = 'OP'
+          AND operating_year >= 2020
+          AND state IS NOT NULL
+        GROUP BY operating_year, state
+        """
+    )
+    _installed = float(
+        query(
+            """
+            SELECT SUM(nameplate_capacity_mw) / 1000.0 AS installed_gw
+            FROM energy_data.eia860_generators
+            WHERE status = 'OP'
+            """
+        ).iloc[0, 0]
+    )
+    _elec_price = float(
+        query(
+            """
+            SELECT value AS retail_price_cents_kwh
+            FROM energy_data.fred_series
+            WHERE series_id = 'APU000072610'
+            ORDER BY date DESC
+            LIMIT 1
+            """
+        ).iloc[0, 0]
+    )
+    citations = query(
+        """
+        SELECT key, value, unit, source_name, source_date, source_detail, url
+        FROM energy_data.source_citations
+        """
+    )
+    citation_map = citations.set_index("key")["value"].to_dict()
 
-    # UCS "Connection Costs Loophole Costs Customers Over $4 Billion" (Sep 2025)
-    _ucs_cost_bn = 4.36  # $B, PJM data center grid costs socialized in 2024
-    _ucs_projects = 150  # count, local transmission projects 2022-2024
-    _ucs_socialized_pct = 95  # %, projects that socialized costs
+    queue_comp = queue_summary[
+        ["year", "solar_gw", "storage_gw", "wind_gw", "gas_gw", "other_gw"]
+    ].rename(columns={"storage_gw": "battery"})
+    queue_comp[["solar_gw", "battery", "wind_gw", "gas_gw", "other_gw"]] = queue_comp[
+        ["solar_gw", "battery", "wind_gw", "gas_gw", "other_gw"]
+    ].fillna(0)
 
-    # JLARC / E3 "Data Centers in Virginia" (December 2024)
-    _va_bill_annual = 444  # $/year, high-growth scenario increase by 2040
-    _va_bill_monthly = _va_bill_annual / 12  # $/month
-    _va_capacity_pct = 25  # %, NoVA share of Americas data center capacity
+    region_state_map = {
+        "PJM": {"DC", "DE", "IL", "IN", "KY", "MD", "MI", "NC", "NJ", "OH", "PA", "TN", "VA", "WV"},
+        "MISO": {"AR", "IA", "LA", "MN", "MS", "MO", "MT", "ND", "SD", "WI"},
+        "CAISO": {"CA"},
+        "SPP": {"KS", "NE", "NM", "OK", "WY"},
+        "ERCOT": {"TX"},
+        "NYISO": {"NY"},
+        "ISO-NE": {"CT", "MA", "ME", "NH", "RI", "VT"},
+        "Non-ISO West": {"AK", "AZ", "CO", "HI", "ID", "NV", "OR", "UT", "WA"},
+        "Non-ISO Southeast": {"AL", "FL", "GA", "SC"},
+    }
+    state_to_region = {state: region for region, states in region_state_map.items() for state in states}
+    in_service_state_year["region"] = in_service_state_year["state"].map(state_to_region).fillna("Non-ISO West")
+    in_service_region_2024 = (
+        in_service_state_year[in_service_state_year["year"] == 2024]
+        .groupby("region", as_index=False)["in_service_gw"]
+        .sum()
+    )
 
-    # DB-derived: installed capacity and avg residential bill
-    _installed = query(
-        "SELECT SUM(nameplate_capacity_mw)/1000 as gw "
-        "FROM energy_data.eia860_generators WHERE status='OP'"
-    ).iloc[0, 0]
-    _elec_price = query(
-        "SELECT value FROM energy_data.fred_series "
-        "WHERE series_id='APU000072610' ORDER BY date DESC LIMIT 1"
-    ).iloc[0, 0]
-    _avg_monthly_bill = round(_elec_price * 886)  # 886 kWh = EIA avg household consumption
+    capex_latest_year = int(capex_annual["year"].max())
+    capex_latest = capex_annual[capex_annual["year"] == capex_latest_year].copy()
+    capex_region = capex_latest.merge(region_weights, on="ticker", how="inner")
+    capex_region["allocated_capex_bn"] = capex_region["capex_bn"] * capex_region["allocation_weight"]
+    lag_by_company_region = (
+        capex_region.merge(queue_region[["region", "queue_gw"]], on="region", how="left")
+        .merge(in_service_region_2024, on="region", how="left")
+        .assign(
+            implied_lag_years=lambda d: d["queue_gw"] / d["in_service_gw"],
+            throughput_mw_per_bn=lambda d: (d["in_service_gw"] * 1000.0) / d["allocated_capex_bn"],
+        )
+        .sort_values(["implied_lag_years", "allocated_capex_bn"], ascending=[False, False])
+    )
+
+    _q_latest = queue_summary.iloc[-1]
+    _q_prev = queue_summary.iloc[-2]
+    _queue_yoy_pct = (_q_latest["total_gw"] / _q_prev["total_gw"] - 1) * 100
+    _cost_total = cost_alloc[cost_alloc["is_total"]].iloc[-1]
+    _avg_monthly_bill = round(_elec_price * 886)
     _avg_annual_bill = _avg_monthly_bill * 12
 
     stats = {
-        "queue_total_gw": _queue_total,
-        "queue_gen_gw": _queue_gen,
-        "queue_storage_gw": _queue_storage,
-        "median_years": _median_years,
-        "completion_pct": _completion_pct,
-        "yoy_decrease_pct": _yoy_decrease_pct,
-        "ucs_cost_bn": _ucs_cost_bn,
-        "ucs_projects": _ucs_projects,
-        "ucs_socialized_pct": _ucs_socialized_pct,
-        "va_bill_annual": _va_bill_annual,
-        "va_bill_monthly": round(_va_bill_monthly),
-        "va_capacity_pct": _va_capacity_pct,
+        "queue_total_gw": int(_q_latest["total_gw"]),
+        "queue_gen_gw": int(_q_latest["generation_gw"]),
+        "queue_storage_gw": int(_q_latest["storage_gw"]),
+        "median_years": int(citation_map["queue_median_years"]),
+        "completion_pct": int(_q_latest["completion_pct"]),
+        "queue_yoy_pct": round(_queue_yoy_pct),
+        "queue_yoy_abs_pct": abs(round(_queue_yoy_pct)),
+        "queue_yoy_direction": "decrease" if _queue_yoy_pct < 0 else "increase",
+        "ucs_cost_bn": float(_cost_total["cost_bn"]),
+        "ucs_projects": int(_cost_total["project_count"]),
+        "ucs_socialized_pct": int(_cost_total["socialized_pct"]),
+        "va_bill_annual": int(citation_map["va_bill_annual_2040"]),
+        "va_bill_monthly": round(float(citation_map["va_bill_annual_2040"]) / 12),
+        "va_capacity_pct": int(citation_map["va_capacity_share_americas_pct"]),
         "installed_gw": round(_installed),
-        "queue_ratio": round(_queue_total / _installed, 1),
+        "queue_ratio": round(_q_latest["total_gw"] / _installed, 1),
         "avg_monthly_bill": _avg_monthly_bill,
         "avg_annual_bill": _avg_annual_bill,
         "avg_bill_10pct": round(_avg_annual_bill * 0.1),
+        "capex_lag_year": capex_latest_year,
+        "lag_top_region": lag_by_company_region.iloc[0]["region"],
+        "lag_top_years": lag_by_company_region.iloc[0]["implied_lag_years"],
     }
-    return (stats,)
+
+    return (
+        cost_alloc,
+        lag_by_company_region,
+        policy_events,
+        projection_priors,
+        queue_comp,
+        queue_region,
+        stats,
+    )
 
 
 @app.cell(hide_code=True)
@@ -180,9 +302,9 @@ def _(mo, stats):
     that enter the queue are ever built.
 
     There are early signs of improvement. FERC Order 2023 reforms and high
-    withdrawal rates have begun reducing queue backlog — the LBNL 2025
-    edition shows a {stats['yoy_decrease_pct']}% decrease in active queue volume
-    from the prior year. But the structural bottleneck remains severe.
+    withdrawal rates have begun reducing queue backlog — the LBNL annual data
+    shows a {stats['queue_yoy_abs_pct']}% {stats['queue_yoy_direction']} in active
+    queue volume from the prior year. But the structural bottleneck remains severe.
 
     This is the binding constraint on AI infrastructure. It does not matter
     how many renewable PPAs a hyperscaler signs if the generation cannot
@@ -210,32 +332,17 @@ def _(cfg, mo, stats):
 
 
 @app.cell
-def _(cfg, horizontal_bar_ranking, legend_below, plt, save_fig):
-    # LBNL queue data — if not loaded, use representative summary data
-    # from the LBNL Queued Up 2025 Edition report
-    #
-    # Source: LBNL "Queued Up: 2025 Edition" — https://emp.lbl.gov/queues
-    # NOTE: These figures are illustrative estimates of active queue capacity (GW)
-    # by ISO/RTO as of end-2024. Regional totals are approximate and may not sum
-    # to the LBNL national total of ~2,300 GW due to rounding and methodology.
-
-    _regions = [
-        "PJM", "MISO", "CAISO", "SPP", "ERCOT",
-        "NYISO", "ISO-NE", "Non-ISO West", "Non-ISO Southeast",
-    ]
-    # Approximate active queue by ISO/RTO (GW), scaled to sum to ~2,300 GW
-    # Source: LBNL "Queued Up: 2025 Edition" — regional totals are estimates
-    _backlog_gw = [
-        520, 420, 310, 275, 260,
-        105, 70, 180, 160,
-    ]
+def _(CATEGORICAL, COLORS, cfg, horizontal_bar_ranking, legend_below, plt, queue_region, save_fig):
+    _regions = queue_region["region"].tolist()
+    _backlog_gw = queue_region["queue_gw"].tolist()
+    _highlight = [i for i, flag in enumerate(queue_region["is_major_dc_region"].tolist()) if flag]
 
     fig_queue = horizontal_bar_ranking(
         _regions,
         _backlog_gw,
         "PJM and MISO carry the largest interconnection backlogs",
         xlabel="Queue Backlog (GW)",
-        highlight_indices=[0, 4],  # PJM and ERCOT — major data center regions
+        highlight_indices=_highlight,
         highlight_color=COLORS["accent"],
     )
     _ax_q = fig_queue.axes[0]
@@ -274,46 +381,28 @@ def _(cfg, mo):
     it is the administrative and engineering process of connecting them
     to the grid.
 
-    *Regional backlogs are approximate estimates from LBNL data. Individual
-    ISO/RTO figures may not sum precisely to the national total due to
-    methodology differences.*
+    *Regional backlog values are loaded from `energy_data.dd002_queue_region_backlog`
+    and reconciled to the national queue total in `energy_data.lbnl_queue_summary`.*
     """
     )
     return
 
 
 @app.cell
-def _(cfg, pd, save_fig, stacked_bar):
-    # Queue composition by fuel type — LBNL Queued Up 2025 data
-    # Source: https://emp.lbl.gov/queues
-
-    # Queue composition by fuel type — illustrative estimates based on
-    # LBNL "Queued Up" annual editions (2019-2025). 2024 column sums to
-    # ~2,300 GW matching the LBNL 2025 Edition national total.
-    _comp = pd.DataFrame({
-        "year": [2019, 2020, 2021, 2022, 2023, 2024],
-        "solar": [150, 230, 380, 580, 820, 1060],
-        "hybrid": [10, 30, 80, 170, 260, 350],
-        "battery": [40, 80, 170, 310, 400, 470],
-        "wind": [220, 210, 200, 190, 186, 184],
-        "gas": [100, 90, 85, 130, 130, 140],
-        "other": [40, 30, 25, 30, 54, 96],
-    })
-
+def _(CATEGORICAL, COLORS, CONTEXT, FUEL_COLORS, cfg, queue_comp, save_fig, stacked_bar):
     _colors = {
-        "solar": {"color": FUEL_COLORS["solar"], "label": "Solar"},
-        "hybrid": {"color": CATEGORICAL[3], "label": "Hybrid (Solar+Storage)"},
+        "solar_gw": {"color": FUEL_COLORS["solar"], "label": "Solar"},
         "battery": {"color": FUEL_COLORS["battery"], "label": "Battery Storage"},
-        "wind": {"color": FUEL_COLORS["wind"], "label": "Wind"},
-        "gas": {"color": CONTEXT, "label": "Gas"},
-        "other": {"color": COLORS["reference"], "label": "Other"},
+        "wind_gw": {"color": FUEL_COLORS["wind"], "label": "Wind"},
+        "gas_gw": {"color": CONTEXT, "label": "Gas"},
+        "other_gw": {"color": COLORS["reference"], "label": "Other"},
     }
 
     fig_comp = stacked_bar(
-        _comp,
+        queue_comp,
         "year",
         {k: v.copy() for k, v in _colors.items()},
-        "The queue is overwhelmingly clean energy — gas is a shrinking sliver",
+        "The queue is overwhelmingly clean energy — gas is a shrinking share",
         ylabel="Queue Capacity (GW)",
     )
     save_fig(fig_comp, cfg.img_dir / "dd002_queue_composition.png")
@@ -333,10 +422,9 @@ def _(cfg, mo):
 
     The composition of the queue reveals an important structural fact:
     **the pipeline of proposed generation is overwhelmingly clean energy.**
-    Solar and hybrid (solar+storage) projects account for over 60% of queued
-    capacity, with standalone battery storage at roughly 20% and wind at about
-    8%. Gas is approximately 6% — and its share has been declining even as
-    absolute volumes grow.
+    Solar and storage projects account for the majority of queued capacity.
+    Wind remains material. Gas is a smaller share and has not kept pace with
+    clean-energy queue growth.
 
     This means that even under the most aggressive AI demand scenarios,
     the generation that eventually connects to the grid will be predominantly
@@ -344,35 +432,24 @@ def _(cfg, mo):
     Anything that speeds up interconnection (FERC reform, utility process
     improvements, standardized studies) disproportionately benefits clean energy.
 
-    *Queue composition is illustrative, based on LBNL "Queued Up" annual
-    editions. LBNL categorization changed between editions; hybrid
-    (solar+storage) projects may be partially counted under both solar and
-    storage in some years.*
+    *Queue composition is sourced from `energy_data.lbnl_queue_summary`
+    (LBNL annual queue editions), with storage mapped to battery for charting.*
     """
     )
     return
 
 
 @app.cell
-def _(cfg, save_fig, waterfall_chart):
-    # Cost allocation breakdown — UCS PJM study data
-    # Source: Union of Concerned Scientists, "Connection Costs Loophole
-    # Costs Customers Over $4 Billion" (September 2025)
-
+def _(cfg, cost_alloc, save_fig, stats, waterfall_chart):
+    _alloc = cost_alloc[~cost_alloc["is_total"]].sort_values("sort_order")
     _items = [
-        ("Data center\ninterconnection", 2.1),
-        ("Transmission\nreinforcement", 1.2),
-        ("Distribution\nupgrades", 0.6),
-        ("Shared network\nimprovements", 0.46),
+        (row["cost_category"].replace(" ", "\n"), float(row["cost_bn"]))
+        for _, row in _alloc.iterrows()
     ]
 
-    # NOTE: The category breakdown ($2.1B interconnection, $1.2B transmission,
-    # $0.6B distribution, $0.46B shared network) is illustrative, estimated
-    # based on typical transmission project cost structures. The UCS total of
-    # $4.36B is sourced; the breakdown by category is not from the UCS report.
     fig_cost = waterfall_chart(
         _items,
-        "\\$4.36B in PJM data center grid costs shifted to ratepayers in 2024 (estimated breakdown)",
+        f"\\${stats['ucs_cost_bn']:.2f}B in PJM data center grid costs shifted to ratepayers in 2024",
         total_label="Total\nsocialized",
     )
     save_fig(fig_cost, cfg.img_dir / "dd002_cost_allocation.png")
@@ -388,7 +465,7 @@ def _(cfg, mo, stats):
         f"""
     ## The \\${stats['ucs_cost_bn']:.2f} Billion Question
 
-    # \\${stats['ucs_cost_bn']:.2f}B in PJM data center grid costs shifted to ratepayers in 2024 (estimated breakdown)
+    # \\${stats['ucs_cost_bn']:.2f}B in PJM data center grid costs shifted to ratepayers in 2024
 
     {_cost_chart}
 
@@ -405,9 +482,10 @@ def _(cfg, mo, stats):
     Pennsylvania are subsidizing grid upgrades that primarily serve hyperscaler
     data centers.
 
-    The chart above breaks this total into estimated categories based on
-    typical transmission project cost structures. The \\$4.36B total is
-    sourced from UCS; the category-level breakdown is illustrative.
+    The category rows are loaded from
+    `energy_data.dd002_cost_allocation`. The \\$4.36B total is the
+    source-reported UCS figure; category-level rows remain analyst
+    allocations and are explicitly flagged in the source table.
 
     "Socialized costs" means that grid upgrades triggered by data center
     demand are paid for through higher electricity bills for everyone in
@@ -431,24 +509,26 @@ def _(cfg, mo, stats):
 
 
 @app.cell(hide_code=True)
-def _(mo):
-    mo.md("""
-    ## FERC Responds: The December 2025 Order
+def _(mo, policy_events):
+    _events = policy_events.sort_values("event_date")
+    _lines = "\n".join(
+        [
+            (
+                f"- **{row['event_date']} — {row['event_name']}** "
+                f"({row['jurisdiction']} {row['docket']}): {row['description']}"
+            )
+            for _, row in _events.iterrows()
+        ]
+    )
+    mo.md(
+        f"""
+    ## Regulatory Timeline (Database-Sourced)
 
-    The Federal Energy Regulatory Commission addressed this directly in
-    **Docket EL25-49-000** (December 18, 2025). The order directed PJM
-    to create new rules for co-located loads — data centers that share a
-    connection point with a power plant.
+    The policy timeline below is loaded from `energy_data.dd002_policy_events`:
 
-    Key provisions:
-
-    - **Cost causation principle:** "Costs must be allocated to those who
-      cause them and benefit from them."
-    - Co-located data centers must pay their fair share of transmission,
-      regulation, and black start services.
-    - PJM was directed to submit tariff amendments by February 16, 2026.
-    - Three new transmission service options established for large loads.
-    """)
+    {_lines}
+    """
+    )
     return
 
 
@@ -569,7 +649,7 @@ def _(cfg, mo, stats):
     faster-than-linear growth as data center load compounds; the actual path
     depends on Dominion Energy rate cases and regulatory decisions. The 10%
     reference line uses the current national average residential bill
-    (~\\${stats['avg_monthly_bill']}/month from BLS data). Virginia bills differ
+    (~\\${stats['avg_monthly_bill']}/month from FRED series APU000072610). Virginia bills differ
     from the national average.*
     """
     )
@@ -577,17 +657,49 @@ def _(cfg, mo, stats):
 
 
 @app.cell
-def _(mo):
-    # Interactive: projected socialized cost under different growth rates
-    growth_slider = mo.ui.slider(
-        start=0.05,
-        stop=0.25,
+def _(mo, projection_priors):
+    _priors = projection_priors.set_index("parameter")
+
+    growth_mu_slider = mo.ui.slider(
+        start=float(_priors.loc["annual_growth_mean", "low_value"]),
+        stop=float(_priors.loc["annual_growth_mean", "high_value"]),
         step=0.01,
-        value=0.15,
-        label="Data center load growth rate (annual)",
+        value=float(_priors.loc["annual_growth_mean", "base_value"]),
+        label="Annual growth mean",
         show_value=True,
     )
-
+    growth_sigma_slider = mo.ui.slider(
+        start=float(_priors.loc["annual_growth_sigma", "low_value"]),
+        stop=float(_priors.loc["annual_growth_sigma", "high_value"]),
+        step=0.005,
+        value=float(_priors.loc["annual_growth_sigma", "base_value"]),
+        label="Growth uncertainty (sigma)",
+        show_value=True,
+    )
+    shock_prob_slider = mo.ui.slider(
+        start=float(_priors.loc["regulatory_shock_probability", "low_value"]),
+        stop=float(_priors.loc["regulatory_shock_probability", "high_value"]),
+        step=0.01,
+        value=float(_priors.loc["regulatory_shock_probability", "base_value"]),
+        label="Regulatory shock probability",
+        show_value=True,
+    )
+    shock_impact_slider = mo.ui.slider(
+        start=float(_priors.loc["regulatory_shock_impact", "low_value"]),
+        stop=float(_priors.loc["regulatory_shock_impact", "high_value"]),
+        step=0.01,
+        value=float(_priors.loc["regulatory_shock_impact", "base_value"]),
+        label="Shock impact on growth",
+        show_value=True,
+    )
+    throughput_gain_slider = mo.ui.slider(
+        start=float(_priors.loc["throughput_improvement_per_year", "low_value"]),
+        stop=float(_priors.loc["throughput_improvement_per_year", "high_value"]),
+        step=0.005,
+        value=float(_priors.loc["throughput_improvement_per_year", "base_value"]),
+        label="Queue throughput improvement per year",
+        show_value=True,
+    )
     years_slider = mo.ui.slider(
         start=5,
         stop=20,
@@ -596,69 +708,237 @@ def _(mo):
         label="Projection years",
         show_value=True,
     )
+    sims_slider = mo.ui.slider(
+        start=1000,
+        stop=20000,
+        step=1000,
+        value=8000,
+        label="Monte Carlo draws",
+        show_value=True,
+    )
 
-    mo.hstack([growth_slider, years_slider], justify="space-around")
-    return growth_slider, years_slider
+    mo.vstack(
+        [
+            mo.md("## Probabilistic Forecast (ESIG-style uncertainty framing)"),
+            mo.hstack([growth_mu_slider, growth_sigma_slider, years_slider], justify="space-around"),
+            mo.hstack([shock_prob_slider, shock_impact_slider, throughput_gain_slider], justify="space-around"),
+            mo.hstack([sims_slider], justify="start"),
+        ],
+        gap=1,
+    )
+    return (
+        growth_mu_slider,
+        growth_sigma_slider,
+        shock_impact_slider,
+        shock_prob_slider,
+        sims_slider,
+        throughput_gain_slider,
+        years_slider,
+    )
 
 
 @app.cell
-def _(FONTS, growth_slider, mo, np, plt, stats, years_slider):
-    # Simple projection: UCS baseline → compound growth
+def _(
+    COLORS,
+    FONTS,
+    growth_mu_slider,
+    growth_sigma_slider,
+    mo,
+    np,
+    plt,
+    shock_impact_slider,
+    shock_prob_slider,
+    sims_slider,
+    stats,
+    throughput_gain_slider,
+    years_slider,
+):
+    # Monte Carlo fan chart using uncertain growth + policy shock dynamics.
     _annual_base = stats["ucs_cost_bn"]  # 2024 PJM approvals
-    _rate = growth_slider.value
+    _mu = growth_mu_slider.value
+    _sigma = growth_sigma_slider.value
+    _shock_prob = shock_prob_slider.value
+    _shock_impact = shock_impact_slider.value
+    _throughput_gain = throughput_gain_slider.value
     _years = int(years_slider.value)
+    _draws = int(sims_slider.value)
 
-    _year_range = np.arange(0, _years)
-    _annual_costs = np.array([_annual_base * (1 + _rate) ** y for y in _year_range])
-    _cumulative = np.cumsum(_annual_costs)
-    _x_labels = 2024 + _year_range
+    _rng = np.random.default_rng(42)
+    _growth = _rng.normal(_mu, _sigma, size=(_draws, _years))
+    _growth = np.clip(_growth, -0.25, 0.60)
+    _shock = (_rng.random((_draws, _years)) < _shock_prob).astype(float)
+
+    _trend_penalty = _throughput_gain * np.arange(_years)
+    _eff_growth = _growth - (_shock * _shock_impact) - _trend_penalty
+    _eff_growth = np.clip(_eff_growth, -0.30, 0.60)
+
+    _annual = np.zeros((_draws, _years))
+    _annual[:, 0] = _annual_base * (1 + _eff_growth[:, 0])
+    for _t in range(1, _years):
+        _annual[:, _t] = _annual[:, _t - 1] * (1 + _eff_growth[:, _t])
+    _annual = np.clip(_annual, 0, None)
+    _cumulative = np.cumsum(_annual, axis=1)
+
+    _x_labels = 2025 + np.arange(_years)
+    _annual_p10, _annual_p50, _annual_p90 = np.percentile(_annual, [10, 50, 90], axis=0)
+    _cum_p10, _cum_p50, _cum_p90 = np.percentile(_cumulative, [10, 50, 90], axis=0)
+
+    _deterministic = _annual_base * np.cumprod(np.full(_years, 1 + _mu))
 
     _fig, _ax = plt.subplots(figsize=(10, 5))
-    _ax.fill_between(_x_labels, _annual_costs, alpha=0.3, color=COLORS["accent"])
-    _ax.plot(_x_labels, _annual_costs, color=COLORS["accent"], linewidth=2.5)
-    _ax.axhline(y=_annual_base, color=COLORS["reference"], linestyle="--", linewidth=1, alpha=0.7)
+    _ax.fill_between(
+        _x_labels,
+        _annual_p10,
+        _annual_p90,
+        alpha=0.25,
+        color=COLORS["accent"],
+        label="P10-P90 annual range",
+    )
+    _ax.plot(
+        _x_labels,
+        _annual_p50,
+        color=COLORS["accent"],
+        linewidth=2.5,
+        label="P50 annual cost",
+    )
+    _ax.plot(
+        _x_labels,
+        _deterministic,
+        color=COLORS["reference"],
+        linestyle="--",
+        linewidth=1.3,
+        label="Deterministic line (for comparison)",
+    )
+    _ax.axhline(y=_annual_base, color=COLORS["text_light"], linestyle=":", linewidth=1, alpha=0.7)
     _ax.annotate(
         f"2024 baseline: \\${_annual_base:.1f}B",
-        xy=(2024, _annual_base), xytext=(2024 + _years * 0.3, _annual_base * 0.85),
+        xy=(2025, _annual_base), xytext=(2025 + _years * 0.2, _annual_base * 0.82),
         fontsize=FONTS["annotation"], color=COLORS["reference"],
         arrowprops=dict(arrowstyle="->", color=COLORS["reference"], lw=0.8),
     )
 
-    # Annotate final year
-    _final = _annual_costs[-1]
+    _final_p50 = _annual_p50[-1]
+    _final_p10 = _annual_p10[-1]
+    _final_p90 = _annual_p90[-1]
     _ax.annotate(
-        f"\\${_final:,.1f}B/yr",
-        xy=(_x_labels[-1], _final),
-        xytext=(_x_labels[-1] - _years * 0.2, _final * 1.1),
+        f"P50: \\${_final_p50:,.1f}B/yr\nP10-P90: \\${_final_p10:,.1f}B-\\${_final_p90:,.1f}B",
+        xy=(_x_labels[-1], _final_p50),
+        xytext=(_x_labels[-1] - _years * 0.28, _final_p90 * 1.06),
         fontsize=FONTS["annotation"], fontweight="bold", color=COLORS["accent"],
         arrowprops=dict(arrowstyle="->", color=COLORS["accent"], lw=1.2),
     )
 
     _ax.set_xlabel("Year", fontsize=FONTS["axis_label"])
-    _ax.set_ylabel("Annual Socialized Cost ($B)", fontsize=FONTS["axis_label"])
+    _ax.set_ylabel("Annual socialized cost ($B)", fontsize=FONTS["axis_label"])
     _ax.set_xlim(_x_labels[0] - 0.5, _x_labels[-1] + 0.5)
-    _ax.set_ylim(0, _final * 1.25)
+    _ax.set_ylim(0, _annual_p90.max() * 1.25)
+    _ax.legend(loc="upper left", fontsize=FONTS["annotation"] - 1)
     plt.tight_layout()
 
-    _projected = float(_cumulative[-1])
+    _cum_final_p10 = _cum_p10[-1]
+    _cum_final_p50 = _cum_p50[-1]
+    _cum_final_p90 = _cum_p90[-1]
 
     mo.vstack([
         mo.md(
-            f"# At {_rate:.0%} annual growth, socialized grid costs reach "
-            f"\\${_final:,.1f}B/year by {int(_x_labels[-1])}"
+            f"# Probabilistic projection to {int(_x_labels[-1])}: "
+            f"P50 annual \\${_final_p50:,.1f}B (P10-P90: \\${_final_p10:,.1f}B-\\${_final_p90:,.1f}B)"
         ),
         mo.as_html(_fig),
         mo.md(
-            f"**Cumulative socialized cost over {_years} years: "
-            f"\\${_projected:,.1f} billion.** "
-            f"This is a rough compound projection from a single year's PJM data. "
-            f"It assumes costs grow at the data center load rate, which ignores "
-            f"regulatory responses (like the FERC order above), cost non-linearity, "
-            f"and the fact that the \\${stats['ucs_cost_bn']:.2f}B baseline is "
-            f"PJM-specific, not national. Treat as directional, not predictive."
+            f"**Cumulative socialized cost over {_years} years** "
+            f"(P10/P50/P90): \\${_cum_final_p10:,.1f}B / \\${_cum_final_p50:,.1f}B / "
+            f"\\${_cum_final_p90:,.1f}B.\n\n"
+            f"Model setup: {_draws:,} draws, annual growth ~ N({_mu:.1%}, {_sigma:.1%}), "
+            f"shock probability {_shock_prob:.0%}, shock impact {_shock_impact:.1%}, "
+            f"queue-throughput improvement {_throughput_gain:.1%}/yr. This follows an "
+            f"ESIG-style uncertainty framing: probabilistic bands instead of a single line."
         ),
     ])
     plt.close(_fig)
+    return
+
+
+@app.cell
+def _(COLORS, cfg, horizontal_bar_ranking, lag_by_company_region, save_fig):
+    _lag = (
+        lag_by_company_region.dropna(subset=["implied_lag_years"])
+        .sort_values("implied_lag_years", ascending=False)
+        .head(10)
+    )
+    _labels = [
+        f"{row['ticker']} - {row['region']}"
+        for _, row in _lag.iterrows()
+    ]
+    _values = _lag["implied_lag_years"].tolist()
+
+    fig_lag = horizontal_bar_ranking(
+        _labels,
+        _values,
+        "Implied queue-to-service lag proxy by company-region exposure",
+        xlabel="Queue GW / 2024 in-service GW (years, proxy)",
+        highlight_indices=[0, 1, 2],
+        highlight_color=COLORS["accent"],
+    )
+    save_fig(fig_lag, cfg.img_dir / "dd002_capex_lag_proxy.png")
+    return
+
+
+@app.cell(hide_code=True)
+def _(cfg, lag_by_company_region, mo, stats):
+    _lag_chart = mo.image(
+        src=(cfg.img_dir / "dd002_capex_lag_proxy.png").read_bytes(), width=800
+    )
+    _table = lag_by_company_region[
+        [
+            "ticker",
+            "region",
+            "allocated_capex_bn",
+            "queue_gw",
+            "in_service_gw",
+            "implied_lag_years",
+        ]
+    ].copy()
+    _table = _table.rename(
+        columns={
+            "allocated_capex_bn": f"allocated_capex_{stats['capex_lag_year']}_bn",
+            "queue_gw": "queue_gw_latest",
+            "in_service_gw": "in_service_2024_gw",
+            "implied_lag_years": "lag_proxy_years",
+        }
+    )
+    mo.vstack(
+        [
+            mo.md(
+                f"""
+    ## Signature Metric: CapEx -> Interconnection -> In-Service Lag
+
+    {_lag_chart}
+
+    This metric links company capex exposure to regional queue congestion and
+    realized 2024 in-service additions. It is a **throughput lag proxy**:
+    `queue_gw_latest / in_service_2024_gw`.
+    """
+            ),
+            mo.as_html(_table.head(20)),
+        ]
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.callout(
+        mo.md(
+            """
+    ## Methods and Reproducibility
+
+    Detailed methods, source-date tables, and SQL hash registry are published in:
+    `notebooks/dd002_grid_modernization/99_methods_and_sources.py`.
+    """
+        ),
+        kind="info",
+    )
     return
 
 
