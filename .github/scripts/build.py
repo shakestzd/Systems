@@ -333,6 +333,11 @@ _FOOTER = f"""\
 # ---------------------------------------------------------------------------
 # Index page generation
 # ---------------------------------------------------------------------------
+#
+# Uses sentinel replacement (__KEY__) instead of str.format() so that CSS
+# curly braces need no escaping. _SHARED_CSS / _NAV / _FOOTER are only used
+# by the About page; the index carries its own self-contained styles.
+# ---------------------------------------------------------------------------
 
 INDEX_TEMPLATE = """\
 <!DOCTYPE html>
@@ -340,97 +345,293 @@ INDEX_TEMPLATE = """\
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{site_title}</title>
+    <title>__SITE_TITLE__</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
     <style>
-{shared_css}
-        .intro {{
-            font-size: 0.95rem;
-            color: #555;
-            margin-bottom: 2rem;
-            line-height: 1.7;
-        }}
-        .case-study {{
-            margin-bottom: 2.5rem;
-        }}
-        .case-study h2 {{
-            font-size: 1.3rem;
-            padding-left: 0.75rem;
-            margin-bottom: 0.2rem;
-        }}
-        .cs-subtitle {{
-            color: #777;
-            font-size: 0.9rem;
-            margin-bottom: 1rem;
-            padding-left: 0.85rem;
-        }}
-        .notebook-card {{
-            background: white;
-            border: 1px solid #e4e4e4;
-            border-radius: 6px;
-            padding: 1.1rem 1.25rem;
-            margin-bottom: 0.6rem;
-            display: flex;
-            align-items: flex-start;
-            gap: 0.75rem;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }}
-        .notebook-card:hover {{
-            border-color: #aaa;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-        }}
-        .nb-number {{
+        :root {
+            --paper: #f5f1eb;
+            --ink: #1a1917;
+            --ink-mid: #4d4a46;
+            --ink-light: #9a9490;
+            --rule: #d6cfc7;
+            --accent: #b84c2a;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            background: var(--paper);
+            color: var(--ink);
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 300;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        /* paper grain overlay */
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 999;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+        }
+        /* nav */
+        .site-nav {
             display: flex;
             align-items: center;
-            justify-content: center;
-            width: 1.6rem;
-            height: 1.6rem;
-            min-width: 1.6rem;
-            border-radius: 50%;
-            font-size: 0.8rem;
-            font-weight: 700;
-            color: white;
-            margin-top: 0.1rem;
-        }}
-        .nb-content {{ flex: 1; }}
-        .nb-title {{
-            font-weight: 600;
-            font-size: 1rem;
-            color: #1a1a2e;
+            gap: 2rem;
+            padding: 1.2rem 2.5rem;
+            border-bottom: 1px solid var(--rule);
+            position: sticky;
+            top: 0;
+            background: var(--paper);
+            z-index: 50;
+        }
+        .site-nav a {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.67rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--ink-light);
             text-decoration: none;
-        }}
-        .nb-title:hover {{ text-decoration: underline; }}
-        .nb-desc {{
-            color: #666;
-            font-size: 0.88rem;
-            margin-top: 0.2rem;
-        }}
-        .nb-unavailable {{ opacity: 0.45; }}
-        .nb-unavailable .nb-title {{
-            color: #999;
-            pointer-events: none;
-        }}
+            transition: color 0.14s;
+        }
+        .site-nav a.active { color: var(--ink); }
+        .site-nav a:hover { color: var(--ink); }
+        .nav-spacer { flex: 1; }
+        /* masthead */
+        .masthead {
+            padding: 5rem 2.5rem 3.5rem;
+            border-bottom: 1px solid var(--rule);
+        }
+        .kicker {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.64rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--ink-light);
+            margin-bottom: 1.75rem;
+        }
+        .kicker::before {
+            content: '';
+            display: inline-block;
+            width: 1.75rem;
+            height: 1px;
+            background: var(--accent);
+        }
+        .site-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(2.75rem, 5.5vw, 4.75rem);
+            font-weight: 300;
+            line-height: 1.06;
+            letter-spacing: -0.025em;
+            color: var(--ink);
+            margin-bottom: 1.5rem;
+            animation: up 0.7s ease both;
+        }
+        .site-desc {
+            font-size: 0.92rem;
+            color: var(--ink-mid);
+            max-width: 540px;
+            line-height: 1.7;
+            font-weight: 300;
+            animation: up 0.7s 0.08s ease both;
+        }
+        .byline {
+            margin-top: 2.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            animation: up 0.7s 0.15s ease both;
+        }
+        .byline-author {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.67rem;
+            letter-spacing: 0.07em;
+            color: var(--ink-light);
+        }
+        .byline-dot {
+            width: 2px;
+            height: 2px;
+            background: var(--rule);
+            border-radius: 50%;
+        }
+        .byline-ongoing {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.65rem;
+            letter-spacing: 0.07em;
+            color: var(--accent);
+        }
+        @keyframes up {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        /* lede */
+        .lede {
+            padding: 2.5rem 2.5rem;
+            max-width: 700px;
+            border-bottom: 1px solid var(--rule);
+        }
+        .lede p {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.1rem;
+            font-style: italic;
+            font-weight: 300;
+            color: var(--ink-mid);
+            line-height: 1.8;
+        }
+        .lede a {
+            color: inherit;
+            text-decoration-color: var(--rule);
+            transition: text-decoration-color 0.14s;
+        }
+        .lede a:hover { text-decoration-color: currentColor; }
+        /* case study rows */
+        .cs-row {
+            display: grid;
+            grid-template-columns: 88px 1fr;
+            gap: 0 2.5rem;
+            padding: 2.75rem 2.5rem;
+            border-bottom: 1px solid var(--rule);
+            animation: up 0.5s ease both;
+        }
+        .cs-meta { padding-top: 0.15rem; }
+        .cs-id {
+            display: block;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.7rem;
+            letter-spacing: 0.1em;
+            color: var(--accent);
+            font-weight: 500;
+            margin-bottom: 0.4rem;
+        }
+        .cs-status {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.58rem;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            color: var(--ink-light);
+        }
+        .cs-heading {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            font-weight: 400;
+            letter-spacing: -0.01em;
+            line-height: 1.2;
+            color: var(--ink);
+            margin-bottom: 0.3rem;
+        }
+        .cs-tagline {
+            font-size: 0.82rem;
+            color: var(--ink-light);
+            font-weight: 300;
+            margin-bottom: 1.2rem;
+        }
+        /* notebook entries */
+        .nb-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+        a.nb-entry {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.65rem;
+            padding: 0.45rem 0.7rem;
+            margin-left: -0.7rem;
+            border-radius: 3px;
+            text-decoration: none;
+            transition: background 0.12s;
+        }
+        a.nb-entry:hover { background: rgba(26,25,23,0.05); }
+        a.nb-entry.na { opacity: 0.35; pointer-events: none; }
+        .nb-num {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.6rem;
+            color: var(--ink-light);
+            margin-top: 0.18rem;
+            min-width: 1.1rem;
+        }
+        .nb-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 400;
+            color: var(--ink);
+            line-height: 1.3;
+        }
+        .nb-note {
+            display: block;
+            font-size: 0.775rem;
+            color: var(--ink-light);
+            font-weight: 300;
+            margin-top: 0.1rem;
+            line-height: 1.4;
+        }
+        /* footer */
+        .site-footer {
+            padding: 2.5rem 2.5rem;
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+        .site-footer a,
+        .site-footer span {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.64rem;
+            letter-spacing: 0.05em;
+            color: var(--ink-light);
+            text-decoration: none;
+        }
+        .site-footer a:hover { color: var(--ink); }
+        /* mobile */
+        @media (max-width: 680px) {
+            .site-nav { padding: 1rem 1.25rem; gap: 1.5rem; }
+            .masthead { padding: 3rem 1.25rem 2.5rem; }
+            .lede { padding: 2rem 1.25rem; }
+            .cs-row {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+                padding: 2rem 1.25rem;
+            }
+            .cs-meta { display: flex; align-items: center; gap: 1rem; }
+            .site-footer { padding: 2rem 1.25rem; }
+        }
     </style>
 </head>
 <body>
-    <header>
-        <h1>{site_title}</h1>
-        <p class="subtitle">{site_subtitle}</p>
-{nav}
-    </header>
-    <main>
-        <p class="intro">
-            AI companies are deploying over $200B/year in capital expenditure.
-            I&rsquo;m trying to understand where that money actually lands:
-            what it builds, what it locks in, and what the consequences are
-            across different time horizons. Each case study traces one channel
-            through which AI capital reaches the physical economy, using data
-            analysis, visualization, and systems dynamics modeling to map
-            feedback loops and leverage points. Source on
-            <a href="{github_url}" style="color:#555">GitHub</a>.
-        </p>
-        {{sections}}
-    </main>
-{footer}
+    <nav class="site-nav">
+        <a href="index.html" class="active">Research</a>
+        <a href="about.html">About</a>
+        <span class="nav-spacer"></span>
+        <a href="__GITHUB_URL__">GitHub</a>
+    </nav>
+    <div class="masthead">
+        <p class="kicker">Independent Research</p>
+        <h1 class="site-title">__SITE_TITLE__</h1>
+        <p class="site-desc">__SITE_SUBTITLE__</p>
+        <div class="byline">
+            <span class="byline-author">Thandolwethu Zwelakhe Dlamini</span>
+            <span class="byline-dot"></span>
+            <span class="byline-ongoing">Ongoing</span>
+        </div>
+    </div>
+    <div class="lede">
+        <p>AI companies are deploying over $200B/year in capital expenditure.
+        I&rsquo;m trying to understand where that money actually lands:
+        what it builds, what it locks in, and what the consequences are
+        across different time horizons. Source on
+        <a href="__GITHUB_URL__">GitHub</a>.</p>
+    </div>
+    __SECTIONS__
+    <footer class="site-footer">
+        <span>Built with <a href="https://marimo.io">marimo</a></span>
+        <a href="__GITHUB_URL__">Source on GitHub</a>
+    </footer>
 </body>
 </html>
 """
@@ -439,56 +640,67 @@ INDEX_TEMPLATE = """\
 def generate_index(exported: dict[str, bool]) -> str:
     """Generate the index.html content.
 
+    Uses sentinel replacement (__KEY__) to avoid CSS brace escaping.
+
     Parameters
     ----------
     exported : dict
         Mapping of notebook file path -> True if exported successfully.
     """
-    template = INDEX_TEMPLATE.format(
-        shared_css=_SHARED_CSS,
-        nav=_NAV,
-        footer=_FOOTER,
-        site_title=SITE["title"],
-        site_subtitle=SITE["subtitle_html"],
-        github_url=SITE["github_url"],
-    )
+    rows = []
 
-    sections = []
+    for idx, cs in enumerate(CASE_STUDIES):
+        # "dd001" → "DD–001"
+        cs_id_disp = cs["id"][:2].upper() + "\u2013" + cs["id"][2:]
 
-    for cs in CASE_STUDIES:
-        cards = []
+        # Active if any notebook exported; Draft otherwise
+        active = any(exported.get(nb["file"], False) for nb in cs["notebooks"])
+        status = "Active" if active else "Draft"
+
+        # Strip "DD-00X: " prefix — the ID is already shown separately
+        raw_title = cs["title"]
+        clean_title = raw_title.split(": ", 1)[-1] if ": " in raw_title else raw_title
+
+        nb_rows = []
         for i, nb in enumerate(cs["notebooks"]):
             stem = Path(nb["file"]).stem
-            slug = f"{cs['id']}/{stem}.html"
             ok = exported.get(nb["file"], False)
-            unavail = "" if ok else " nb-unavailable"
-            href = slug if ok else "#"
+            href = f"{cs['id']}/{stem}.html" if ok else "#"
+            na_cls = "" if ok else " na"
 
-            cards.append(
-                f'        <div class="notebook-card{unavail}">\n'
-                f'            <div class="nb-number" style="background:{cs["color"]}">'
-                f'{i + 1}</div>\n'
-                f'            <div class="nb-content">\n'
-                f'                <a href="{href}" class="nb-title">'
-                f'{escape(nb["title"])}</a>\n'
-                f'                <div class="nb-desc">{escape(nb["desc"])}</div>\n'
-                f'            </div>\n'
-                f'        </div>'
+            nb_rows.append(
+                f'            <a href="{href}" class="nb-entry{na_cls}">\n'
+                f'                <span class="nb-num">{i + 1:02d}</span>\n'
+                f'                <span>\n'
+                f'                    <span class="nb-label">{escape(nb["title"])}</span>\n'
+                f'                    <span class="nb-note">{escape(nb["desc"])}</span>\n'
+                f'                </span>\n'
+                f'            </a>'
             )
 
-        section = (
-            f'    <section class="case-study">\n'
-            f'        <h2 style="border-left:4px solid {cs["color"]}">'
-            f'{escape(cs["title"])}</h2>\n'
-            f'        <p class="cs-subtitle">{escape(cs["subtitle"])}</p>\n'
-            + "\n".join(cards)
-            + "\n    </section>"
+        delay = f"{idx * 0.08:.2f}s"
+        rows.append(
+            f'    <div class="cs-row" style="animation-delay:{delay}">\n'
+            f'        <div class="cs-meta">\n'
+            f'            <span class="cs-id">{cs_id_disp}</span>\n'
+            f'            <span class="cs-status">{status}</span>\n'
+            f'        </div>\n'
+            f'        <div class="cs-content">\n'
+            f'            <div class="cs-heading">{escape(clean_title)}</div>\n'
+            f'            <div class="cs-tagline">{escape(cs["subtitle"])}</div>\n'
+            f'            <div class="nb-list">\n'
+            + "\n".join(nb_rows)
+            + "\n            </div>\n"
+            f'        </div>\n'
+            f'    </div>'
         )
-        sections.append(section)
 
-    # Use replace instead of format to avoid conflicts with CSS curly braces
-    # that were injected in the first format pass.
-    return template.replace("{sections}", "\n".join(sections))
+    html = INDEX_TEMPLATE
+    html = html.replace("__SITE_TITLE__", SITE["title"])
+    html = html.replace("__SITE_SUBTITLE__", SITE["subtitle_html"])
+    html = html.replace("__GITHUB_URL__", SITE["github_url"])
+    html = html.replace("__SECTIONS__", "\n".join(rows))
+    return html
 
 
 # ---------------------------------------------------------------------------
