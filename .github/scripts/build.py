@@ -187,9 +187,23 @@ def ensure_data() -> bool:
 # ---------------------------------------------------------------------------
 
 
+# Anti-FOUC script for <head>: sets `dark` class on <html> before first paint.
+# Marimo exports use Tailwind with class-based dark mode (dark:prose-invert),
+# so adding class="dark" to <html> activates marimo's own dark theme.
+_NOTEBOOK_HEAD_SCRIPT = (
+    '<script>'
+    '(function(){'
+    'var t=localStorage.getItem("color-theme");'
+    'var d=t?t==="dark":window.matchMedia("(prefers-color-scheme:dark)").matches;'
+    'if(d)document.documentElement.classList.add("dark")'
+    '})();'
+    '</script>'
+)
+
+# Nav + dark mode toggle injected into <body>.
+# Uses .dark .snb selectors (not @media) so nav and notebook content
+# always switch together when the dark class is toggled.
 _NOTEBOOK_NAV = (
-    # Adaptive nav that follows system dark/light preference.
-    # No forced background override — marimo's own theming handles content area.
     '<style>'
     '.snb{background:#f5f1eb;padding:0.85rem 2.5rem;display:flex;align-items:center;'
     "gap:2rem;border-bottom:1px solid #d6cfc7;font-family:'DM Mono',monospace;"
@@ -197,33 +211,63 @@ _NOTEBOOK_NAV = (
     '.snb a{color:#9a9490;text-decoration:none;font-size:0.67rem;'
     'letter-spacing:0.12em;text-transform:uppercase;transition:color .14s}'
     '.snb a:hover{color:#1a1917}'
-    '@media(prefers-color-scheme:dark){'
-    '.snb{background:#14120f;border-bottom-color:#2e2b27}'
-    '.snb a{color:#5a5650}'
-    '.snb a:hover{color:#e5e0d8}'
-    '}'
+    '.nb-tog{background:none;border:none;cursor:pointer;'
+    "font-family:'DM Mono',monospace;font-size:0.82rem;"
+    'color:#9a9490;padding:0;line-height:1;transition:color .14s}'
+    '.nb-tog:hover{color:#1a1917}'
+    '.dark .snb{background:#14120f;border-bottom-color:#2e2b27}'
+    '.dark .snb a{color:#5a5650}'
+    '.dark .snb a:hover{color:#e5e0d8}'
+    '.dark .nb-tog{color:#5a5650}'
+    '.dark .nb-tog:hover{color:#e5e0d8}'
     '</style>\n'
     '<div class="snb">'
     '<a href="../index.html">&#8592; Research</a>'
     '<a href="../about.html">About</a>'
+    '<span style="flex:1"></span>'
+    '<button class="nb-tog" id="nb-tog" onclick="nbTog()" title="Toggle theme">◑</button>'
     f'<a href="{SITE["github_url"]}">GitHub</a>'
-    '</div>'
+    '</div>\n'
+    '<script>'
+    '(function(){'
+    'var root=document.documentElement,btn=document.getElementById("nb-tog");'
+    'function eff(){var s=localStorage.getItem("color-theme");'
+    'return s||(window.matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light")}'
+    'function ap(t){'
+    'if(t==="dark")root.classList.add("dark");else root.classList.remove("dark");'
+    'if(btn)btn.textContent=t==="dark"?"◐":"◑"}'
+    'ap(eff());'
+    'window.nbTog=function(){var n=eff()==="dark"?"light":"dark";'
+    'localStorage.setItem("color-theme",n);ap(n)};'
+    'window.matchMedia("(prefers-color-scheme:dark)").addEventListener("change",function(e){'
+    'if(!localStorage.getItem("color-theme"))ap(e.matches?"dark":"light")})'
+    '})();'
+    '</script>'
 )
 
 
 def inject_site_nav(html_path: Path) -> None:
-    """Inject a sticky nav bar into a marimo-exported notebook HTML file.
+    """Inject dark-mode support and a sticky nav into a marimo-exported notebook.
 
-    Inserts the nav immediately after <body> so readers can return to the
-    index from any notebook page.
+    1. Injects an anti-FOUC script before </head> — adds class="dark" to <html>
+       before first paint, activating marimo's Tailwind dark:prose-invert styles.
+    2. Injects the nav + toggle JS after <body>.
     """
     html = html_path.read_text(encoding="utf-8")
+
+    # 1. Anti-FOUC in <head>
+    head_end = html.find("</head>")
+    if head_end != -1:
+        html = html[:head_end] + "\n" + _NOTEBOOK_HEAD_SCRIPT + "\n" + html[head_end:]
+
+    # 2. Nav in <body>
     marker = "<body>"
     idx = html.find(marker)
     if idx == -1:
         return  # unexpected structure — leave untouched
     insert_at = idx + len(marker)
     html = html[:insert_at] + "\n" + _NOTEBOOK_NAV + "\n" + html[insert_at:]
+
     html_path.write_text(html, encoding="utf-8")
 
 
