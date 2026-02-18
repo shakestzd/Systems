@@ -64,6 +64,13 @@ select = ["E", "F", "I", "N", "W", "UP"]
 # E501: markdown tables inside mo.md() strings can't be line-wrapped.
 "notebooks/**/*.py" = ["N803", "F821", "E501"]
 
+[tool.marimo]
+[tool.marimo.display]
+# Force light (paper) theme in the editor — consistent with the published site.
+# The exported notebooks render both light and dark via media query.
+theme = "light"
+default_width = "medium"
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 

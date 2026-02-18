@@ -188,28 +188,25 @@ def ensure_data() -> bool:
 
 
 _NOTEBOOK_NAV = (
-    # Force paper background — marimo's dark mode media query is overridden here.
-    # The <style> in <body> is valid HTML5 and applies to the full document.
+    # Adaptive nav that follows system dark/light preference.
+    # No forced background override — marimo's own theming handles content area.
     '<style>'
-    'html,body{background:#f5f1eb!important;color:#1a1917!important}'
+    '.snb{background:#f5f1eb;padding:0.85rem 2.5rem;display:flex;align-items:center;'
+    "gap:2rem;border-bottom:1px solid #d6cfc7;font-family:'DM Mono',monospace;"
+    'position:sticky;top:0;z-index:9999}'
+    '.snb a{color:#9a9490;text-decoration:none;font-size:0.67rem;'
+    'letter-spacing:0.12em;text-transform:uppercase;transition:color .14s}'
+    '.snb a:hover{color:#1a1917}'
     '@media(prefers-color-scheme:dark){'
-    'html,body{background:#f5f1eb!important;color:#1a1917!important}'
+    '.snb{background:#14120f;border-bottom-color:#2e2b27}'
+    '.snb a{color:#5a5650}'
+    '.snb a:hover{color:#e5e0d8}'
     '}'
     '</style>\n'
-    '<div style="background:#f5f1eb;padding:0.85rem 2.5rem;display:flex;'
-    'align-items:center;gap:2rem;'
-    "border-bottom:1px solid #d6cfc7;"
-    "font-family:'DM Mono',monospace;"
-    'position:sticky;top:0;z-index:9999;">'
-    '<a href="../index.html" style="color:#9a9490;text-decoration:none;'
-    'font-size:0.67rem;letter-spacing:0.12em;text-transform:uppercase;">'
-    '&#8592; Research</a>'
-    '<a href="../about.html" style="color:#9a9490;text-decoration:none;'
-    'font-size:0.67rem;letter-spacing:0.12em;text-transform:uppercase;">'
-    'About</a>'
-    f'<a href="{SITE["github_url"]}" style="color:#9a9490;text-decoration:none;'
-    'font-size:0.67rem;letter-spacing:0.12em;text-transform:uppercase;">'
-    'GitHub</a>'
+    '<div class="snb">'
+    '<a href="../index.html">&#8592; Research</a>'
+    '<a href="../about.html">About</a>'
+    f'<a href="{SITE["github_url"]}">GitHub</a>'
     '</div>'
 )
 
@@ -302,8 +299,40 @@ INDEX_TEMPLATE = """\
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+    <script>
+        /* Anti-FOUT: apply stored theme before first paint */
+        (function(){var t=localStorage.getItem('color-theme');if(t)document.documentElement.dataset.colorTheme=t;})();
+    </script>
     <style>
         :root {
+            --paper: #f5f1eb;
+            --ink: #1a1917;
+            --ink-mid: #4d4a46;
+            --ink-light: #9a9490;
+            --rule: #d6cfc7;
+            --accent: #b84c2a;
+        }
+        /* Dark mode — system preference (no manual override) */
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-color-theme]) {
+                --paper: #14120f;
+                --ink: #e5e0d8;
+                --ink-mid: #ada89f;
+                --ink-light: #5a5650;
+                --rule: #2e2b27;
+                --accent: #d4634a;
+            }
+        }
+        /* Manual overrides via toggle */
+        :root[data-color-theme="dark"] {
+            --paper: #14120f;
+            --ink: #e5e0d8;
+            --ink-mid: #ada89f;
+            --ink-light: #5a5650;
+            --rule: #2e2b27;
+            --accent: #d4634a;
+        }
+        :root[data-color-theme="light"] {
             --paper: #f5f1eb;
             --ink: #1a1917;
             --ink-mid: #4d4a46;
@@ -354,6 +383,18 @@ INDEX_TEMPLATE = """\
         .site-nav a.active { color: var(--ink); }
         .site-nav a:hover { color: var(--ink); }
         .nav-spacer { flex: 1; }
+        .theme-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.82rem;
+            color: var(--ink-light);
+            padding: 0;
+            line-height: 1;
+            transition: color 0.14s;
+        }
+        .theme-toggle:hover { color: var(--ink); }
         /* masthead */
         .masthead {
             padding: 5rem 2.5rem 3.5rem;
@@ -561,6 +602,7 @@ INDEX_TEMPLATE = """\
         <a href="index.html" class="active">Research</a>
         <a href="about.html">About</a>
         <span class="nav-spacer"></span>
+        <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light mode">◑</button>
         <a href="__GITHUB_URL__">GitHub</a>
     </nav>
     <div class="masthead">
@@ -585,6 +627,29 @@ INDEX_TEMPLATE = """\
         <span>Built with <a href="https://marimo.io">marimo</a></span>
         <a href="__GITHUB_URL__">Source on GitHub</a>
     </footer>
+    <script>
+        (function() {
+            var root = document.documentElement;
+            var btn = document.getElementById('theme-toggle');
+            function effective() {
+                var s = localStorage.getItem('color-theme');
+                return s || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            }
+            function apply(theme) {
+                root.dataset.colorTheme = theme;
+                if (btn) btn.textContent = theme === 'dark' ? '◐' : '◑';
+            }
+            apply(effective());
+            window.toggleTheme = function() {
+                var next = effective() === 'dark' ? 'light' : 'dark';
+                localStorage.setItem('color-theme', next);
+                apply(next);
+            };
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+                if (!localStorage.getItem('color-theme')) apply(e.matches ? 'dark' : 'light');
+            });
+        })();
+    </script>
 </body>
 </html>
 """
@@ -673,8 +738,38 @@ ABOUT_TEMPLATE = """\
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+    <script>
+        /* Anti-FOUT: apply stored theme before first paint */
+        (function(){var t=localStorage.getItem('color-theme');if(t)document.documentElement.dataset.colorTheme=t;})();
+    </script>
     <style>
         :root {
+            --paper: #f5f1eb;
+            --ink: #1a1917;
+            --ink-mid: #4d4a46;
+            --ink-light: #9a9490;
+            --rule: #d6cfc7;
+            --accent: #b84c2a;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-color-theme]) {
+                --paper: #14120f;
+                --ink: #e5e0d8;
+                --ink-mid: #ada89f;
+                --ink-light: #5a5650;
+                --rule: #2e2b27;
+                --accent: #d4634a;
+            }
+        }
+        :root[data-color-theme="dark"] {
+            --paper: #14120f;
+            --ink: #e5e0d8;
+            --ink-mid: #ada89f;
+            --ink-light: #5a5650;
+            --rule: #2e2b27;
+            --accent: #d4634a;
+        }
+        :root[data-color-theme="light"] {
             --paper: #f5f1eb;
             --ink: #1a1917;
             --ink-mid: #4d4a46;
@@ -723,6 +818,18 @@ ABOUT_TEMPLATE = """\
         .site-nav a.active { color: var(--ink); }
         .site-nav a:hover { color: var(--ink); }
         .nav-spacer { flex: 1; }
+        .theme-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.82rem;
+            color: var(--ink-light);
+            padding: 0;
+            line-height: 1;
+            transition: color 0.14s;
+        }
+        .theme-toggle:hover { color: var(--ink); }
         /* about header */
         .about-header {
             padding: 4rem 2.5rem 3rem;
@@ -876,6 +983,7 @@ ABOUT_TEMPLATE = """\
         <a href="index.html">Research</a>
         <a href="about.html" class="active">About</a>
         <span class="nav-spacer"></span>
+        <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light mode">◑</button>
         <a href="__GITHUB_URL__">GitHub</a>
     </nav>
     <div class="about-header">
@@ -981,6 +1089,29 @@ ABOUT_TEMPLATE = """\
         <span>Built with <a href="https://marimo.io">marimo</a></span>
         <a href="__GITHUB_URL__">Source on GitHub</a>
     </footer>
+    <script>
+        (function() {
+            var root = document.documentElement;
+            var btn = document.getElementById('theme-toggle');
+            function effective() {
+                var s = localStorage.getItem('color-theme');
+                return s || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            }
+            function apply(theme) {
+                root.dataset.colorTheme = theme;
+                if (btn) btn.textContent = theme === 'dark' ? '◐' : '◑';
+            }
+            apply(effective());
+            window.toggleTheme = function() {
+                var next = effective() === 'dark' ? 'light' : 'dark';
+                localStorage.setItem('color-theme', next);
+                apply(next);
+            };
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+                if (!localStorage.getItem('color-theme')) apply(e.matches ? 'dark' : 'light');
+            });
+        })();
+    </script>
 </body>
 </html>
 """
