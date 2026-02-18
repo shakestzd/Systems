@@ -46,11 +46,27 @@ CASE_STUDIES = [
         "color": "#1f77b4",
         "notebooks": [
             {
-                "file": "notebooks/dd001_capital_reality/01_capex_vs_reality.py",
-                "title": "Part 1 \u2014 Capex vs Reality",
+                "file": "notebooks/dd001_capital_reality/01_markets_and_money.py",
+                "title": "Part 1 \u2014 Markets and Money",
                 "desc": (
-                    "Comparing AI company capex and market cap trajectories "
-                    "against what the physical supply chain can actually deliver."
+                    "Is the capital commitment justified by revenue? "
+                    "Market cap gains against disclosed capex and cloud revenue trajectories."
+                ),
+            },
+            {
+                "file": "notebooks/dd001_capital_reality/02_conversion_reality.py",
+                "title": "Part 2 \u2014 Conversion Reality",
+                "desc": (
+                    "From announcement to infrastructure: interconnection queues, "
+                    "the physical sequence, and the asset-life distribution."
+                ),
+            },
+            {
+                "file": "notebooks/dd001_capital_reality/03_risk_and_durability.py",
+                "title": "Part 3 \u2014 Risk and Durability",
+                "desc": (
+                    "Who holds the downside when long-lived infrastructure "
+                    "outlasts the demand thesis that justified it."
                 ),
             },
         ],
@@ -172,16 +188,28 @@ def ensure_data() -> bool:
 
 
 _NOTEBOOK_NAV = (
-    '<div style="background:#1a1a2e;padding:0.7rem 1.5rem;display:flex;'
-    'align-items:center;gap:1.5rem;'
-    'font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;'
-    'position:sticky;top:0;z-index:9999;box-shadow:0 1px 4px rgba(0,0,0,0.25);">'
-    '<a href="../index.html" style="color:rgba(255,255,255,0.8);text-decoration:none;'
-    'font-size:0.88rem;letter-spacing:0.02em;">&#8592; Research</a>'
-    '<a href="../about.html" style="color:rgba(255,255,255,0.65);text-decoration:none;'
-    'font-size:0.88rem;letter-spacing:0.02em;">About</a>'
-    f'<a href="{SITE["github_url"]}" style="color:rgba(255,255,255,0.65);'
-    'text-decoration:none;font-size:0.88rem;letter-spacing:0.02em;">GitHub</a>'
+    # Force paper background — marimo's dark mode media query is overridden here.
+    # The <style> in <body> is valid HTML5 and applies to the full document.
+    '<style>'
+    'html,body{background:#f5f1eb!important;color:#1a1917!important}'
+    '@media(prefers-color-scheme:dark){'
+    'html,body{background:#f5f1eb!important;color:#1a1917!important}'
+    '}'
+    '</style>\n'
+    '<div style="background:#f5f1eb;padding:0.85rem 2.5rem;display:flex;'
+    'align-items:center;gap:2rem;'
+    "border-bottom:1px solid #d6cfc7;"
+    "font-family:'DM Mono',monospace;"
+    'position:sticky;top:0;z-index:9999;">'
+    '<a href="../index.html" style="color:#9a9490;text-decoration:none;'
+    'font-size:0.67rem;letter-spacing:0.12em;text-transform:uppercase;">'
+    '&#8592; Research</a>'
+    '<a href="../about.html" style="color:#9a9490;text-decoration:none;'
+    'font-size:0.67rem;letter-spacing:0.12em;text-transform:uppercase;">'
+    'About</a>'
+    f'<a href="{SITE["github_url"]}" style="color:#9a9490;text-decoration:none;'
+    'font-size:0.67rem;letter-spacing:0.12em;text-transform:uppercase;">'
+    'GitHub</a>'
     '</div>'
 )
 
@@ -253,81 +281,6 @@ def export_notebook(nb_file: str, output_path: Path) -> bool:
 # ---------------------------------------------------------------------------
 # Shared HTML fragments
 # ---------------------------------------------------------------------------
-
-_NAV = f"""\
-    <nav>
-        <a href="index.html">Research</a>
-        <a href="about.html">About</a>
-        <a href="{SITE['github_url']}">GitHub</a>
-    </nav>"""
-
-_SHARED_CSS = """\
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
-                         Roboto, Oxygen, Ubuntu, sans-serif;
-            background: #fafafa;
-            color: #1a1a2e;
-            line-height: 1.6;
-        }
-        header {
-            background: #1a1a2e;
-            color: white;
-            padding: 3rem 2rem 2rem;
-            text-align: center;
-        }
-        header h1 {
-            font-size: 2.2rem;
-            font-weight: 700;
-            margin-bottom: 0.75rem;
-            letter-spacing: -0.5px;
-        }
-        .subtitle {
-            font-size: 1.05rem;
-            opacity: 0.85;
-            max-width: 680px;
-            margin: 0 auto 0.5rem;
-        }
-        nav {
-            display: flex;
-            justify-content: center;
-            gap: 1.5rem;
-            padding: 1rem 0 0;
-            border-top: 1px solid rgba(255,255,255,0.15);
-            margin-top: 1.5rem;
-        }
-        nav a {
-            color: rgba(255,255,255,0.75);
-            text-decoration: none;
-            font-size: 0.9rem;
-            letter-spacing: 0.02em;
-        }
-        nav a:hover { color: white; }
-        main {
-            max-width: 860px;
-            margin: 2.5rem auto;
-            padding: 0 1.5rem;
-        }
-        footer {
-            text-align: center;
-            padding: 2rem;
-            color: #aaa;
-            font-size: 0.82rem;
-            border-top: 1px solid #eee;
-            margin-top: 2rem;
-        }
-        footer a { color: #888; }
-        @media (max-width: 600px) {
-            header { padding: 2rem 1.25rem 1.5rem; }
-            header h1 { font-size: 1.7rem; }
-            main { padding: 0 1rem; }
-        }"""
-
-_FOOTER = f"""\
-    <footer>
-        Built with <a href="https://marimo.io">marimo</a> &middot;
-        <a href="{SITE['github_url']}">Source on GitHub</a>
-    </footer>"""
 
 
 # ---------------------------------------------------------------------------
@@ -706,6 +659,9 @@ def generate_index(exported: dict[str, bool]) -> str:
 # ---------------------------------------------------------------------------
 # About page generation
 # ---------------------------------------------------------------------------
+#
+# Uses sentinel replacement (__KEY__) — same approach as INDEX_TEMPLATE.
+# ---------------------------------------------------------------------------
 
 ABOUT_TEMPLATE = """\
 <!DOCTYPE html>
@@ -713,238 +669,318 @@ ABOUT_TEMPLATE = """\
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>About &mdash; {site_title}</title>
+    <title>About &mdash; __SITE_TITLE__</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
     <style>
-{shared_css}
-        .about-content {{
-            max-width: 680px;
-        }}
-        .about-content h2 {{
-            font-size: 1.4rem;
-            font-weight: 700;
-            margin: 2rem 0 0.75rem;
-            color: #1a1a2e;
-        }}
-        .about-content h2:first-child {{
-            margin-top: 0;
-        }}
-        .about-content p {{
-            color: #444;
-            font-size: 0.97rem;
-            line-height: 1.75;
+        :root {
+            --paper: #f5f1eb;
+            --ink: #1a1917;
+            --ink-mid: #4d4a46;
+            --ink-light: #9a9490;
+            --rule: #d6cfc7;
+            --accent: #b84c2a;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            background: var(--paper);
+            color: var(--ink);
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 300;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 999;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+        }
+        .site-nav {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            padding: 1.2rem 2.5rem;
+            border-bottom: 1px solid var(--rule);
+            position: sticky;
+            top: 0;
+            background: var(--paper);
+            z-index: 50;
+        }
+        .site-nav a {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.67rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--ink-light);
+            text-decoration: none;
+            transition: color 0.14s;
+        }
+        .site-nav a.active { color: var(--ink); }
+        .site-nav a:hover { color: var(--ink); }
+        .nav-spacer { flex: 1; }
+        /* about header */
+        .about-header {
+            padding: 4rem 2.5rem 3rem;
+            border-bottom: 1px solid var(--rule);
+        }
+        .kicker {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.64rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--ink-light);
+            margin-bottom: 1.25rem;
+        }
+        .kicker::before {
+            content: '';
+            display: inline-block;
+            width: 1.75rem;
+            height: 1px;
+            background: var(--accent);
+        }
+        .page-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(2rem, 4vw, 3.25rem);
+            font-weight: 300;
+            line-height: 1.08;
+            letter-spacing: -0.02em;
+            color: var(--ink);
+        }
+        /* about body */
+        .about-body {
+            max-width: 700px;
+            padding: 3.5rem 2.5rem 5rem;
+        }
+        .name-sub {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.7rem;
+            letter-spacing: 0.05em;
+            color: var(--ink-light);
+            margin-bottom: 1.75rem;
+        }
+        .about-body h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            font-weight: 400;
+            letter-spacing: -0.01em;
+            color: var(--ink);
+            margin: 3rem 0 0.9rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--rule);
+        }
+        .about-body h2:first-of-type { border-top: none; padding-top: 0; margin-top: 0.5rem; }
+        .about-body p {
+            font-size: 0.93rem;
+            color: var(--ink-mid);
+            line-height: 1.8;
             margin-bottom: 1rem;
-        }}
-        .about-content ul {{
-            margin: 0.5rem 0 1rem 1.25rem;
-            color: #444;
-            font-size: 0.97rem;
-            line-height: 1.75;
-        }}
-        .about-content ul li {{
-            margin-bottom: 0.3rem;
-        }}
-        .timeline {{
-            border-left: 2px solid #e4e4e4;
-            margin: 1rem 0 1.5rem 0.5rem;
-            padding-left: 1.25rem;
-        }}
-        .timeline-item {{
-            margin-bottom: 1rem;
+        }
+        .about-body p em { font-style: italic; }
+        .about-body ul {
+            margin: 0.25rem 0 1rem 1rem;
+            color: var(--ink-mid);
+            font-size: 0.93rem;
+            line-height: 1.8;
+        }
+        .about-body ul li { margin-bottom: 0.2rem; }
+        .about-body a { color: var(--ink); text-decoration-color: var(--rule); }
+        .about-body a:hover { text-decoration-color: var(--ink); }
+        /* timeline */
+        .timeline {
+            border-left: 1px solid var(--rule);
+            margin: 1.25rem 0 1.5rem 0.25rem;
+            padding-left: 1.5rem;
+        }
+        .timeline-item {
+            margin-bottom: 1.25rem;
             position: relative;
-        }}
-        .timeline-item::before {{
-            content: "";
-            width: 8px;
-            height: 8px;
-            background: #1a1a2e;
+        }
+        .timeline-item::before {
+            content: '';
+            width: 5px;
+            height: 5px;
+            background: var(--rule);
             border-radius: 50%;
             position: absolute;
-            left: -1.6rem;
-            top: 0.45rem;
-        }}
-        .timeline-year {{
-            font-size: 0.78rem;
-            font-weight: 700;
-            color: #999;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-        }}
-        .timeline-desc {{
-            font-size: 0.95rem;
-            color: #333;
-            line-height: 1.5;
-        }}
-        .links {{
+            left: -1.82rem;
+            top: 0.5rem;
+        }
+        .timeline-year {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.65rem;
+            letter-spacing: 0.06em;
+            color: var(--accent);
+            margin-bottom: 0.2rem;
+        }
+        .timeline-desc {
+            font-size: 0.91rem;
+            color: var(--ink-mid);
+            line-height: 1.6;
+        }
+        /* contact links */
+        .links {
             display: flex;
-            gap: 1rem;
+            gap: 0.75rem;
             flex-wrap: wrap;
-            margin-top: 0.5rem;
-        }}
-        .link-pill {{
+            margin-top: 0.75rem;
+        }
+        .link-pill {
             display: inline-block;
-            background: #1a1a2e;
-            color: white;
+            border: 1px solid var(--rule);
+            color: var(--ink);
             text-decoration: none;
-            padding: 0.4rem 0.9rem;
-            border-radius: 4px;
-            font-size: 0.88rem;
-            transition: opacity 0.15s;
-        }}
-        .link-pill:hover {{ opacity: 0.8; }}
-        .name-pronunciation {{
-            font-size: 0.85rem;
-            color: #888;
-            margin-top: 0.1rem;
-        }}
+            padding: 0.4rem 0.85rem;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.65rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            transition: border-color 0.14s;
+        }
+        .link-pill:hover { border-color: var(--ink); }
+        /* footer */
+        .site-footer {
+            padding: 2.5rem 2.5rem;
+            border-top: 1px solid var(--rule);
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+        .site-footer a,
+        .site-footer span {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.64rem;
+            letter-spacing: 0.05em;
+            color: var(--ink-light);
+            text-decoration: none;
+        }
+        .site-footer a:hover { color: var(--ink); }
+        /* mobile */
+        @media (max-width: 680px) {
+            .site-nav { padding: 1rem 1.25rem; gap: 1.5rem; }
+            .about-header { padding: 3rem 1.25rem 2rem; }
+            .about-body { padding: 2.5rem 1.25rem 4rem; }
+            .site-footer { padding: 2rem 1.25rem; }
+        }
     </style>
 </head>
 <body>
-    <header>
-        <h1>{site_title}</h1>
-        <p class="subtitle">{site_subtitle}</p>
-{nav}
-    </header>
-    <main>
-        <div class="about-content">
+    <nav class="site-nav">
+        <a href="index.html">Research</a>
+        <a href="about.html" class="active">About</a>
+        <span class="nav-spacer"></span>
+        <a href="__GITHUB_URL__">GitHub</a>
+    </nav>
+    <div class="about-header">
+        <p class="kicker">About the Research</p>
+        <h1 class="page-title">Thandolwethu Zwelakhe Dlamini</h1>
+    </div>
+    <div class="about-body">
+        <p class="name-sub">Goes by Shakes &mdash; from Eswatini (formerly Swaziland), Southern Africa</p>
 
-            <h2>Thandolwethu Zwelakhe Dlamini</h2>
-            <p class="name-pronunciation">Goes by Shakes &mdash; from Eswatini (formerly Swaziland), Southern Africa</p>
+        <p>I&rsquo;m a mechanical engineer with a background in energy access and
+        infrastructure policy. This project started from a question I couldn&rsquo;t
+        find a good answer to: what does $200B+ in annual AI capital expenditure
+        actually do to the physical economy, and what does it lock in across short,
+        medium, and long time horizons?</p>
 
-            <p>
-                I&rsquo;m a mechanical engineer with a background in energy
-                access and infrastructure policy. This project started from a
-                question I couldn&rsquo;t find a good answer to: what does
-                $200B+ in annual AI capital expenditure actually do to the
-                physical economy, and what does it lock in across short, medium,
-                and long time horizons?
-            </p>
+        <p>The approach is investigative. Each case study picks one channel through
+        which AI capital reaches the physical world and follows it: what gets built,
+        what gets locked in, where the feedback loops are. The methods are data
+        analysis, visualization, and systems dynamics modeling.</p>
 
-            <p>
-                The approach is investigative. Each case study picks one channel
-                through which AI capital reaches the physical world and follows
-                it: what gets built, what gets locked in, where the feedback
-                loops are. The methods are data analysis, visualization, and
-                systems dynamics modeling.
-            </p>
+        <h2>Background</h2>
 
-            <h2>Background</h2>
-
-            <div class="timeline">
-                <div class="timeline-item">
-                    <div class="timeline-year">2015 &ndash; 2018</div>
-                    <div class="timeline-desc">
-                        <strong>Duke University</strong> &mdash; B.S. Mechanical Engineering,
-                        Minor in German. Study abroad in Berlin (Spring 2017); took three
-                        engineering courses in German after 18 months of study. Conducted
-                        research with the Duke University Center for Water, Sanitation, Hygiene
-                        and Infectious Disease (WaSH-AID), developing a methodology to design
-                        an off-grid solar PV system for one of the center&rsquo;s novel
-                        sanitation technologies.
-                    </div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-year">Aug 2018 &ndash; Mar 2019</div>
-                    <div class="timeline-desc">
-                        <strong>OnePower, Lesotho</strong> &mdash; Energy Access Fellow.
-                        Designed powerhouses for mini-grids serving rural communities
-                        without grid access.
-                    </div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-year">Mar 2019 &ndash; Aug 2019</div>
-                    <div class="timeline-desc">
-                        <strong>Eswatini Electricity Company (EEC)</strong> &mdash;
-                        Engineering Trainee. Coordinated EEC&rsquo;s US&nbsp;$230,000
-                        off-grid electrification project &mdash; the company&rsquo;s
-                        first microgrid, electrifying a remote village unreachable
-                        by conventional grid infrastructure.
-                    </div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-year">Aug 2019 &ndash; May 2020</div>
-                    <div class="timeline-desc">
-                        <strong>Duke University</strong> &mdash; Final year. Represented
-                        Eswatini at COP25 in Madrid (Dec 2019) as part of the national
-                        delegation to the UN Climate Conference.
-                    </div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-year">2020 &ndash; 2022</div>
-                    <div class="timeline-desc">
-                        <strong>MIT</strong> &mdash; S.M. Technology &amp; Policy.
-                        Research applied quantitative techniques to estimate mercury
-                        emissions to the atmosphere from artisanal and small-scale
-                        gold mining (ASGM), globally and regionally.
-                    </div>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-year">2022 &ndash; 2025</div>
-                    <div class="timeline-desc">
-                        <strong>SunStrong Management LLC</strong> (formerly Sunnova Energy)
-                        &mdash; Senior Data Analyst. Managed data infrastructure and
-                        Energy Community ITC analysis for a portfolio of 200,000+
-                        solar installations across the U.S.
-                    </div>
-                </div>
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="timeline-year">2015 &ndash; 2018</div>
+                <div class="timeline-desc"><strong>Duke University</strong> &mdash;
+                B.S. Mechanical Engineering, Minor in German. Study abroad in Berlin
+                (Spring 2017). Research with Duke WaSH-AID on off-grid solar PV design
+                for novel sanitation technologies.</div>
             </div>
-
-            <h2>Why This Project</h2>
-
-            <p>
-                AI capex numbers appear in quarterly earnings reports and get
-                written up in press releases. But the capital itself converts
-                into transformers, transmission lines, gas turbines, semiconductor
-                fabs, and data center concrete. That infrastructure is durable.
-                It reshapes supply chains, labor markets, grid topology, and
-                trade patterns for decades.
-            </p>
-
-            <p>
-                The question driving the analysis: <em>Where does AI capex land
-                in the physical economy, what does it lock in, and how do current
-                regulatory decisions amplify or distort those outcomes?</em>
-            </p>
-
-            <p>
-                Each case study traces one supply chain node and applies the same
-                framework: capital flow mapping, durability taxonomy, and systems
-                dynamics modeling to identify feedback architecture and policy
-                leverage points.
-            </p>
-
-            <h2>Methods</h2>
-
-            <p>
-                All analysis is done in
-                <a href="https://marimo.io" style="color:#1a1a2e">marimo</a>
-                &mdash; reactive Python notebooks that are valid .py files and
-                diff cleanly in git. Data sources are government databases,
-                regulatory filings, and company disclosures. The code,
-                data pipelines, and methodology are fully visible in the
-                source repository.
-            </p>
-
-            <ul>
-                <li>Data pipelines: DuckDB + dlt</li>
-                <li>Systems dynamics: PySD</li>
-                <li>Visualization: matplotlib (Storytelling with Data principles)</li>
-                <li>Statistics: PyMC, statsmodels</li>
-            </ul>
-
-            <h2>Contact</h2>
-
-            <div class="links">
-                <a href="https://github.com/Shakes-tzd/Systems" class="link-pill">
-                    Source Code
-                </a>
-                <a href="https://github.com/Shakes-tzd" class="link-pill">
-                    GitHub Profile
-                </a>
+            <div class="timeline-item">
+                <div class="timeline-year">Aug 2018 &ndash; Mar 2019</div>
+                <div class="timeline-desc"><strong>OnePower, Lesotho</strong> &mdash;
+                Energy Access Fellow. Designed powerhouses for mini-grids serving
+                rural communities without grid access.</div>
             </div>
-
+            <div class="timeline-item">
+                <div class="timeline-year">Mar 2019 &ndash; Aug 2019</div>
+                <div class="timeline-desc"><strong>Eswatini Electricity Company</strong>
+                &mdash; Engineering Trainee. Coordinated the company&rsquo;s first
+                microgrid: a US&nbsp;$230,000 off-grid electrification project for a
+                remote village unreachable by conventional grid infrastructure.</div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-year">Aug 2019 &ndash; May 2020</div>
+                <div class="timeline-desc"><strong>Duke University</strong> &mdash;
+                Final year. Represented Eswatini at COP25 in Madrid (Dec 2019) as
+                part of the national delegation to the UN Climate Conference.</div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-year">2020 &ndash; 2022</div>
+                <div class="timeline-desc"><strong>MIT</strong> &mdash; S.M. Technology
+                &amp; Policy. Quantitative estimation of mercury emissions from
+                artisanal and small-scale gold mining (ASGM), globally and regionally.</div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-year">2022 &ndash; 2025</div>
+                <div class="timeline-desc"><strong>SunStrong Management LLC</strong>
+                (formerly Sunnova Energy) &mdash; Senior Data Analyst. Managed data
+                infrastructure and Energy Community ITC analysis for 200,000+ solar
+                installations across the U.S.</div>
+            </div>
         </div>
-    </main>
-{footer}
+
+        <h2>Why This Project</h2>
+
+        <p>AI capex numbers appear in quarterly earnings reports. But the capital
+        converts into transformers, transmission lines, gas turbines, semiconductor
+        fabs, and data center concrete. That infrastructure is durable &mdash; it
+        reshapes supply chains, labor markets, grid topology, and trade patterns
+        for decades.</p>
+
+        <p><em>Where does AI capex land in the physical economy, what does it lock in,
+        and how do current regulatory decisions amplify or distort those outcomes?</em></p>
+
+        <p>Each case study traces one supply chain node and applies the same framework:
+        capital flow mapping, durability taxonomy, and systems dynamics modeling to
+        identify feedback architecture and policy leverage points.</p>
+
+        <h2>Methods</h2>
+
+        <p>All analysis is in <a href="https://marimo.io">marimo</a> &mdash; reactive
+        Python notebooks that are valid .py files and diff cleanly in git. Data sources
+        are government databases, regulatory filings, and company disclosures. The code,
+        data pipelines, and methodology are fully visible in the source repository.</p>
+
+        <ul>
+            <li>Data pipelines: DuckDB + dlt</li>
+            <li>Systems dynamics: PySD</li>
+            <li>Visualization: matplotlib (Storytelling with Data principles)</li>
+            <li>Statistics: PyMC, statsmodels</li>
+        </ul>
+
+        <h2>Contact</h2>
+
+        <div class="links">
+            <a href="https://github.com/Shakes-tzd/Systems" class="link-pill">Source Code</a>
+            <a href="https://github.com/Shakes-tzd" class="link-pill">GitHub Profile</a>
+        </div>
+
+    </div>
+    <footer class="site-footer">
+        <span>Built with <a href="https://marimo.io">marimo</a></span>
+        <a href="__GITHUB_URL__">Source on GitHub</a>
+    </footer>
 </body>
 </html>
 """
@@ -952,13 +988,10 @@ ABOUT_TEMPLATE = """\
 
 def generate_about() -> str:
     """Generate the about.html content."""
-    return ABOUT_TEMPLATE.format(
-        shared_css=_SHARED_CSS,
-        nav=_NAV,
-        footer=_FOOTER,
-        site_title=SITE["title"],
-        site_subtitle=SITE["subtitle_html"],
-    )
+    html = ABOUT_TEMPLATE
+    html = html.replace("__SITE_TITLE__", SITE["title"])
+    html = html.replace("__GITHUB_URL__", SITE["github_url"])
+    return html
 
 
 # ---------------------------------------------------------------------------
