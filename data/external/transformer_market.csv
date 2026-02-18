@@ -1,0 +1,29 @@
+metric,value,unit,year,source
+global_market_size,30.38,billion_usd,2025,MarketsandMarkets
+global_market_cagr,6.5,percent,2025-2030,MarketsandMarkets
+us_market_size,1.49,billion_usd,2025,Mordor Intelligence
+dc_transformer_market,9.0,billion_usd,2025,Yahoo Finance / Grand View
+power_transformer_supply_deficit,30,percent,2025,Wood Mackenzie
+distribution_transformer_supply_deficit,10,percent,2025,Wood Mackenzie
+power_transformer_supply_deficit_proj,5,percent,2030,Wood Mackenzie
+power_transformer_demand_growth,116,percent_since_2019,2025,Wood Mackenzie
+distribution_transformer_demand_growth,41,percent_since_2019,2025,Wood Mackenzie
+gsu_demand_growth,274,percent_since_2019,2025,Wood Mackenzie
+power_transformer_price_increase,77,percent_since_2019,2025,Wood Mackenzie
+distribution_transformer_price_increase,95,percent_since_2019,2025,Wood Mackenzie (max)
+gsu_price_increase,45,percent_since_2019,2025,Wood Mackenzie
+us_power_transformer_import_share,80,percent,2025,Wood Mackenzie
+us_distribution_transformer_import_share,50,percent,2025,Wood Mackenzie
+us_aging_distribution_transformers,40,million_units,2024,NREL / DOE
+demand_growth_annual,8,percent,2025,Wood Mackenzie (midpoint 7-9%)
+supply_growth_annual,3.5,percent,2025,Wood Mackenzie (midpoint 3-4%)
+oem_investment_north_america,1800,million_usd,2023-2025,POWER Magazine / Wood Mackenzie
+nrel_dt_capacity_increase_2050_low,160,percent_vs_2021,2050,NREL
+nrel_dt_capacity_increase_2050_high,260,percent_vs_2021,2050,NREL
+global_dc_transformer_demand_growth,21,percent_yoy,2025,Wood Mackenzie
+dpa_ira_funding,500,million_usd,2024,IRA Section 30001
+eib_grid_financing,11000,million_eur,2025,EIB
+mission300_wbg_commitment,30000,million_usd,2024-2030,World Bank
+mission300_afdb_commitment,18000,million_usd,2024-2030,AfDB
+africa_minigrids_deployed,3000,count,2024,World Bank / ESMAP
+africa_minigrids_planned,9000,count,2024,World Bank / ESMAP

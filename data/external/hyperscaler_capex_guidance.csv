@@ -1,0 +1,7 @@
+ticker,year,capex_bn,source
+AMZN,2026,200.0,"FY25 Q4 earnings call, Feb 2026"
+GOOGL,2026,180.0,"FY25 Q4 earnings call, Feb 2026 (midpoint)"
+MSFT,2026,140.0,"FY26 H1 run-rate estimate ($72B in H1), Feb 2026"
+META,2026,125.0,"FY25 Q4 earnings call (midpoint $115-135B), Feb 2026"
+ORCL,2026,50.0,"FY26 earnings call guidance, Feb 2026"
+NVDA,2026,15.0,"FY27 guidance est (fabless; offices/test/DGX Cloud)"

@@ -1,0 +1,6 @@
+year,generation_gw,storage_gw,total_gw,solar_gw,wind_gw,gas_gw,nuclear_gw,other_gw,completion_pct,withdrawal_pct,source
+2020,750,200,950,450,230,70,3,17,,,LBNL Queued Up 2021 Edition
+2021,1000,400,1400,800,260,75,3,12,,,LBNL Queued Up 2022 Edition
+2022,1350,680,2030,1000,280,80,5,15,,,LBNL Queued Up 2023 Edition
+2023,1570,1030,2600,1350,260,130,5,175,14,82,LBNL Queued Up 2024 Edition
+2024,2240,860,3100,1800,250,140,10,40,14,82,LBNL Queued Up 2025 Edition (Rand et al. April 2025)

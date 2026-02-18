@@ -1,0 +1,10 @@
+metric,value,unit,source
+global_production_2024,26.0,Mt/year,ICSG
+tonnes_per_gw_hyperscale,50000,tonnes,BHP
+tonnes_per_mw_msft_ref,26,tonnes,BHP (Microsoft 80MW Chicago)
+dc_demand_2025,1100,kt/year,Fastmarkets
+dc_demand_2030_low,330,kt/year,Goldman Sachs
+dc_demand_2030_high,500,kt/year,BHP
+tonnes_per_gw_grid,5000,tonnes,ICA
+refined_deficit_2025,304,kt,Wood Mackenzie
+dc_demand_2040,2500,kt/year,Tom's Hardware / Fastmarkets

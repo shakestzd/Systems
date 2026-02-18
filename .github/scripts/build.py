@@ -156,7 +156,12 @@ def ensure_data() -> bool:
 
 
 def export_notebook(nb_file: str, output_path: Path) -> bool:
-    """Export a single marimo notebook to static HTML."""
+    """Export a single marimo notebook to static HTML (code hidden).
+
+    Returns True if the HTML file was produced, even if some cells had
+    runtime errors (marimo exits 1 with "cells failed to execute" message
+    but still writes a valid HTML file in that case).
+    """
     full_path = PROJECT_ROOT / nb_file
     if not full_path.exists():
         print(f"  SKIP  {nb_file} (file not found)")
@@ -166,6 +171,7 @@ def export_notebook(nb_file: str, output_path: Path) -> bool:
 
     result = subprocess.run(
         [sys.executable, "-m", "marimo", "export", "html",
+         "--no-include-code",
          str(full_path), "-o", str(output_path)],
         cwd=str(PROJECT_ROOT),
         capture_output=True,
@@ -173,17 +179,24 @@ def export_notebook(nb_file: str, output_path: Path) -> bool:
         timeout=300,
     )
 
-    if result.returncode != 0:
-        print(f"  FAIL  {nb_file}")
-        if result.stderr:
-            lines = result.stderr.strip().split("\n")
-            for line in lines[-5:]:
-                print(f"         {line}")
-        return False
+    if output_path.exists():
+        size_kb = output_path.stat().st_size / 1024
+        if result.returncode != 0:
+            # Marimo exits 1 when some cells fail but still writes the HTML.
+            # Deploy it anyway — failed cells render as error panels, which is
+            # better than a grayed-out "unavailable" card on the index.
+            print(f"  WARN  {nb_file} ({size_kb:.0f} KB, some cells had errors)")
+        else:
+            print(f"  OK    {nb_file} ({size_kb:.0f} KB)")
+        return True
 
-    size_kb = output_path.stat().st_size / 1024
-    print(f"  OK    {nb_file} ({size_kb:.0f} KB)")
-    return True
+    # HTML was not written at all — real failure.
+    print(f"  FAIL  {nb_file}")
+    if result.stderr:
+        lines = result.stderr.strip().split("\n")
+        for line in lines[-8:]:
+            print(f"         {line}")
+    return False
 
 
 # ---------------------------------------------------------------------------

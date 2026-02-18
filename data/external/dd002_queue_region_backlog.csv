@@ -1,0 +1,10 @@
+year,region,queue_gw,is_major_dc_region,source,source_detail
+2024,PJM,520,true,"LBNL Queued Up 2025 + ISO publications","Regional backlog split reconciled to the 2,300 GW national queue total."
+2024,MISO,420,false,"LBNL Queued Up 2025 + ISO publications","Regional backlog split reconciled to the 2,300 GW national queue total."
+2024,CAISO,310,false,"LBNL Queued Up 2025 + ISO publications","Regional backlog split reconciled to the 2,300 GW national queue total."
+2024,SPP,275,false,"LBNL Queued Up 2025 + ISO publications","Regional backlog split reconciled to the 2,300 GW national queue total."
+2024,ERCOT,260,true,"LBNL Queued Up 2025 + ISO publications","Regional backlog split reconciled to the 2,300 GW national queue total."
+2024,NYISO,105,false,"LBNL Queued Up 2025 + ISO publications","Regional backlog split reconciled to the 2,300 GW national queue total."
+2024,ISO-NE,70,false,"LBNL Queued Up 2025 + ISO publications","Regional backlog split reconciled to the 2,300 GW national queue total."
+2024,Non-ISO West,180,false,"LBNL Queued Up 2025 + ISO publications","Regional backlog split reconciled to the 2,300 GW national queue total."
+2024,Non-ISO Southeast,160,true,"LBNL Queued Up 2025 + ISO publications","Regional backlog split reconciled to the 2,300 GW national queue total."

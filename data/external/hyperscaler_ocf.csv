@@ -1,0 +1,7 @@
+ticker,period,ocf_bn,source
+MSFT,TTM-Q3-FY2025,139.8,"SEC 10-Q filings via stockanalysis.com (Apr 2024 - Mar 2025)"
+AMZN,TTM-Q1-2025,104.4,"SEC 10-Q filings via stockanalysis.com (Apr 2024 - Mar 2025)"
+GOOGL,TTM-Q1-2025,124.9,"SEC 10-Q filings via stockanalysis.com (Apr 2024 - Mar 2025)"
+META,TTM-Q1-2025,90.4,"SEC 10-Q filings via stockanalysis.com (Apr 2024 - Mar 2025)"
+ORCL,TTM-Q3-FY2025,29.1,"SEC 10-Q filings via stockanalysis.com (Mar 2024 - Feb 2025)"
+NVDA,TTM-Q1-FY2026,59.3,"SEC 10-Q filings via stockanalysis.com (May 2024 - Apr 2025)"

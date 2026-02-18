@@ -1,0 +1,4 @@
+event_date,jurisdiction,docket,event_name,event_type,status,effective_or_due_date,description,source_name,source_url
+2023-07-28,FERC,RM22-14-000,Order No. 2023 interconnection reform,Final rule,Effective,2023-07-28,"Cluster studies, readiness requirements, and milestone reforms for queue processing.",FERC Order No. 2023,https://www.ferc.gov/media/order-no-2023
+2025-12-18,FERC,EL25-49-000,PJM co-located load order,Order,Issued,2025-12-18,"FERC required PJM to update tariff treatment for co-located large loads and cost allocation.",FERC December 2025 Commission Summary,https://www.ferc.gov/news-events/news/summaries-december-2025-commission-meeting
+2026-02-16,PJM,EL25-49-000,PJM tariff compliance filing,Filing deadline,Due,2026-02-16,"PJM directed to submit tariff amendments implementing service options and cost allocation treatment.",FERC Docket EL25-49-000,https://elibrary.ferc.gov/eLibrary/search

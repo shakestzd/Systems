@@ -1,0 +1,31 @@
+year,equipment_type,lead_weeks,source
+2019,power_transformer,30,Industry baseline (pre-COVID)
+2019,distribution_transformer,12,Industry baseline (pre-COVID)
+2019,generator_stepup,35,Industry baseline (pre-COVID)
+2019,circuit_breaker,16,Industry baseline (pre-COVID)
+2019,mv_switchgear,14,Industry baseline (pre-COVID)
+2021,power_transformer,50,Taishan Transformer / Wood Mackenzie
+2021,distribution_transformer,24,NRECA reports
+2021,generator_stepup,55,Wood Mackenzie
+2021,circuit_breaker,40,Utility Dive
+2021,mv_switchgear,20,T&D World
+2022,power_transformer,75,Wood Mackenzie
+2022,distribution_transformer,40,APPA survey
+2022,generator_stepup,85,Wood Mackenzie
+2022,circuit_breaker,65,Utility Dive
+2022,mv_switchgear,24,T&D World
+2023,power_transformer,110,Wood Mackenzie
+2023,distribution_transformer,60,POWER Magazine
+2023,generator_stepup,125,Wood Mackenzie
+2023,circuit_breaker,100,NEMA
+2023,mv_switchgear,28,T&D World
+2024,power_transformer,135,Wood Mackenzie Q2 survey
+2024,distribution_transformer,80,NRECA / APPA
+2024,generator_stepup,155,Wood Mackenzie
+2024,circuit_breaker,130,Utility Dive
+2024,mv_switchgear,30,T&D World
+2025,power_transformer,128,Wood Mackenzie Q2 2025 survey
+2025,distribution_transformer,90,IEEE Spectrum / POWER Magazine
+2025,generator_stepup,144,Wood Mackenzie Q2 2025 survey
+2025,circuit_breaker,150,Fast Company / Utility Dive
+2025,mv_switchgear,29,T&D World

@@ -179,6 +179,7 @@ data/processed/
 data/external/*
 !data/external/.gitkeep
 !data/external/cb_2024_us_state_20m/
+!data/external/*.csv
 !data/.gitkeep
 !data/raw/.gitkeep
 !data/processed/.gitkeep

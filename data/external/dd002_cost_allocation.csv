@@ -1,0 +1,6 @@
+year,region,cost_category,cost_bn,sort_order,is_total,project_count,socialized_pct,is_estimate,source,source_detail
+2024,PJM,Data center interconnection,2.10,1,false,150,95,true,"Union of Concerned Scientists (Sep 2025)","Category-level split is an analyst allocation of the UCS total."
+2024,PJM,Transmission reinforcement,1.20,2,false,150,95,true,"Union of Concerned Scientists (Sep 2025)","Category-level split is an analyst allocation of the UCS total."
+2024,PJM,Distribution upgrades,0.60,3,false,150,95,true,"Union of Concerned Scientists (Sep 2025)","Category-level split is an analyst allocation of the UCS total."
+2024,PJM,Shared network improvements,0.46,4,false,150,95,true,"Union of Concerned Scientists (Sep 2025)","Category-level split is an analyst allocation of the UCS total."
+2024,PJM,Total socialized,4.36,99,true,150,95,false,"Union of Concerned Scientists (Sep 2025)","Total socialized amount reported by UCS for PJM 2024 approvals."

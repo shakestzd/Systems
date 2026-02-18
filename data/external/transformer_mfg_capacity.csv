@@ -1,0 +1,25 @@
+manufacturer,country,facility_location,investment_usd_m,capacity_impact,completion_year,equipment_type,source
+Hitachi Energy,Switzerland,South Boston VA USA,457,Largest US LPT plant,2028,power_transformer,Hitachi Energy press release Sep 2025
+Hitachi Energy,Switzerland,Varennes QC Canada,195,3x LPT capacity,2027,power_transformer,Hitachi Energy press release Sep 2025
+Hitachi Energy,Switzerland,Alamo TN USA,106,Component manufacturing expansion,2026,components,Hitachi Energy press release Aug 2025
+Hitachi Energy,Switzerland,Ludvika Sweden,200,Factory expansion,2027,power_transformer,Hitachi Energy Nov 2025
+Hitachi Energy,Switzerland,Samutprakarn Thailand,14,+60% production capacity,2027,power_transformer,Hitachi Energy
+Siemens Energy,Germany,Charlotte NC USA,400,24-57 units/year (first US LPT plant),2026,power_transformer,Siemens Energy press release
+Siemens Energy,Germany,Nuremberg Germany,240,+50% production capacity,2028,power_transformer,Siemens Energy EUR 220M
+GE Vernova,USA,Monterrey Mexico,85,Doubled pad-mount transformer output,2025,distribution_transformer,GE Vernova / Prolec GE
+GE Vernova,USA,Goldsboro NC USA,140,New transformer capacity,2028,power_transformer,GE Vernova
+GE Vernova,USA,Prolec GE acquisition,5275,Full North American integration,2026,all,GE Vernova $5.275B acquisition
+Eaton,Ireland,Jonesville SC USA,340,Three-phase transformer mfg,2027,distribution_transformer,Eaton press release
+Eaton,Ireland,Nacogdoches TX USA,100,Doubled US voltage regulator capacity,2025,distribution_transformer,Eaton
+HD Hyundai,South Korea,Alabama USA,274,+50% (100 to 150 units/year),2026,power_transformer,KED Global
+HD Hyundai,South Korea,Ulsan South Korea,0,+30% ultra-high-capacity 765kV,2026,power_transformer,PowerSystems Technology
+ABB,Switzerland,Selmer TN USA,60,New transformer manufacturing,2026,power_transformer,Manufacturing Dive
+ABB,Switzerland,Senatobia MS USA,60,Doubled site footprint,2026,power_transformer,Manufacturing Dive
+Schneider Electric,France,Mt Juliet TN USA,85,Transformer mfg for data centers/grid,2025,distribution_transformer,Manufacturing Dive
+Schneider Electric,France,India,2,+1500 MVA/year (5500 to 7000),2026,power_transformer,Transformers Magazine
+CG Power,India,Greenfield India,84,+45000 MVA/year (to 85000 total),2028,power_transformer,TNDIndia
+CG Power,India,Malanpur India,0,25000 to 40000 MVA/year,2025,power_transformer,TNDIndia
+CG Power,India,Bhopal India,0,+3000 MVA/year distribution,2025,distribution_transformer,TNDIndia
+Cleveland-Cliffs,USA,Butler Works PA USA,195,GOES capacity expansion,2027,raw_material_goes,Butler Eagle Dec 2025
+Cleveland-Cliffs,USA,Weirton WV USA,150,Transformer plant (HALTED May 2025),0,power_transformer,Weirton Daily Times
+Metglas (Proterial),Japan,Conway SC USA,0,Doubled amorphous metal HB1M line,2023,raw_material_amorphous,Metglas press release

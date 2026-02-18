@@ -1,0 +1,6 @@
+parameter,base_value,low_value,high_value,units,source,source_date,source_detail
+annual_growth_mean,0.15,0.05,0.25,fraction_per_year,"UCS + LBNL trend synthesis",2025-09,"Anchored on 2024 PJM socialized-cost baseline and recent large-load growth."
+annual_growth_sigma,0.06,0.02,0.12,fraction_per_year,"ESIG-style forecast uncertainty framing",2025-12,"Represents forecast dispersion around annual growth mean."
+regulatory_shock_probability,0.20,0.05,0.40,probability,"FERC/PJM policy event uncertainty",2025-12,"Probability of a policy year that materially lowers cost growth."
+regulatory_shock_impact,0.08,0.02,0.20,fraction_per_year,"Scenario assumption",2025-12,"Reduction applied to annual growth in shock years."
+throughput_improvement_per_year,0.01,0.00,0.04,fraction_per_year,"Queue reform scenario assumption",2025-12,"Annual reduction in effective growth from improving queue throughput."
