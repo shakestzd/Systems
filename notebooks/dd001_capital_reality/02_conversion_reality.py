@@ -32,6 +32,7 @@ def _(mo, stats):
 
     The infrastructure that *does* get built will outlast the demand thesis by decades.
     Understanding the asset-life distribution is the key to understanding lock-in.
+
     """)
     return
 
@@ -39,6 +40,7 @@ def _(mo, stats):
 @app.cell
 def _():
     import sys
+    from pathlib import Path
 
     import marimo as mo
     sys.path.insert(0, str(mo.notebook_dir().parent.parent))
@@ -53,14 +55,33 @@ def _():
         COLORS,
         CONTEXT,
         FIGSIZE,
+        FLOW_FONT_SIZE,
         FONTS,
         chart_title,
+        flow_diagram,
         legend_below,
+        us_scatter_map,
     )
     cfg = setup()
     return (
-        COLORS, CONTEXT, FIGSIZE, FONTS, cfg, chart_title,
-        legend_below, mo, mpatches, np, pd, plt, query, save_fig,
+        COLORS,
+        CONTEXT,
+        FIGSIZE,
+        FLOW_FONT_SIZE,
+        FONTS,
+        Path,
+        cfg,
+        chart_title,
+        flow_diagram,
+        legend_below,
+        mo,
+        mpatches,
+        np,
+        pd,
+        plt,
+        query,
+        save_fig,
+        us_scatter_map,
     )
 
 
@@ -100,11 +121,25 @@ def _(pd, query):
     guidance_2026 = query("""
         SELECT ticker, year, capex_bn, source FROM energy_data.capex_guidance
     """)
-    return capex_annual, capex_raw, citations, guidance_2026, pnfi_bn, queue_summary, ppe_schedule
+    return (
+        capex_annual,
+        citations,
+        guidance_2026,
+        pnfi_bn,
+        ppe_schedule,
+        queue_summary,
+    )
 
 
 @app.cell
-def _(capex_annual, citations, guidance_2026, ppe_schedule, pnfi_bn, queue_summary):
+def _(
+    capex_annual,
+    citations,
+    guidance_2026,
+    pnfi_bn,
+    ppe_schedule,
+    queue_summary,
+):
     _tickers_6 = ["MSFT", "AMZN", "GOOGL", "META", "ORCL", "NVDA"]
     _annual = capex_annual[capex_annual["ticker"].isin(_tickers_6)]
 
@@ -182,11 +217,15 @@ def _(mo, stats):
     mo.md(f"""
     ---
 
-    ## What Persists: The Durability Taxonomy
+    ## Decision Filter: What Counts as Durable Obligation
 
-    Applying the project's analytical framework, AI infrastructure investments
-    fall into three durability categories. The distinction matters because financial
-    cycles are short, while some infrastructure consequences persist for decades:
+    This section answers a practical allocation question: which assets should be
+    underwritten as long-duration obligations, and which should stay contingent on
+    realized demand?
+
+    AI infrastructure investments fall into three durability categories. The distinction
+    matters because financial cycles are short, while some infrastructure consequences
+    persist for decades:
 
     | Category | What Gets Built | Life | Persists? |
     | :--- | :--- | :--- | :--- |
@@ -199,7 +238,50 @@ def _(mo, stats):
     ~{stats['decomp_equip_pct']}% is equipment-class (servers, network gear, machinery). In practice,
     the split varies: Meta skews toward construction; Microsoft skews toward equipment.
     The range across the three companies with clear disclosure is {stats['decomp_const_low']}–{stats['decomp_const_high']}%.
+
+    The decision tree below shows the classification logic and the failure condition
+    that should force reclassification to a lower-confidence tier:
     """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(COLORS, CONTEXT, FLOW_FONT_SIZE, cfg, flow_diagram, mpatches, save_fig):
+    fig_dt = flow_diagram(
+        nodes={
+            "q1": ("Is it physically\nembedded in the grid?", 6.5, 4.5, CONTEXT, COLORS["text_dark"]),
+            "q2": ("Is demand\nmulti-customer?", 2.0, 2.5, CONTEXT, COLORS["text_dark"]),
+            "q3": ("Does a regulatory\nregime protect it?", 11.0, 2.5, CONTEXT, COLORS["text_dark"]),
+            "s":  ("STRUCTURAL\n20–50 yr life\nGrid · substations\ntransmission", 2.0, 0.0, COLORS["positive"], "#ffffff"),
+            "p":  ("POLICY-DEPENDENT\nvariable life\nNuclear · SMR\nRate structures", 6.5, 0.0, COLORS["neutral"], "#ffffff"),
+            "d":  ("DEMAND-THESIS\nDEPENDENT\n3–6 yr life\nGPU · AI cooling", 11.0, 0.0, COLORS["negative"], "#ffffff"),
+        },
+        edges=[
+            {"src": "q1", "dst": "q2", "label": "Yes","exit": "left",    "entry": "top"},
+            {"src": "q1", "dst": "q3", "label": "No","exit": "right",    "entry": "top"},
+            {"src": "q2", "dst": "s", "label": "Yes →\ndurable demand"},
+            {"src": "q2", "dst": "p", "label": "No →\nsingle-customer","exit": "right",    "entry": "top"},
+            {"src": "q3", "dst": "p", "label": "Yes","exit": "left",    "entry": "top"},
+            {"src": "q3", "dst": "d", "label": "No"},
+        ],
+        figsize=(16, 8),
+        xlim=(-2.5, 16.5),
+        ylim=(-2.5, 6.5),
+        font_size=FLOW_FONT_SIZE,
+        legend_handles=[
+            mpatches.Patch(facecolor=COLORS["positive"], label="Structural (20–50 yr)"),
+            mpatches.Patch(facecolor=COLORS["neutral"], label="Policy-dependent (variable)"),
+            mpatches.Patch(facecolor=COLORS["negative"], label="Demand-thesis-dependent (3–6 yr)"),
+        ],
+    )
+    save_fig(fig_dt, cfg.img_dir / "dd001_durability_taxonomy.png")
+    return
+
+
+@app.cell(hide_code=True)
+def _(cfg, mo):
+    _chart = mo.image(src=(cfg.img_dir / "dd001_durability_taxonomy.png").read_bytes(), width=850)
+    mo.md(f"{_chart}")
     return
 
 
@@ -275,17 +357,7 @@ def _(cfg, mo, stats):
 
     {_chart}
 
-    *FY2024 10-K property schedules imply a cross-company midpoint near
-    ~{stats['decomp_const_pct']}% construction and ~{stats['decomp_equip_pct']}%
-    equipment. Construction assets — sites, buildings, substations, interconnects —
-    typically persist for 20–40 years. Equipment turns over much faster. Horizontal
-    span represents asset life; bar thickness represents 2025 capex scale. Note:
-    Alphabet extended server useful life from 4 to 6 years in 2024, adding ~$3.9B to
-    annual operating income — asset life assumptions materially affect the economics
-    (Alphabet 10-K FY2024, Note 1). Cumulated across the 2022–2025 AI era, the six major
-    builders committed ~${stats['ai_era_total_bn']:.0f}B in total capex — of which approximately
-    ~${stats['ai_era_const_bn']:.0f}B (applying the {stats['decomp_const_pct']}% EDGAR-derived construction
-    share) is now embedded in physical infrastructure with 20–40 year asset lives.*
+    *Takeaway: about {stats['decomp_const_pct']}% of AI-era capex maps to long-lived construction assets, which creates infrastructure lock-in that outlasts 3-5 year demand visibility. Source: FY2024 10-K property schedules.*
 
     This is the lock-in asymmetry. Investment risk is often evaluated on a 3–5 year
     return horizon, but much of the physical footprint lasts far longer. A gas plant
@@ -295,7 +367,66 @@ def _(cfg, mo, stats):
     early capital choices create self-reinforcing lock-in — the lock-in here is not just
     technological but geographic and infrastructural. Substations, transmission lines,
     and campus foundations cannot be relocated the way software platforms can.
+
+    **The current binding constraint on conversion is not capital — it is the physical
+    sequence.** Of all phases, grid interconnection imposes the longest lag: a national
+    median of ~5 years from request to commercial operation, up from ~3 years a decade
+    ago (Rand et al., LBNL, 2025). The physical constraint sequence is detailed in the
+    next section.
     """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    ## Decision Check: Announced Capital vs Buildable Capital
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(
+    COLORS,
+    CONTEXT,
+    FLOW_FONT_SIZE,
+    cfg,
+    flow_diagram,
+    mpatches,
+    save_fig,
+    stats,
+):
+    fig_sg = flow_diagram(
+        nodes={
+            "a": ("Stargate Announcement\nJan 21, 2025", 2.0, 1.5, CONTEXT, COLORS["text_dark"]),
+            "b": (f"Phase 1\n${stats['stargate_initial_bn']}B\nCommitted · deploying", 7.5, 3.0, COLORS["positive"], "#ffffff"),
+            "c": (f"Mobilization pledge\n~${stats['stargate_announced_bn'] - stats['stargate_initial_bn']}B\nStructure unspecified", 7.5, 0.0, CONTEXT, COLORS["text_dark"]),
+            "d": ("Texas sites\nunder construction", 13.0, 3.0, COLORS["positive"], "#ffffff"),
+            "e": ("Requires SoftBank\ndebt issuance +\nco-investor capital", 13.0, 0.0, CONTEXT, COLORS["text_dark"]),
+        },
+        edges=[
+            {"src": "a", "dst": "b", "label": "committed", "exit": "top", "entry": "left"},
+            {"src": "a", "dst": "c", "label": "speculative", "exit": "bottom", "entry": "left"},
+            {"src": "b", "dst": "d"},
+            {"src": "c", "dst": "e"},
+        ],
+        figsize=(12, 5),
+        xlim=(-1.0, 17.0),
+        ylim=(-1.5, 4.5),
+        font_size=FLOW_FONT_SIZE,
+        legend_handles=[
+            mpatches.Patch(facecolor=COLORS["positive"], label="Committed capital"),
+            mpatches.Patch(facecolor=CONTEXT, label="Speculative / unverified"),
+        ],
+    )
+    save_fig(fig_sg, cfg.img_dir / "dd001_stargate_commitment.png")
+    return
+
+
+@app.cell(hide_code=True)
+def _(cfg, mo):
+    _chart = mo.image(src=(cfg.img_dir / "dd001_stargate_commitment.png").read_bytes(), width=850)
+    mo.md(f"{_chart}")
     return
 
 
@@ -303,10 +434,7 @@ def _(cfg, mo, stats):
 def _(mo, stats):
     _capex_low = stats["capex_2025"] * stats["analyst_const_pct_low"] / 100
     mo.md(f"""
-    ---
-
-    ## Announcements vs. Physical Reality
-
+    **Decision implication:** do not treat announced capex as delivered infrastructure.
     The central gap is conversion, not commitment. Announcements are large, but
     delivery is constrained by interconnection timelines, permitting, and equipment
     bottlenecks:
@@ -347,17 +475,86 @@ def _(mo, stats):
     dispatchable power. Solar remains dominant at ~{stats['queue_solar_gw']:,} GW ({stats['queue_solar_pct']}% of total queue),
     storage ~{stats['queue_storage_gw']:,} GW ({stats['queue_storage_pct']}%), wind ~{stats['queue_wind_gw']} GW ({stats['queue_wind_pct']}%).
 
-    Supply-side constraints that capex figures don't capture:
+    For planning, this implies a conversion haircut: when programs depend on queue
+    outcomes, treat only a minority of announced capacity as likely near-term delivery.
 
-    - **GPU allocation and advanced packaging:** TSMC's CoWoS (Chip-on-Wafer-on-Substrate)
-      packaging capacity is the proximate bottleneck on H100/H200/B200 AI accelerator
-      production. GPU delivery lags order placement by 12–18 months.
-    - **Grid interconnection:** The median time from interconnection request to operation
-      is 4+ years (LBNL *Queued Up* 2025). Committed construction capex cannot be
-      energized until grid capacity is allocated.
-    - **Transformer supply:** Lead times for large power transformers have extended to
-      2+ years — data center buildings can be erected faster than the substation
-      equipment needed to power them (see archived *CS-1: Transformer Manufacturing*).
+    Supply-side constraints that capex figures don't capture — visualized in the
+    next chart.
+    """)
+    return
+
+
+@app.cell
+def _(COLORS, CONTEXT, FIGSIZE, FONTS, cfg, chart_title, np, plt, save_fig):
+    # Physical constraint phases: each row shows where time is consumed
+    # before a data center can operate. Data from LBNL Queued Up 2025 + industry sources.
+    _phases = [
+        ("GPU chip order\nto delivery",         0,  18, "locked", "TSMC CoWoS packaging\nbottleneck (12–18 mo)"),
+        ("Grid interconnection\nrequest to ops",  0,  60, "locked", "National median: ~5 yrs\n(LBNL Queued Up 2025)"),
+        ("Transformer\nprocurement",              6,  30, "locked", "Lead time: 2–3 yrs\n(CS-1 Transformer Mfg)"),
+        ("Land + permits",                        0,  12, "exit",   "Site selection to\nground-break: 6–12 mo"),
+        ("DC construction",                      12,  30, "exit",   "18–30 mo per building\n(Project Rainier proxy)"),
+        ("Energization",                          30,  36, "locked", "Final step: utility\nswitchgear install"),
+    ]
+    _colors = {"locked": COLORS["negative"], "exit": CONTEXT}
+    _alphas = {"locked": 0.8, "exit": 0.5}
+
+    fig_constraints, _ax = plt.subplots(figsize=(FIGSIZE["wide"][0], FIGSIZE["wide"][1] * 1.4))
+
+    _n = len(_phases)
+    _short_bar = 12  # months — below this threshold, annotation goes outside the bar
+    for _i, (_label, _start, _end, _kind, _note) in enumerate(_phases):
+        _dur = _end - _start
+        _ax.barh(
+            _i, _dur, left=_start, height=0.65,
+            color=_colors[_kind], alpha=_alphas[_kind],
+            edgecolor="white", linewidth=0.5,
+        )
+        if _dur >= _short_bar:
+            # Long bar: annotation centered inside
+            _mid = _start + _dur / 2
+            _ax.text(
+                _mid, _i, _note, ha="center", va="center",
+                fontsize=FONTS["annotation"] - 2,
+                color="white" if _kind == "locked" else COLORS["text_dark"],
+                fontweight="normal",
+            )
+        else:
+            # Short bar: annotation to the right, outside the bar
+            _ax.text(
+                _end + 1.0, _i, _note, ha="left", va="center",
+                fontsize=FONTS["annotation"] - 2,
+                color=COLORS["text_dark"],
+                fontweight="normal",
+            )
+
+    _ax.set_yticks(np.arange(_n))
+    _ax.set_yticklabels([p[0] for p in _phases], fontsize=FONTS["tick_label"])
+    _ax.set_xlabel("Months from capital commitment", fontsize=FONTS["axis_label"])
+    _ax.tick_params(axis="x", labelsize=FONTS["tick_label"])
+    _ax.set_xlim(0, 68)
+    _ax.axvline(36, color=COLORS["accent"], linewidth=1.5, linestyle="--", alpha=0.7)
+    # Place "~3-year minimum" just above the top bar (Energization, y=n-1)
+    # va="bottom" keeps it above the bar without extending into the title
+    _ax.text(36.5, _n - 1 + 0.35, "~3-year\nminimum", fontsize=FONTS["annotation"] - 1,
+             color=COLORS["accent"], va="bottom")
+    _ax.spines[["top", "right"]].set_visible(False)
+    chart_title(fig_constraints,
+                "Physical constraints stack — grid interconnection alone takes 5 years")
+    plt.tight_layout()
+    save_fig(fig_constraints, cfg.img_dir / "dd001_constraint_phases.png")
+    return
+
+
+@app.cell(hide_code=True)
+def _(cfg, mo):
+    _chart = mo.image(src=(cfg.img_dir / "dd001_constraint_phases.png").read_bytes(), width=850)
+    mo.md(f"""
+    # Physical constraints stack — grid interconnection alone takes 5 years
+
+    {_chart}
+
+    *Takeaway: the limiting step is still grid interconnection (~5 years median), so capital alone cannot compress end-to-end delivery below roughly three years. Sources: LBNL Queued Up 2025; CS-1 Transformer Manufacturing.*
     """)
     return
 
@@ -366,6 +563,9 @@ def _(mo, stats):
 def _(mo, stats):
     mo.md(f"""
     ### Case Study: Project Rainier (Amazon/Anthropic, Indiana)
+
+    **Decision relevance:** Rainier is a live benchmark for timeline realism, subsidy
+    exposure, and load-concentration risk.
 
     The most detailed public record of AI infrastructure conversion comes from
     Amazon's Project Rainier campus near New Carlisle, Indiana — a facility built
@@ -405,7 +605,7 @@ def _(mo, stats):
 
 
 @app.cell
-def _(COLORS, CONTEXT, FIGSIZE, FONTS, cfg, chart_title, mpatches, np, plt, save_fig, stats):
+def _(COLORS, CONTEXT, FIGSIZE, FONTS, cfg, chart_title, plt, save_fig, stats):
     _built = stats["rainier_dc_built_jun2025"]
     _planned = stats["rainier_dc_planned"]
     _remaining = _planned - _built
@@ -470,24 +670,195 @@ def _(cfg, mo, stats):
         src=(cfg.img_dir / "dd001_rainier_progress.png").read_bytes(), width=850
     )
     mo.md(f"""
-    # Project Rainier: {stats['rainier_dc_built_jun2025']} of {stats['rainier_dc_planned']} buildings complete — Amazon's campus alone doubles Indiana's peak grid load
+    # Project Rainier: {stats['rainier_dc_built_jun2025']} of {stats['rainier_dc_planned']} buildings complete after 2 years — conversion is the constraint, not capital
 
     {_chart}
 
-    *Top: build progress as of June 2025 — {stats['rainier_dc_built_jun2025']} data center buildings completed,
-    {stats['rainier_dc_planned'] - stats['rainier_dc_built_jun2025']} remaining, from a planned {stats['rainier_dc_planned']}-building campus.
-    Bottom: conversion timeline from announcement to operation.
-    The {stats['rainier_gw']} GW campus accounts for roughly half of the additional load AEP Indiana
-    is planning to serve by 2030 (from {stats['aep_indiana_peak_2024_gw']} GW to {stats['aep_indiana_peak_2030_gw']}+ GW peak demand).
-    AEP plans to meet ~{stats['aep_gas_share_pct']}% of that additional load with natural gas.
-    Source: NYT, "At Amazon's Biggest Data Center, Everything Is Supersized for A.I.,"
-    Jun 24, 2025 (Weise & Metz).*
+    *Takeaway: Rainier is a live conversion benchmark, with {stats['rainier_dc_built_jun2025']} of {stats['rainier_dc_planned']} buildings up after ~2 years and major long-run grid implications. Source: NYT (Jun 24, 2025).*
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(COLORS, CONTEXT, FONTS, Path, cfg, plt, save_fig):
+    import io as _io
+    import zipfile as _zipfile
+
+    import geopandas as _gpd
+    import matplotlib.colors as _mcolors
+    import pandas as _pd
+    import requests as _requests
+
+    # ── 1. County shapefile (already cached from earlier map cells) ───────────
+    _county_shp = Path("/Users/shakes/DevProjects/Systems/data/external/cb_2024_us_county_20m/cb_2024_us_county_20m.shp")
+    if not _county_shp.exists():
+        _county_dir = _county_shp.parent
+        _county_dir.mkdir(parents=True, exist_ok=True)
+        _resp = _requests.get(
+            "https://www2.census.gov/geo/tiger/GENZ2024/shp/cb_2024_us_county_20m.zip",
+            timeout=120,
+        )
+        _resp.raise_for_status()
+        with _zipfile.ZipFile(_io.BytesIO(_resp.content)) as _zf:
+            _zf.extractall(_county_shp.parent)
+
+    _all_counties = _gpd.read_file(_county_shp)
+    _conus = _all_counties[~_all_counties["STATEFP"].isin(["02", "15", "72"])]
+
+    # ── 2. Census ACS 5-yr unemployment rate by Indiana county ────────────────
+    # B23025_005E = Unemployed; B23025_002E = Civilian labor force total
+    _unemp_cache = Path("/Users/shakes/DevProjects/Systems/data/external/indiana_county_unemployment.csv")
+    if _unemp_cache.exists():
+        _unemp_df = _pd.read_csv(_unemp_cache, dtype={"GEOID": str})
+    else:
+        _url = (
+            "https://api.census.gov/data/2022/acs/acs5"
+            "?get=NAME,B23025_005E,B23025_002E&for=county:*&in=state:18"
+        )
+        _r = _requests.get(_url, timeout=30)
+        _data = _r.json()
+        _unemp_df = _pd.DataFrame(_data[1:], columns=_data[0])
+        _unemp_df["B23025_005E"] = _pd.to_numeric(_unemp_df["B23025_005E"], errors="coerce")
+        _unemp_df["B23025_002E"] = _pd.to_numeric(_unemp_df["B23025_002E"], errors="coerce")
+        _unemp_df["unemployment_rate"] = (
+            _unemp_df["B23025_005E"] / _unemp_df["B23025_002E"] * 100
+        ).round(1)
+        _unemp_df["GEOID"] = _unemp_df["state"] + _unemp_df["county"]
+        _unemp_df[["GEOID", "NAME", "unemployment_rate"]].to_csv(_unemp_cache, index=False)
+
+    # ── 3. Spatial setup ──────────────────────────────────────────────────────
+    _indiana = _conus[_conus["STATEFP"] == "18"].copy()
+    _indiana = _indiana.merge(_unemp_df[["GEOID", "unemployment_rate"]], on="GEOID", how="left")
+    _st_joseph = _indiana[_indiana["NAME"] == "St. Joseph"]
+    _neighbors = _conus[_conus["STATEFP"].isin(["17", "26", "39", "21"])]
+    _us_states = _conus.dissolve(by="STATEFP", as_index=False)
+
+    # ── 4. Combined figure: US context (left) + Indiana zoom (right) ──────────
+    fig_rainier_map, (_ax_us, _ax_in) = plt.subplots(
+        1, 2, figsize=(16, 6),
+        gridspec_kw={"width_ratios": [2.2, 1]},
+    )
+
+    # --- Left panel: US overview ---
+    _us_states.plot(
+        ax=_ax_us, color=COLORS["background"], edgecolor=COLORS["muted"], linewidth=0.3,
+    )
+    _site_lats = [41.68,   32.477,  35.058,  32.502]
+    _site_lons = [-86.47,  -91.755, -90.153, -99.789]
+    _dot_colors = [COLORS["accent"], CONTEXT, CONTEXT, CONTEXT]
+    for _la, _lo, _c in zip(_site_lats, _site_lons, _dot_colors):
+        _ax_us.scatter(_lo, _la, c=_c, s=100, zorder=5, edgecolors="white", linewidth=1.0)
+    _labels_us = [
+        (-86.47,  41.68,  "Project Rainier\n(New Carlisle, IN)",    "left",  42.8, COLORS["accent"]),
+        (-91.755, 32.477, "Meta Hyperion\n(Richland Parish, LA)",   "right", 31.5, COLORS["text_light"]),
+        (-90.153, 35.058, "xAI Colossus\n(Memphis, TN)",            "left",  36.8, COLORS["text_light"]),
+        (-99.789, 32.502, "Stargate TX\n(Abilene, TX)",             "right", 28.5, COLORS["text_light"]),
+    ]
+    for _lo, _la, _lbl, _ha, _yt, _clr in _labels_us:
+        _xt = _lo + (2.5 if _ha == "left" else -2.5)
+        _ax_us.annotate(
+            _lbl, xy=(_lo, _la), xytext=(_xt, _yt), ha=_ha,
+            fontsize=FONTS["small"], color=_clr,
+            arrowprops=dict(arrowstyle="-", color=_clr, lw=0.8),
+        )
+    _ax_us.set_xlim(-125, -65)
+    _ax_us.set_ylim(24, 50)
+    _ax_us.set_axis_off()
+
+    # --- Right panel: Indiana zoom + Lake Michigan context ---
+    # Blue background: Lake Michigan visible as the blue area above Indiana's northern border
+    _ax_in.set_facecolor("#dde8f4")
+    _neighbors.dissolve(by="STATEFP", as_index=False).plot(
+        ax=_ax_in, color="#f0f0f0", edgecolor=COLORS["muted"], linewidth=0.3, zorder=1,
+    )
+    _vmin, _vmax = 2.5, 8.5
+    _indiana.plot(
+        column="unemployment_rate", ax=_ax_in, cmap="YlOrRd",
+        vmin=_vmin, vmax=_vmax,
+        edgecolor=COLORS["muted"], linewidth=0.4, zorder=2,
+        missing_kwds={"color": COLORS["background"]},
+    )
+    # St. Joseph County: accent border, no fill override (preserves choropleth)
+    _st_joseph.plot(ax=_ax_in, color="none", edgecolor=COLORS["accent"], linewidth=2.5, zorder=4)
+    # New Carlisle site dot
+    _ax_in.scatter([-86.47], [41.68], c=COLORS["accent"], s=200, zorder=6,
+                   edgecolors="white", linewidth=1.5)
+    # Lake Michigan label — in the blue background above Indiana's northern border
+    _ax_in.text(-86.3, 42.0, "Lake Michigan", ha="center",
+                fontsize=FONTS["small"], color="#4a7fa5", style="italic", zorder=5)
+    # Distance annotation: New Carlisle to lake shore (~8 miles)
+    _ax_in.annotate(
+        "~8 mi\nto lake", xy=(-86.47, 41.78), xytext=(-87.4, 42.05),
+        ha="center", fontsize=FONTS["small"] - 1, color="#4a7fa5", zorder=5,
+        arrowprops=dict(arrowstyle="->", color="#4a7fa5", lw=1.0),
+    )
+    # Geographic reference points
+    _ax_in.text(-87.7, 41.5, "Chicago\n(~60 mi W)", ha="center",
+                fontsize=FONTS["small"] - 1, color=CONTEXT, zorder=5)
+    _ax_in.text(-86.05, 41.67, "South Bend\n(15 mi E)", ha="left",
+                fontsize=FONTS["small"] - 1, color=CONTEXT, zorder=5)
+    # Colorbar for unemployment choropleth
+    _sm = plt.cm.ScalarMappable(
+        cmap="YlOrRd", norm=_mcolors.Normalize(vmin=_vmin, vmax=_vmax),
+    )
+    _sm.set_array([])
+    _cbar = plt.colorbar(_sm, ax=_ax_in, orientation="horizontal",
+                         pad=0.02, fraction=0.06, aspect=18, shrink=0.85)
+    _cbar.set_label("Unemployment rate (%) — Census ACS 2022",
+                    fontsize=FONTS["small"] - 1, color=COLORS["text_dark"])
+    _cbar.ax.tick_params(labelsize=FONTS["small"] - 2)
+    # Extend north past Indiana's border to reveal Lake Michigan in the background
+    _ax_in.set_xlim(-88.1, -84.7)
+    _ax_in.set_ylim(37.7, 42.2)
+    _ax_in.set_axis_off()
+
+    plt.tight_layout(pad=1.0, w_pad=0.5)
+    save_fig(fig_rainier_map, cfg.img_dir / "dd001_rainier_combined_map.png")
+    return
+
+
+@app.cell(hide_code=True)
+def _(cfg, mo):
+    _chart = mo.image(
+        src=(cfg.img_dir / "dd001_rainier_combined_map.png").read_bytes(), width=850
+    )
+    mo.md(f"""
+    # New Carlisle sits 8 miles from Lake Michigan — water access and grid proximity drove site selection
+
+    {_chart}
+
+    *Takeaway: New Carlisle combined cooling-water access, grid proximity, and local economic incentives, making it a plausible fast-start site for a multi-GW campus. Sources: Census ACS/TIGER; NYT.*
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    Rainier is a special case: Amazon contracted directly with the local utility
+    (AEP Indiana) and bypassed the standard interconnection queue by securing a
+    negotiated rate agreement. Most AI data centers cannot do this — they enter the
+    standard interconnection queue and face the general-case attrition and delays
+    documented below.
     """)
     return
 
 
 @app.cell
-def _(COLORS, CONTEXT, FONTS, cfg, chart_title, legend_below, mpatches, np, plt, queue_summary, save_fig, stats):
+def _(
+    COLORS,
+    CONTEXT,
+    FONTS,
+    cfg,
+    chart_title,
+    legend_below,
+    mpatches,
+    np,
+    plt,
+    queue_summary,
+    save_fig,
+    stats,
+):
     _years = queue_summary["year"].tolist()
     _gen_gw = queue_summary["generation_gw"].tolist()
     _storage_gw = queue_summary["storage_gw"].tolist()
@@ -548,13 +919,7 @@ def _(cfg, mo, stats):
 
     {_chart}
 
-    *Total generation and storage capacity in U.S. interconnection queues at year-end.
-    From 2000–2024 cohorts, {stats['queue_withdrawal_pct']}% of queued capacity was
-    withdrawn and {stats['queue_completion_pct']}% reached commercial operation
-    (Rand et al., LBNL, 2025, Table 3). Queue volume rose about {stats['queue_yoy_pct']}%
-    in 2024 to {stats['queue_total_gw']:,} GW. LBNL also tracked 100+ GW of large-load
-    requests — primarily data center connections — for the first time in the dataset's
-    history. Source: Rand et al., LBNL, "Queued Up" 2025 Edition (data through end-2024).*
+    *Takeaway: queue volume is rising ({stats['queue_total_gw']:,} GW), but conversion remains weak: {stats['queue_withdrawal_pct']}% withdrawn and only {stats['queue_completion_pct']}% completed historically. Source: LBNL "Queued Up" 2025.*
     """)
     return
 
@@ -570,6 +935,15 @@ def _(mo, stats):
     converts to infrastructure — it will, given enough time. The constraints are
     *when*, *where*, and *who pays for the grid capacity* needed to power it. Those
     questions are the subject of DD-002.
+
+    **Failure movie (2027-2030):** queue completion stays near {stats['queue_completion_pct']}%,
+    utilities still build for projected hyperscaler load, and rate-base obligations are
+    socialized before durable local benefits materialize. If demand then softens, customers
+    still carry a decades-long amortization tail on underutilized assets.
+
+    **Applied decision rule for DD-002:** prioritize projects with shared-grid spillover
+    and clear beneficiary-pays cost allocation; defer programs whose economics only hold
+    under optimistic queue and demand assumptions.
 
     **Next:** [03_risk_and_durability.py](./03_risk_and_durability.py) — Who holds
     the financial downside if the demand thesis proves incorrect?
