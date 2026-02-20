@@ -786,10 +786,14 @@ wheels = [
 [[package]]
 name = "flowmpl"
 version = "0.2.0"
-source = { editable = "../flowmpl" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "matplotlib" },
     { name = "numpy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/87/d7/bbe78a83669eab528c7df947173f1b4fea2dab51841b313cf688a378e818/flowmpl-0.2.0.tar.gz", hash = "sha256:4176d0c6f42d22dc05ab02b7c9e375f36311be0b54bd27642fcffaf019d598c9", size = 2519765, upload-time = "2026-02-20T17:34:21.469Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/8e/b1/6fe1d60133ac134fa976d07984552ecad5b69302ca24088c6e6acedcea78/flowmpl-0.2.0-py3-none-any.whl", hash = "sha256:7f7917f3f81b0ca2d7fefa160dba72f11a3337dd7f9015dc6c1dc74bde7ad5c2", size = 210629, upload-time = "2026-02-20T17:34:17.807Z" },
 ]
 
 [package.optional-dependencies]
@@ -798,23 +802,6 @@ all = [
     { name = "pandas" },
     { name = "requests" },
 ]
-
-[package.metadata]
-requires-dist = [
-    { name = "dlt", extras = ["duckdb"], marker = "extra == 'examples'", specifier = ">=1.0" },
-    { name = "flowmpl", extras = ["charts", "maps"], marker = "extra == 'all'" },
-    { name = "flowmpl", extras = ["charts", "maps", "examples"], marker = "extra == 'dev'" },
-    { name = "geopandas", marker = "extra == 'maps'", specifier = ">=1.0" },
-    { name = "marimo", marker = "extra == 'dev'", specifier = ">=0.10" },
-    { name = "marimo", marker = "extra == 'examples'", specifier = ">=0.10" },
-    { name = "matplotlib", specifier = ">=3.7" },
-    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.8" },
-    { name = "numpy", specifier = ">=1.24" },
-    { name = "pandas", marker = "extra == 'charts'", specifier = ">=2.0" },
-    { name = "requests", marker = "extra == 'maps'", specifier = ">=2.31" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.3" },
-]
-provides-extras = ["charts", "maps", "all", "dev", "examples"]
 
 [[package]]
 name = "fonttools"
@@ -4182,7 +4169,7 @@ requires-dist = [
     { name = "auto-mix-prep", specifier = ">=0.2.0" },
     { name = "dlt", extras = ["duckdb"], specifier = ">=1.0" },
     { name = "duckdb", specifier = ">=1.4" },
-    { name = "flowmpl", extras = ["all"], editable = "../flowmpl" },
+    { name = "flowmpl", extras = ["all"], specifier = ">=0.1.1" },
     { name = "fredapi", specifier = ">=0.5" },
     { name = "geopandas", specifier = ">=1.0" },
     { name = "hmmlearn", specifier = ">=0.3" },

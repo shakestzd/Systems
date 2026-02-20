@@ -81,10 +81,6 @@ python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
 
-[tool.uv.sources]
-# Local path until flowmpl 0.1.1 is published to PyPI.
-# After `uv publish` in flowmpl/, remove this section and run `uv sync`.
-flowmpl = { path = "../flowmpl", editable = true }
 
 [dependency-groups]
 dev = [
