@@ -12,29 +12,26 @@ app = marimo.App(
 def _(mo, stats):
     mo.md(f"""
     # AI Valuations vs. Infrastructure Spending
-    ## Decision Lens for 2026 Allocation
 
     *Thandolwethu Zwelakhe Dlamini*
 
     ---
 
-    The Magnificent Seven have added about \\${stats['mkt_gain_t']:.1f} trillion in market
-    capitalisation since January 2023. Capital expenditure across six major AI infrastructure
-    builders reached about \\${stats['capex_2025']:.0f}B in 2025, up from \\${stats['capex_2024']:.0f}B
-    in 2024, with \\${stats['guidance_2026_point']:.0f}B guided for 2026 (caveat band:
-    \\${stats['guidance_2026_low']:.0f}–\\${stats['guidance_2026_high']:.0f}B). The central
-    question is whether that financial commitment is converting to physical infrastructure, and
-    whether the revenue base justifies the spend.
+    The seven largest US tech companies added about \\${stats['mkt_gain_t']:.1f} trillion in
+    combined market value since January 2023. Over the same period, six of the biggest AI
+    infrastructure builders spent about \\${stats['capex_2025']:.0f}B on capital investment in
+    2025, up from \\${stats['capex_2024']:.0f}B in 2024. They have announced plans to spend
+    about \\${stats['guidance_2026_point']:.0f}B in 2026, though that figure could reasonably
+    land anywhere between \\${stats['guidance_2026_low']:.0f}B and \\${stats['guidance_2026_high']:.0f}B
+    based on how much guidance has shifted in prior years.
 
-    Cloud revenue for the three cloud providers (Amazon, Alphabet, Microsoft) was about
-    \\${stats['cloud_rev_2025']:.0f}B in 2025 — against capital expenditure of \\${stats['capex_3co_2025']:.0f}B for
-    the same firms. Capital expenditure overtook cloud revenue on a quarterly basis in late 2025, a crossover
-    that had never happened in the platform era. Whether AI-driven demand reverses that ratio
-    or signals persistent overinvestment is the open question.
-
-    The spending data through Q4 2025 supports one decision rule: stage additional long-lived
-    AI infrastructure behind explicit revenue and utilization gates rather than treating 2026
-    guidance as baseline.
+    The question is whether the spending is backed by real revenue. Amazon, Alphabet, and
+    Microsoft together earned about \\${stats['cloud_rev_2025']:.0f}B in cloud revenue in 2025
+    and spent about \\${stats['capex_3co_2025']:.0f}B on infrastructure. For the first time,
+    their quarterly capital investment exceeded their quarterly cloud earnings. Whether
+    AI-driven demand catches up to that level of spending, or whether companies are building
+    well ahead of what customers will actually pay for, is the question this article works
+    through.
     """)
     return
 
@@ -301,20 +298,39 @@ def _(cfg, mo, stats):
 
     {_chart}
 
-    *Takeaway: market value has outrun annual infrastructure spend by roughly {stats['ratio_vs_2025']:.0f}x, so today's pricing assumes several years of strong revenue growth. Source: Yahoo Finance; SEC filings via yfinance.*
+    *Market value grew roughly {stats['ratio_vs_2025']:.0f} times faster than annual infrastructure investment. At that gap, current stock prices only hold up if revenue grows strongly for several more years. Source: Yahoo Finance; SEC filings via yfinance.*
     """)
     return
 
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(r"""
-    > **The Tesla/xAI question.** Tesla's \$1.18T market cap gain (Jan 2023–Feb 2026) is overwhelmingly priced on AI, not cars: forward P/E is about 160x vs. the auto sector median of 6.2x. Tesla spent about \$5B on AI infrastructure in 2024 (44% of total capital expenditure) and guides \$20B+ for 2026. Separately, Musk's xAI built the 200,000-GPU "Colossus" supercomputer for about \$7B — AI infrastructure capital flowing through a web of related entities with overlapping leadership and ambiguous corporate boundaries.
-    >
-    > Tesla's capital expenditure is excluded from the totals above because its core spend remains automotive, but the AI narrative drives its valuation — making it arguably the most extreme example of the disconnect this analysis tracks.
-    >
-    > *Sources: Tesla 10-K (2024), CNBC, CompaniesMarketCap.*
-    """)
+    mo.callout(mo.md(r"""
+    Tesla's market cap grew by \$1.18T between January 2023 and February 2026. That gain is
+    priced on AI expectations, not the car business: investors are paying about 160 times
+    Tesla's expected annual earnings per share, compared to about 6 times for a typical auto
+    company. Tesla spent about \$5B on AI infrastructure in 2024 (44% of its total capital
+    expenditure) and has announced plans to spend \$20B+ in 2026. Separately, Musk's xAI
+    built a 200,000-GPU supercomputer called Colossus for about \$7B, structured through a
+    set of related entities that share leadership with Tesla but have no clear corporate
+    boundary between them.
+
+    Tesla is excluded from the totals below because its reported capital expenditure is
+    mostly automotive. Its valuation is almost entirely an AI bet, making it the clearest
+    case where market pricing has run far ahead of reported infrastructure spend.
+
+    *Sources: Tesla 10-K (2024), CNBC, CompaniesMarketCap.*
+    """), kind="neutral")
+    return
+
+
+@app.cell
+def _():
+    return
+
+
+@app.cell
+def _():
     return
 
 
@@ -372,7 +388,7 @@ def _(cfg, mo, stats):
     mo.md(
         f"# Big Tech capital expenditure is {_mult_4co:.1f}× higher than in 2019\n\n"
         f"{_chart_ratio}\n\n"
-        f"*Takeaway: the AI era (2022-2025) is a steeper spending cycle than the prior cloud cycle, reaching about \\${_capex_4co_2025:.0f}B in 2025. Source: SEC filings via yfinance.*"
+        f"*Spending accelerated sharply after 2022. The increase is steeper than the previous wave of cloud infrastructure investment between 2015 and 2021, reaching about \\${_capex_4co_2025:.0f}B in 2025. Source: SEC filings via yfinance.*"
     )
     return
 
@@ -442,7 +458,7 @@ def _(cfg, mo, stats):
 
     {_chart}
 
-    *Takeaway: spend rose from about \\${stats['capex_2023']:.0f}B (2023) to about \\${stats['capex_2025']:.0f}B (2025), and 2026 guidance still points higher at about \\${stats['guidance_2026_point']:.0f}B (range \\${stats['guidance_2026_low']:.0f}–\\${stats['guidance_2026_high']:.0f}B). Source: SEC filings and Q4 2025 guidance calls.*
+    *Spend rose from about \\${stats['capex_2023']:.0f}B (2023) to about \\${stats['capex_2025']:.0f}B (2025), and 2026 guidance still points higher at about \\${stats['guidance_2026_point']:.0f}B (range \\${stats['guidance_2026_low']:.0f}–\\${stats['guidance_2026_high']:.0f}B). Source: SEC filings and Q4 2025 guidance calls.*
     """)
     return
 
@@ -450,57 +466,30 @@ def _(cfg, mo, stats):
 @app.cell(hide_code=True)
 def _(mo, stats):
     mo.md(f"""
-    > **What these numbers miss: infrastructure commitments not captured in reported capital expenditure.**
-    > The figures above capture capital expenditures as reported in SEC filings.
-    > They exclude a parallel — and growing — channel: leased and SPV-financed
-    > infrastructure that shows up as operating expenses, not capital investments.
-    >
-    > In September–November 2025 alone, Microsoft signed over \\${stats['msft_neocloud_total_bn']}B in 3-5 year
-    > neocloud leases (Nebius \\${stats['msft_nebius_deal_bn']}B, Nscale \\${stats['msft_nscale_deal_bn']}B, Iren \\${stats['msft_iren_deal_bn']}B, Lambda multi-billion) —
-    > none of which appears in its capital expenditure line (NYT, Dec 2025). Meta structured
-    > about \\${stats['meta_beignet_financing_bn']}B in Louisiana data center financing through a special purpose vehicle
-    > (Beignet Investor LLC), with Blue Owl Capital providing 80% of the funding
-    > and Pimco selling the underlying bonds. The deal is classified as an operating
-    > lease — so it flows through operating expenses rather than capital expenditure, and therefore
-    > does not appear in the capital expenditure figures tracked here. (Note: under
-    > FASB ASC 842, effective 2019, operating leases over 12 months do appear on the
-    > balance sheet as right-of-use assets and lease liabilities — the critical
-    > accounting distinction is between *capital expenditure* and *operating expense*, not on- vs. off-balance-sheet.)
-    >
-    > This means the true infrastructure commitment is **materially higher** than
-    > about the \\${stats['capex_2025']:.0f}B in reported capital expenditure. The risk distribution of these
-    > arrangements is traced in [03_risk_and_durability.py](./03_risk_and_durability.py).
-    >
-    > *Sources: NYT, "How Tech's Biggest Companies Are Offloading the Risks of the
-    > A.I. Boom," Dec 15, 2025 (Weise & Tan).*
-    """)
-    return
+    And those figures understate the real commitment. Alongside direct capital investment,
+    companies have been financing infrastructure through long-term leases and special purpose
+    vehicles — legal structures that hold assets separately from the main company. These
+    arrangements are classified as operating expenses rather than capital investment, so they
+    never appear in the numbers above.
 
+    In three months (September–November 2025), Microsoft signed over \\${stats['msft_neocloud_total_bn']}B
+    in leases with third-party data center operators (Nebius \\${stats['msft_nebius_deal_bn']}B,
+    Nscale \\${stats['msft_nscale_deal_bn']}B, Iren \\${stats['msft_iren_deal_bn']}B, Lambda
+    multi-billion). None of it shows up in Microsoft's capital expenditure (NYT, Dec 2025).
+    Meta financed \\${stats['meta_beignet_financing_bn']}B of Louisiana data center construction
+    through a separate legal entity called Beignet Investor LLC, with Blue Owl Capital
+    providing 80% of the funding and Pimco selling the bonds to investors. Also classified
+    as an operating lease, it also disappears from the capital expenditure figures here.
 
-@app.cell(hide_code=True)
-def _(mo, stats):
-    mo.md(f"""
-    ---
+    The actual infrastructure commitment is higher than the charts show. How the financial
+    risk in these arrangements is distributed is traced in
+    [03_risk_and_durability.py](./03_risk_and_durability.py).
 
-    ## Decision Lens: Revenue Conversion vs Capital Commitments
-
-    Amazon, Alphabet, and Microsoft are the three companies with comparable cloud
-    revenue segments (AWS, Azure, Google Cloud). This section informs one decision:
-    should long-lived AI infrastructure commitments accelerate, hold, or slow based
-    on observed revenue conversion?
-
-    | Metric | 2024 | 2025 | 2026 (guided) |
-    | :--- | :--- | :--- | :--- |
-    | Capital expenditure (AMZN + GOOGL + MSFT) | about \\${stats['capex_3co_2024']:.0f}B | about \\${stats['capex_3co_2025']:.0f}B | about \\${stats['capex_3co_2026g']:.0f}B\\* |
-    | Cloud revenue (same 3) | about \\${stats['cloud_rev_2024']:.0f}B | about \\${stats['cloud_rev_2025']:.0f}B | est. about \\${stats['cloud_rev_2026_low']}–{stats['cloud_rev_2026_high']}B\\*\\* |
-    | Capital expenditure / Revenue ratio | about {stats['capex_3co_2024'] / stats['cloud_rev_2024']:.1f}x | about {stats['capex_3co_2025'] / stats['cloud_rev_2025']:.1f}x | about {stats['capex_3co_2026g'] / stats['cloud_rev_2026_high']:.1f}–{stats['capex_3co_2026g'] / stats['cloud_rev_2026_low']:.1f}x |
-
-    \\* Management guidance. \\*\\* Analyst consensus estimates.
-    *(Extends the revenue-gap framing from Sequoia Capital "AI's \\${stats['sequoia_rev_target_bn']}B Question," Sep 2024, and Goldman Sachs "Gen AI: Too Much Spend, Too Little Return?," Sep 2024, using auditable EDGAR data rather than analyst extrapolations.)*
-
-    **Decision implication:** when capital expenditure remains at or above revenue while
-    revenue quality is mixed, additional long-lived AI-dedicated investment should be staged
-    behind explicit demand and utilization gates rather than treated as baseline growth.
+    *(A note on accounting: US rules that took effect in 2019 require operating leases over
+    12 months to appear on the balance sheet as assets and liabilities. But they still flow
+    through operating expenses rather than capital investment lines, which is why they do
+    not appear in the figures above. Source: NYT, "How Tech's Biggest Companies Are
+    Offloading the Risks of the A.I. Boom," Dec 15, 2025, Weise & Tan.)*
     """)
     return
 
@@ -508,13 +497,81 @@ def _(mo, stats):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    ### Decision Risk: One Spending Line, Multiple Demand Assumptions
+    ---
 
-    The revenue gap is compounded by a structural issue: the companies building this
-    infrastructure cannot articulate a single demand story that justifies the spend.
-    A September 2025 industry survey (NYT, Metz & Weise) identified at least six
-    overlapping visions being pursued simultaneously — ranging from near-term proven
-    revenue to long-horizon bets with no commercial model yet:
+    ## Revenue vs Capital: Amazon, Alphabet, Microsoft
+
+    Amazon, Alphabet, and Microsoft each report their cloud business as a separate revenue
+    segment (AWS, Azure, and Google Cloud respectively), which makes a direct comparison
+    possible: you can see both what they spent and what came back in.
+    """)
+    return
+
+
+@app.cell
+def _(COLORS, CONTEXT, FONTS, cfg, plt, save_fig, stats):
+    _years = [2024, 2025, 2026]
+    _labels = ["2024", "2025", "2026\n(guided)"]
+    _r24 = stats["capex_3co_2024"] / stats["cloud_rev_2024"]
+    _r25 = stats["capex_3co_2025"] / stats["cloud_rev_2025"]
+    _r26_mid = stats["capex_3co_2026g"] / ((stats["cloud_rev_2026_low"] + stats["cloud_rev_2026_high"]) / 2)
+    _ratios = [_r24, _r25, _r26_mid]
+
+    fig_ratio_slope, _ax = plt.subplots(figsize=(5, 3.2))
+    _x = [0, 1, 2]
+
+    # Reference line at 1.0
+    _ax.axhline(1.0, color=CONTEXT, linewidth=1.2, linestyle="--", alpha=0.6, zorder=1)
+    _ax.text(2.08, 1.0, "Spending = Revenue", va="center", fontsize=FONTS["annotation"] - 1, color=CONTEXT)
+
+    # Line + solid markers for reported years, hollow for guided
+    _ax.plot(_x[:2], _ratios[:2], color=COLORS["accent"], linewidth=2.5, zorder=3)
+    _ax.plot(_x[1:], _ratios[1:], color=COLORS["accent"], linewidth=2.5, linestyle="--", alpha=0.7, zorder=3)
+    _ax.scatter(_x[:2], _ratios[:2], color=COLORS["accent"], s=80, zorder=4, edgecolors="white", linewidth=1.5)
+    _ax.scatter([_x[2]], [_ratios[2]], color="white", s=80, zorder=4, edgecolors=COLORS["accent"], linewidth=2)
+
+    # Point labels
+    for _i, (_xi, _r) in enumerate(zip(_x, _ratios)):
+        _offset = 0.07 if _i < 2 else 0.09
+        _ax.text(_xi, _r + _offset, f"{_r:.1f}×", ha="center", va="bottom",
+                 fontsize=FONTS["annotation"], color=COLORS["accent"], fontweight="bold")
+
+    _ax.set_xticks(_x)
+    _ax.set_xticklabels(_labels, fontsize=FONTS["tick_label"])
+    _ax.set_xlim(-0.4, 3.0)
+    _ax.set_ylim(0.4, 1.65)
+    _ax.set_yticks([])
+    _ax.spines["left"].set_visible(False)
+    plt.tight_layout()
+    save_fig(fig_ratio_slope, cfg.img_dir / "dd001_capex_ratio_slope.png")
+    return
+
+
+@app.cell(hide_code=True)
+def _(cfg, mo, stats):
+    _chart = mo.image(src=(cfg.img_dir / "dd001_capex_ratio_slope.png").read_bytes(), width=420)
+    mo.md(f"""
+    # For the first time, these three companies are spending more on infrastructure than they earn from cloud services
+
+    {_chart}
+
+    *Spending as a share of cloud revenue (AWS + Azure + Google Cloud). Hollow marker = company guidance, not reported. 2026 uses the midpoint of analyst revenue estimates (\\${stats['cloud_rev_2026_low']}–{stats['cloud_rev_2026_high']}B). Sources: SEC 10-Q filings; Q4 2025 earnings calls. Framing follows Sequoia Capital's "AI's \\${stats['sequoia_rev_target_bn']}B Question" (Sep 2024) and Goldman Sachs "Gen AI: Too Much Spend, Too Little Return?" (Sep 2024).*
+
+    Spending crossed above revenue for the first time in 2025. If the 2026 guidance lands as announced, every dollar of new infrastructure will be built ahead of any revenue it has yet earned.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    ### One Spending Line, Multiple Demand Assumptions
+
+    There is a deeper problem beneath the revenue gap: the companies building this
+    infrastructure are not all building it for the same reason. A September 2025 survey
+    of the industry (NYT, Metz & Weise) found at least six distinct visions being pursued
+    at the same time, ranging from products with proven revenue today to long-horizon bets
+    that have no commercial model yet:
     """)
     return
 
@@ -578,9 +635,9 @@ def _(cfg, mo):
 
     {_chart}
 
-    *Six revenue theses are funded simultaneously from the same capital expenditure pool. Only
-    near-term proven revenue — better search and enterprise software — has demonstrated commercial
-    scale. Source: NYT, "What Exactly Are A.I. Companies Trying to Build?" Sep 2025.*
+    *Six revenue assumptions are being funded from the same pool of capital investment. Only
+    the near-term products (better search, enterprise software) have demonstrated commercial
+    scale so far. Source: NYT, "What Exactly Are A.I. Companies Trying to Build?" Sep 2025.*
     """)
     return
 
@@ -588,23 +645,26 @@ def _(cfg, mo):
 @app.cell(hide_code=True)
 def _(mo, stats):
     mo.md(f"""
-    **Decision implication:** each vision implies a different revenue trajectory, infrastructure requirement,
-    and risk profile. The capital expenditure figures aggregate across all six. Current revenue
-    reflects mainly the near-term theses — better search and productivity tools.
+    Each vision implies a different revenue trajectory, different infrastructure requirements,
+    and different risks. The capital investment figures add all six together. The revenue
+    coming in right now reflects mainly the near-term products: better search and productivity
+    software.
 
-    Key signal that demand is real but fragile: Google Cloud's contracted backlog
-    surged {stats['gcp_backlog_growth_pct']}% to \\${stats['gcp_backlog_bn']}B, and cloud is growing
-    {stats['cloud_yoy_min']:.0f}–{stats['cloud_yoy_max']:.0f}% YoY. But a meaningful portion reflects AI
-    services sold to VC-funded startups (\\${stats['vc_ai_2024_bn']}B globally in 2024, PitchBook).
-    Those startups are major cloud customers, so revenue can move with VC cycles. McKinsey's
-    2025 survey found that about {stats['mckinsey_no_impact_pct']}% of businesses testing generative AI
-    had not yet seen significant bottom-line impact. If the medium- and long-term theses
-    don't materialize as revenue-generating products, the infrastructure built for them
-    becomes capacity in search of demand.
+    Demand is real but some of it is fragile. Google Cloud's signed future contracts grew
+    {stats['gcp_backlog_growth_pct']}% to \\${stats['gcp_backlog_bn']}B, and cloud revenue is
+    growing {stats['cloud_yoy_min']:.0f}–{stats['cloud_yoy_max']:.0f}% year-on-year. But a
+    significant portion of that comes from AI startups funded by venture capital
+    (\\${stats['vc_ai_2024_bn']}B in venture investment globally in 2024, PitchBook). Those
+    startups are large cloud customers, and their spending depends on continued investor
+    funding rather than their own revenue. McKinsey's 2025 survey found about
+    {stats['mckinsey_no_impact_pct']}% of businesses testing generative AI had not yet seen
+    it improve their financial results. If the longer-horizon bets don't develop into
+    products people pay for, the infrastructure built for them will be running at a fraction
+    of capacity.
 
-    **Failure movie (2028-2030):** near-term revenue growth softens, long-horizon use
-    cases fail to scale, and operators are left with fixed infrastructure costs sized
-    for demand that never arrives.
+    By 2028-2030, that looks like: revenue growth slows, the longer-horizon products fail
+    to find customers at scale, and operators are carrying the fixed costs of infrastructure
+    built for demand that never arrived.
 
     *Sources: NYT, "What Exactly Are A.I. Companies Trying to Build?" Sep 16, 2025
     (Metz & Weise); McKinsey Global Survey on AI (2025); OpenAI public statements.*
@@ -687,7 +747,7 @@ def _(cfg, mo, stats):
 
     {_chart}
 
-    *Takeaway: by Q4 2025, capital expenditure for Amazon, Alphabet, and Microsoft exceeded combined cloud revenue; full-year 2025 was about \\${stats['capex_3co_2025']:.0f}B vs about \\${stats['cloud_rev_2025']:.0f}B. Source: SEC 10-Q filings.*
+    *By Q4 2025, capital expenditure for Amazon, Alphabet, and Microsoft exceeded combined cloud revenue; full-year 2025 was about \\${stats['capex_3co_2025']:.0f}B vs about \\${stats['cloud_rev_2025']:.0f}B. Source: SEC 10-Q filings.*
     """)
     return
 
@@ -749,14 +809,31 @@ def _(
 
 
 @app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ---
+
+    # Does AI Efficiency Reduce Infrastructure Demand?
+
+    DeepSeek R1 (January 2025) created the sharpest test of this question to date. The
+    reported $6M figure for DeepSeek-V3's final training run (arXiv:2412.19437, Dec 2024)
+    is self-reported and partial (one training run, not the full cost of development), but
+    the directional claim is significant: models matching or approaching the capability of
+    today's most powerful systems may be achievable at costs far below what current
+    infrastructure spending implies.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
 def _(cfg, mo, stats):
     _chart = mo.image(src=(cfg.img_dir / "dd001_quarterly_capex.png").read_bytes(), width=850)
     mo.md(f"""
-    # DeepSeek R1 changed nothing — all four AI builders accelerated capital expenditure
+    ## DeepSeek R1 changed nothing — all four AI builders accelerated capital expenditure
 
     {_chart}
 
-    *Takeaway: even after DeepSeek R1 (Jan 2025), all four major builders kept accelerating through Q4 2025, despite an about \\${stats['nvda_deepseek_loss_bn']}B one-day Nvidia repricing. Source: yfinance (SEC filings).*
+    *Even after DeepSeek R1 (Jan 2025), all four major builders kept accelerating through Q4 2025, despite Nvidia losing about \\${stats['nvda_deepseek_loss_bn']}B in market value in a single day on the efficiency news. Source: yfinance (SEC filings).*
     """)
     return
 
@@ -764,12 +841,6 @@ def _(cfg, mo, stats):
 @app.cell(hide_code=True)
 def _(mo, stats):
     mo.md(f"""
-    ---
-
-    ## Does AI Efficiency Reduce Infrastructure Demand?
-
-    DeepSeek R1 (January 2025) created the sharpest test of this question to date. The reported about $6M figure for DeepSeek-V3's final training run (arXiv:2412.19437, December 2024) is self-reported and partial (one run, not full development costs), but the directional claim is significant: frontier-capable models may be achievable at costs far below what current infrastructure spending implies.
-
     Through four quarters of data, the answer from actual spending is: no slowdown. All major builders accelerated through 2025:
 
     | Company | 2024 actual | 2025 actual | 2026 guidance |
@@ -779,25 +850,40 @@ def _(mo, stats):
     | Microsoft | about \\${stats['msft_2024']:.0f}B | about \\${stats['msft_2025']:.0f}B | about \\${stats['msft_2026g']:.0f}B |
     | Meta | about \\${stats['meta_2024']:.0f}B | about \\${stats['meta_2025']:.0f}B | \\${stats['meta_2026g_low']}-{stats['meta_2026g_high']}B |
 
-    Plain-language takeaway: compute got much cheaper, but total infrastructure spending
-    still increased. The spending data through Q4 2025 is consistent with both "Jevons wins"
-    and "overinvestment" — it cannot distinguish between them.
+    Compute got much cheaper, but total infrastructure spending still increased. The spending
+    data through Q4 2025 fits both explanations: companies are investing ahead of real demand,
+    or cheaper compute is unlocking so much more usage that total spending rises anyway. The
+    data alone cannot tell which.
 
-    The Jevons paradox offers one explanation: lower unit prices unlock enough extra usage
-    that total demand rises faster than price falls. OpenAI's GPT-4 API pricing fell about
-    97% from about \\$60/1M tokens (March 2023) to about \\$2.50/1M tokens (May 2024), and
-    usage volumes rose. But Jevons only dominates when price elasticity of demand exceeds 1
-    in absolute value — and that elasticity is not established for AI inference.
+    The second explanation has a name: the Jevons paradox. When something gets cheaper,
+    people use more of it, and total consumption can rise even as the unit price falls.
+    OpenAI's cost to process one million tokens of text fell about 97%, from roughly $60
+    (March 2023) to roughly $2.50 (May 2024), and usage volumes rose. But the paradox only
+    holds when demand responds strongly enough to more than offset the price drop. Whether AI
+    usage is that sensitive to price is not yet established.
 
-    Three conditions must hold simultaneously for Jevons to explain the full spending trajectory:
-    1. **Cost continues falling** — verified; about 10× per 18 months (company pricing pages, 2023–2025)
-    2. **Use cases expand faster than cost falls** — plausible but unverified at scale
-    3. **Net-new applications unlock** — cheaper inference enables new categories, not just cheaper existing ones
+    Three things would all need to be true for cheaper compute to fully explain the spending
+    trajectory:
+    1. **Costs keep falling** — verified; roughly 10x cheaper per 18 months (company pricing pages, 2023–2025)
+    2. **Demand grows faster than costs fall** — plausible but not yet demonstrated at scale
+    3. **New categories of use open up** — cheaper compute enables things that weren't possible before, not just cheaper versions of existing things
 
-    Management guidance expresses conviction in conditions 2 and 3.
-    The revenue data through Q4 2025 does not yet confirm it.
+    Company executives express confidence in points 2 and 3. The revenue data through Q4
+    2025 does not yet confirm it.
 
-    **Caveat on guidance reliability:** AI capital expenditure guidance has historically been revised by up to plus or minus {stats['guidance_max_revision_pct']}% within a single year. Meta cut 2023 guidance {stats['meta_guidance_cut_pct']}% from its original \\${stats['meta_2023_guidance_low']}-{stats['meta_2023_guidance_high']}B range to \\${stats['meta_2023']:.0f}B actual; Microsoft raised FY2025 guidance {stats['msft_guidance_raise_pct']}% in one quarter. The \\${stats['guidance_2026_point']:.0f}B total should be treated as directionally correct but uncertain at the company level. The combined 2026 guidance would consume about {stats['capex_ocf_2026_pct']:.0f}% of these companies' trailing twelve-month operating cash flow (OCF; about \\${stats['ocf_ttm']:.0f}B), far exceeding the 10-year average of about {stats['hist_capex_ocf_avg_pct']}% (Bernstein Research, 2024). Amazon individually is at about {stats['amzn_ocf_pct']:.0f}% (2025 actual capital expenditure vs. trailing OCF).
+    The 2026 spending figures are also less certain than they appear. Company guidance on
+    capital investment has historically shifted by as much as plus or minus
+    {stats['guidance_max_revision_pct']}% within a single year. Meta cut its 2023 investment
+    plans by {stats['meta_guidance_cut_pct']}%, from an original range of
+    \\${stats['meta_2023_guidance_low']}–{stats['meta_2023_guidance_high']}B down to
+    \\${stats['meta_2023']:.0f}B actual. Microsoft raised its fiscal year 2025 plans by
+    {stats['msft_guidance_raise_pct']}% in a single quarter. The \\${stats['guidance_2026_point']:.0f}B
+    combined figure is directionally correct but should not be read as a firm commitment at
+    the company level. It would also require these companies to spend about
+    {stats['capex_ocf_2026_pct']:.0f}% of the cash their operations generated over the past
+    twelve months (about \\${stats['ocf_ttm']:.0f}B total), well above their historical average
+    of about {stats['hist_capex_ocf_avg_pct']}% (Bernstein Research, 2024). Amazon alone is
+    already at about {stats['amzn_ocf_pct']:.0f}% of its operating cash flow.
     """)
     return
 
@@ -805,20 +891,23 @@ def _(mo, stats):
 @app.cell(hide_code=True)
 def _(mo, stats):
     mo.md(f"""
-    ## Decision Rules for 2026 Allocation
+    ## What to Watch in 2026
 
-    Current observed anchor: 2025 capital expenditure-to-cloud-revenue ratio for Amazon+Alphabet+Microsoft
-    is **{stats['capex_3co_2025'] / stats['cloud_rev_2025']:.2f}x**.
+    In 2025, Amazon, Alphabet, and Microsoft spent **{stats['capex_3co_2025'] / stats['cloud_rev_2025']:.2f}
+    dollars** on infrastructure for every dollar of cloud revenue they earned. That ratio
+    crossed above 1.0 for the first time.
 
-    1. **Scale long-lived investment** if revenue conversion tightens (ratio trends toward <1.0x)
-       and revenue growth broadens beyond subsidy-like demand.
-    2. **Hold / sequence** if ratio remains around parity and demand quality is mixed.
-    3. **Defer AI-dedicated long-lived assets** if the ratio stays materially above parity
-       while measured bottom-line impact remains weak.
+    1. **Build more** if the ratio starts falling back toward or below 1.0, and if revenue
+       growth is coming from durable enterprise contracts rather than venture-funded startups.
+    2. **Wait** if the ratio stays near 1.0 and the revenue picture remains mixed.
+    3. **Slow down** if the ratio keeps rising while there is still little evidence that AI
+       is improving the financial results of the businesses using it.
 
-    **Failure movie (2028-2030):** spending keeps rising, enterprise revenue lags,
-    and the system is forced into late write-downs, tariff renegotiations, and stranded
-    utility upgrades already placed into long-duration recovery schedules.
+    The scenario where this goes wrong by 2028-2030: spending keeps rising, business
+    customers don't see returns that justify their AI budgets, enterprise revenue stalls,
+    and operators are left holding the costs of infrastructure built for demand that did not
+    materialise — including utility grid upgrades that ratepayers will be paying off for
+    decades.
     """)
     return
 
@@ -828,10 +917,11 @@ def _(mo):
     mo.md("""
     ---
 
-    Decision handoff: the spend signal is clear, but construction speed and lock-in risk
-    depend on conversion physics, not earnings-call intent.
+    The spending signal is clear. What happens next depends on whether physical
+    infrastructure actually gets built at the pace announced, not on what executives said
+    on earnings calls.
 
-    **Next:** [02_conversion_reality.py](./02_conversion_reality.py) — Construction timelines, interconnection queues, and the gap between announcement and operation.
+    **Next:** [02_conversion_reality.py](./02_conversion_reality.py): construction timelines, grid interconnection queues, and the gap between announcement and operation.
     """)
     return
 
