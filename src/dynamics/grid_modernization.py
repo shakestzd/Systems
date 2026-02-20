@@ -6,7 +6,7 @@ Translated using PySD
 from pathlib import Path
 import numpy as np
 
-from pysd.py_backend.statefuls import Integ, Delay
+from pysd.py_backend.statefuls import Delay, Integ
 from pysd import Component
 
 __pysd_version__ = "3.14.3"
@@ -444,8 +444,8 @@ def btm_cost_advantage():
     comp_subtype="Normal",
     depends_on={
         "regulatory_favorability": 1,
-        "queue_wait_time": 1,
         "reference_queue_time": 1,
+        "queue_wait_time": 1,
         "grid_reliability_premium": 1,
     },
 )

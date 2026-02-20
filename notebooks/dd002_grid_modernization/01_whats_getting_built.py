@@ -717,37 +717,34 @@ def _(cfg, eia, horizontal_bar_ranking, legend_below, plt, save_fig):
 
 
 @app.cell
-def _(cfg, eia, np, plt, save_fig, us_scatter_map):
-    # Map: new power plants since 2020, colored by fuel type
+def _(COLORS, CONTEXT, FIGSIZE, FONTS, FUEL_COLORS, cfg, eia, np, plt, save_fig, us_scatter_map):
+    # Map: new power plants since 2020
+    # SWD gray+accent: solar and wind are the geographic story — everything else is context
     _recent_geo = eia[
         (eia["operating_year"] >= 2020)
         & eia["latitude"].notna()
         & eia["longitude"].notna()
-        # Filter to continental US bounds
         & (eia["longitude"] > -130)
         & (eia["longitude"] < -60)
         & (eia["latitude"] > 23)
         & (eia["latitude"] < 51)
     ].copy()
 
+    _focus_fuels = {"solar", "wind"}
     _colors = [
-        FUEL_COLORS.get(f, COLORS["reference"]) for f in _recent_geo["fuel_category"]
+        FUEL_COLORS.get(f, CONTEXT) if f in _focus_fuels else CONTEXT
+        for f in _recent_geo["fuel_category"]
     ]
     _sizes = np.clip(_recent_geo["nameplate_capacity_mw"].values / 5, 3, 120)
 
-    # Build legend
     _legend_handles = [
-        plt.Line2D(
-            [0],
-            [0],
-            marker="o",
-            color="w",
-            markerfacecolor=c,
-            markersize=18,
-            label=label.replace("_", " ").title(),
-        )
-        for label, c in FUEL_COLORS.items()
-        if label in _recent_geo["fuel_category"].values
+        plt.Line2D([0], [0], marker="o", color="w",
+                   markerfacecolor=FUEL_COLORS["solar"], markersize=14, label="Solar"),
+        plt.Line2D([0], [0], marker="o", color="w",
+                   markerfacecolor=FUEL_COLORS["wind"], markersize=14, label="Wind"),
+        plt.Line2D([0], [0], marker="o", color="w",
+                   markerfacecolor=CONTEXT, markersize=14,
+                   label="Other (gas, battery, nuclear…)"),
     ]
 
     fig_plant_map = us_scatter_map(
@@ -755,13 +752,12 @@ def _(cfg, eia, np, plt, save_fig, us_scatter_map):
         _recent_geo["longitude"].values,
         _colors,
         _sizes,
-        "New power plants since 2020 cluster in data center corridors and renewable-rich regions",
+        "Solar concentrates in the Sun Belt, wind across the Great Plains",
         legend_handles=_legend_handles,
-        figsize=FIGSIZE["large"],
-        alpha=0.5,
+        figsize=FIGSIZE["map"],
+        alpha=0.55,
     )
 
-    # Override legend with larger font and markers for readability
     _map_ax = fig_plant_map.axes[0]
     _map_ax.get_legend().remove()
     _map_ax.legend(
@@ -769,8 +765,8 @@ def _(cfg, eia, np, plt, save_fig, us_scatter_map):
         labels=[h.get_label() for h in _legend_handles],
         loc="upper center",
         bbox_to_anchor=(0.5, -0.02),
-        ncol=4,
-        fontsize=16,
+        ncol=len(_legend_handles),
+        fontsize=FONTS["legend"],
         frameon=False,
         markerscale=1.5,
         columnspacing=1.5,
@@ -787,18 +783,18 @@ def _(cfg, mo):
     )
     mo.md(
         f"""
-    ## Geographic Concentration
-
-    # New power plants since 2020 cluster in data center corridors and renewable-rich regions
+    # Solar concentrates in the Sun Belt, wind across the Great Plains — renewable geography shapes where AI infrastructure can credibly be "clean"
 
     {_plant_map}
 
-    The map reveals clear spatial patterns. Solar concentrates in the
-    Sun Belt — Texas, California, the Southeast. Wind clusters in the
-    Great Plains corridor. Gas combined cycle plants dot the eastern
-    seaboard and Texas Gulf Coast. The geographic distribution is not
-    random: it follows resource availability (sun, wind), existing
-    grid infrastructure, and permitting environments.
+    The map reveals the resource logic underlying the generation buildout.
+    Solar follows insolation — Texas, California, the Southwest. Wind follows
+    the Great Plains corridor from Texas north through the Dakotas. Gas and
+    battery plants (shown in gray) fill in the gaps where renewable resources
+    are thin or where dispatchable capacity is needed. The geographic
+    distribution is not random: it reflects sun, wind, and transmission access
+    — the same constraints that shape where a hyperscaler can claim a clean
+    energy match for its load.
     """
     )
     return

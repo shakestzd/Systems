@@ -423,6 +423,95 @@ def bls_qcew(
 
 
 # ---------------------------------------------------------------------------
+# BLS LAUS — Local Area Unemployment Statistics (monthly county unemployment)
+# ---------------------------------------------------------------------------
+
+# Annual averages Excel URL — {yy} is two-digit year (e.g. "23" for 2023)
+# Note: BLS removed .txt versions; only .xlsx is available
+_LAUS_URL = "https://www.bls.gov/lau/laucnty{yy}.xlsx"
+
+_LAUS_UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+
+
+@dlt.resource(write_disposition="merge", primary_key=["area_fips", "year"])
+def bls_laus(
+    years: list[int] | None = None,
+) -> dlt.sources.DltResource:
+    """Download BLS LAUS annual average county unemployment rates.
+
+    Uses BLS Excel bulk download files (no API key required).
+    Fetches annual-average labor force statistics at the county level.
+
+    Yields one record per county per year with:
+        area_fips (5-digit), state_fips (2-digit), county_fips_3 (3-digit),
+        area_title, year, labor_force, employed, unemployed, unemployment_rate
+    """
+    import io
+
+    years = years or list(range(2016, 2025))
+
+    for year in years:
+        yy = str(year)[2:]
+        url = _LAUS_URL.format(yy=yy)
+        logger.info("BLS LAUS %d: fetching %s", year, url)
+
+        try:
+            resp = requests.get(url, timeout=120, headers={"User-Agent": _LAUS_UA})
+            resp.raise_for_status()
+        except Exception:
+            logger.warning("BLS LAUS %d: download failed", year, exc_info=True)
+            continue
+
+        try:
+            xl = pd.ExcelFile(io.BytesIO(resp.content))
+            # Row 0 is the title; row 1 is the real header — use skiprows=1
+            df = pd.read_excel(xl, sheet_name=xl.sheet_names[0], skiprows=1, dtype=str)
+        except Exception:
+            logger.warning("BLS LAUS %d: Excel parse failed", year, exc_info=True)
+            continue
+
+        # Normalise column names
+        df.columns = [str(c).strip() for c in df.columns]
+        col_map = {
+            "LAUS Code": "laus_code",
+            "State FIPS Code": "state_fips",
+            "County FIPS Code": "county_fips_3",
+            "County Name/State Abbreviation": "area_title",
+            "Year": "year_col",
+            "Labor Force": "labor_force",
+            "Employed": "employed",
+            "Unemployed": "unemployed",
+            "Unemployment Rate (%)": "unemployment_rate",
+        }
+        df = df.rename(columns={k: v for k, v in col_map.items() if k in df.columns})
+
+        def _num(s: str) -> float | None:
+            try:
+                return float(str(s).replace(",", "").strip())
+            except (ValueError, TypeError):
+                return None
+
+        for _, row in df.iterrows():
+            state_fips = str(row.get("state_fips", "")).strip().zfill(2)
+            county_fips_3 = str(row.get("county_fips_3", "")).strip().zfill(3)
+            if county_fips_3 in ("000", "999", "nan") or not state_fips.isdigit():
+                continue
+            area_fips = state_fips + county_fips_3
+
+            yield {
+                "area_fips": area_fips,
+                "state_fips": state_fips,
+                "county_fips_3": county_fips_3,
+                "area_title": str(row.get("area_title", "")),
+                "year": year,
+                "labor_force": _num(row.get("labor_force")),
+                "employed": _num(row.get("employed")),
+                "unemployed": _num(row.get("unemployed")),
+                "unemployment_rate": _num(row.get("unemployment_rate")),
+            }
+
+
+# ---------------------------------------------------------------------------
 # BLS OEWS — Occupational Employment and Wage Statistics
 # ---------------------------------------------------------------------------
 
@@ -977,9 +1066,15 @@ def source_citations() -> dlt.sources.DltResource:
 
     df = pd.read_csv(path)
     for _, row in df.iterrows():
+        raw_val = row["value"]
+        try:
+            value_numeric: float | None = float(str(raw_val))
+        except (ValueError, TypeError):
+            value_numeric = None
         yield {
             "key": str(row["key"]),
-            "value": float(row["value"]),
+            "value": value_numeric,
+            "value_text": str(raw_val) if pd.notna(raw_val) else "",
             "unit": str(row.get("unit", "")),
             "source_type": str(row.get("source_type", "")),
             "source_name": str(row.get("source_name", "")),
@@ -987,6 +1082,80 @@ def source_citations() -> dlt.sources.DltResource:
             "source_detail": str(row.get("source_detail", "")),
             "url": str(row.get("url", "")),
             "paywalled": str(row.get("paywalled", "false")).lower() == "true",
+        }
+
+
+# ---------------------------------------------------------------------------
+# DD-004: PJM Zone Demand Requests (large load adjustments by zone × year)
+# ---------------------------------------------------------------------------
+
+
+@dlt.resource(write_disposition="replace")
+def dd004_pjm_zone_demand() -> dlt.sources.DltResource:
+    """Load PJM large load adjustment demand and capacity requests by zone and year.
+
+    Source: PJM Load Analysis Subcommittee submission data (Sep 2025).
+    Covers 2025–2046 for all PJM zones (AEP, DOM, COMED, ATSI, etc.).
+    Values are submitted requests from EDC/LSEs — NOT final PJM-accepted adjustments.
+    Source file: data/external/dd004_pjm_zone_demand.csv
+    """
+    path = PROJECT_ROOT / "data" / "external" / "dd004_pjm_zone_demand.csv"
+    if not path.exists():
+        logger.warning("DD-004 PJM zone demand CSV not found at %s", path)
+        return
+
+    df = pd.read_csv(path)
+    for _, row in df.iterrows():
+        yield {
+            "zone": str(row["zone"]),
+            "year": int(row["year"]),
+            "request_type": str(row["request_type"]),
+            "requested_mw": float(row["requested_mw"]),
+            "source": str(row.get("source", "")),
+            "source_url": str(row.get("source_url", "")),
+            "note": str(row.get("note", "")),
+        }
+
+
+# ---------------------------------------------------------------------------
+# DD-004: IURC Case Registry (Indiana utility regulatory proceedings)
+# ---------------------------------------------------------------------------
+
+
+@dlt.resource(write_disposition="replace")
+def dd004_iurc_cases() -> dlt.sources.DltResource:
+    """Load structured metadata for key IURC regulatory cases (DD-004).
+
+    Covers tariff, CPCN, EGR Plan, and ARP proceedings for Indiana Michigan Power.
+    Sourced from OCR-extracted final orders and petitions.
+    Source file: data/external/dd004_iurc_cases.csv
+    """
+    path = PROJECT_ROOT / "data" / "external" / "dd004_iurc_cases.csv"
+    if not path.exists():
+        logger.warning("DD-004 IURC cases CSV not found at %s", path)
+        return
+
+    df = pd.read_csv(path)
+    for _, row in df.iterrows():
+        metric_val = row.get("key_metric_value")
+        try:
+            metric_numeric: float | None = float(metric_val) if pd.notna(metric_val) else None
+        except (ValueError, TypeError):
+            metric_numeric = None
+        yield {
+            "cause_number": str(row["cause_number"]),
+            "company": str(row.get("company", "")),
+            "case_type": str(row.get("case_type", "")),
+            "filed_date": str(row.get("filed_date", "")) if pd.notna(row.get("filed_date")) else None,
+            "order_date": str(row.get("order_date", "")) if pd.notna(row.get("order_date")) else None,
+            "status": str(row.get("status", "")),
+            "case_title": str(row.get("case_title", "")),
+            "key_metric": str(row.get("key_metric", "")),
+            "key_metric_value": metric_numeric,
+            "key_metric_unit": str(row.get("key_metric_unit", "")),
+            "ratepayer_impact": str(row.get("ratepayer_impact", "")),
+            "source_url": str(row.get("source_url", "")),
+            "notes": str(row.get("notes", "")),
         }
 
 
@@ -1063,6 +1232,13 @@ def run_bls() -> None:
     logger.info("BLS QCEW: %s", info)
 
 
+def run_laus() -> None:
+    """Run BLS LAUS county unemployment pipeline."""
+    pipeline = _make_pipeline()
+    info = pipeline.run(bls_laus())
+    logger.info("BLS LAUS: %s", info)
+
+
 def run_oews() -> None:
     """Run BLS OEWS occupational wage pipeline."""
     pipeline = _make_pipeline()
@@ -1111,6 +1287,10 @@ def run_reference() -> None:
     logger.info("Source citations: %s", info)
     info = pipeline.run(bea_nipa_investment())
     logger.info("BEA NIPA: %s", info)
+    info = pipeline.run(dd004_pjm_zone_demand())
+    logger.info("DD-004 PJM zone demand: %s", info)
+    info = pipeline.run(dd004_iurc_cases())
+    logger.info("DD-004 IURC cases: %s", info)
 
 
 def run_edgar() -> None:
@@ -1128,6 +1308,7 @@ def run_all() -> None:
     run_eia()
     run_lbnl()
     run_bls()
+    run_laus()
     run_oews()
     run_census()
     run_capex()
@@ -1145,6 +1326,7 @@ if __name__ == "__main__":
     parser.add_argument("--lbnl", action="store_true", help="LBNL queue only")
     parser.add_argument("--fred", action="store_true", help="FRED series only")
     parser.add_argument("--bls", action="store_true", help="BLS QCEW only")
+    parser.add_argument("--laus", action="store_true", help="BLS LAUS county unemployment only")
     parser.add_argument("--oews", action="store_true", help="BLS OEWS wage data only")
     parser.add_argument("--census", action="store_true", help="Census CBP only")
     parser.add_argument("--capex", action="store_true", help="Hyperscaler CapEx only")
@@ -1153,7 +1335,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     flags = [
-        args.eia, args.lbnl, args.fred, args.bls, args.oews,
+        args.eia, args.lbnl, args.fred, args.bls, args.laus, args.oews,
         args.census, args.capex, args.ref, args.edgar,
     ]
     if not any(flags):
@@ -1167,6 +1349,8 @@ if __name__ == "__main__":
             run_lbnl()
         if args.bls:
             run_bls()
+        if args.laus:
+            run_laus()
         if args.oews:
             run_oews()
         if args.census:

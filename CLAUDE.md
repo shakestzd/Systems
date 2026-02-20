@@ -43,11 +43,13 @@ notebook directory, then run the sync script. Do NOT edit PROJECT_STATUS.md by h
 ### DRY / Single Source of Truth
 - **Every configuration, constant, and shared value must have exactly one canonical location.**
   If a value appears in more than one place, extract it to a shared module.
-- `src/plotting.py` — dataviz design system (colors, fonts, sizing, chart helpers)
+- `src/plotting.py` — compatibility shim; re-exports everything from the `flowmpl` package
+  - Canonical source is `flowmpl` (PyPI: `pip install flowmpl`, GitHub: Shakes-tzd/flowmpl)
   - `COLORS` (semantic roles), `FUEL_COLORS`, `COMPANY_COLORS`, `CATEGORICAL` (palettes)
   - `CONTEXT` (SWD gray for non-focus elements), `FONTS`, `FIGSIZE`, `BAR_DEFAULTS`
   - `focus_colors()` (SWD gray+accent pattern), `legend_below()`, `annotate_point()`
   - Company colors are redistributed across hue bands for chart legibility (not raw brand blues)
+  - To change or extend plotting behavior, edit `flowmpl` — not `src/plotting.py`
 - `src/notebook.py:setup()` — single entry point for notebook configuration
 - `research/deep_dives.csv` — single source for case study metadata
 - `scripts/sync_project_status.py` — generates PROJECT_STATUS.md from the above
@@ -56,7 +58,7 @@ notebook directory, then run the sync script. Do NOT edit PROJECT_STATUS.md by h
 
 ### Separation of Concerns
 - **Data pipelines** (`src/data/`) — fetch, clean, store data; no visualization
-- **Plotting** (`src/plotting.py`) — reusable chart functions; return Figure objects
+- **Plotting** (`src/plotting.py`) — shim to `flowmpl`; do not add logic here directly
 - **Notebook setup** (`src/notebook.py`) — style, paths, save_fig; no data logic
 - **Dynamics models** (`src/dynamics/`) — PySD model wrappers; no visualization
 - **Notebooks** (`notebooks/`) — analysis narrative, call src/ functions, display results
@@ -194,11 +196,20 @@ Knaflic's *Storytelling with Data* methodology.
 - [ ] Are colors distinguishable? (check for adjacent similar hues)
 - [ ] Does the insight title match what the chart actually shows?
 
+> **MANDATORY — READ THE IMAGE AFTER EVERY CHART GENERATION.**
+> After every `save_fig(...)` call and successful notebook test, use the `Read` tool to
+> open the saved `.png` and visually inspect it before reporting success to the user.
+> Check specifically: text overflow, label clipping, overlapping elements, legend
+> placement, and axis limits. Do NOT report a chart as complete until you have read
+> and verified the image. This is non-negotiable — the test suite only checks that
+> cells execute without error; it does not check visual correctness.
+
 **Visual review workflow:**
 1. Regenerate charts: `bash scripts/test_notebooks.sh`
-2. Open all images: `open notebooks/images/dd00*.png`
-3. Check for: color consistency, font sizing, visual family across charts
-4. Verify no hex colors in notebook code: `rg '#[0-9a-fA-F]{6}' notebooks/`
+2. **Read every saved image** using the `Read` tool — verify text fits, nothing clips
+3. Open all images for side-by-side review: `open notebooks/images/dd00*.png`
+4. Check for: color consistency, font sizing, visual family across charts
+5. Verify no hex colors in notebook code: `rg '#[0-9a-fA-F]{6}' notebooks/`
 
 ### Writing Style
 

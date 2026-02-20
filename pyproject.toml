@@ -13,6 +13,8 @@ requires-python = ">=3.11"
 license = {text = "MIT"}
 
 dependencies = [
+    # Visualization design system and flow diagram renderer
+    "flowmpl[all]>=0.1.1",
     # Core scientific computing
     "numpy>=1.24",
     "pandas>=2.0",
@@ -79,6 +81,11 @@ python_version = "3.11"
 warn_return_any = true
 warn_unused_configs = true
 
+[tool.uv.sources]
+# Local path until flowmpl 0.1.1 is published to PyPI.
+# After `uv publish` in flowmpl/, remove this section and run `uv sync`.
+flowmpl = { path = "../flowmpl", editable = true }
+
 [dependency-groups]
 dev = [
     "mcp>=1",
@@ -91,3 +98,4 @@ dev = [
     "sqlglot>=28.10.1",
     "websockets>=16.0",
 ]
+

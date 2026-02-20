@@ -14,7 +14,9 @@ REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 # Archived notebooks (notebooks/_archive/) are excluded.
 NOTEBOOKS=(
     "notebooks/source_tracker.py"
-    "notebooks/dd001_capital_reality/01_capex_vs_reality.py"
+    "notebooks/dd001_capital_reality/01_markets_and_money.py"
+    "notebooks/dd001_capital_reality/02_conversion_reality.py"
+    "notebooks/dd001_capital_reality/03_risk_and_durability.py"
     "notebooks/dd001_capital_reality/99_methods_and_sources.py"
     "notebooks/dd002_grid_modernization/01_whats_getting_built.py"
     "notebooks/dd002_grid_modernization/02_who_benefits.py"

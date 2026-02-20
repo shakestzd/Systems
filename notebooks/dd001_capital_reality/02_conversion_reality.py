@@ -19,7 +19,7 @@ def _(mo, stats):
     ---
 
     Capital commitment and physical delivery are different things. The previous notebook
-    documented ~\\${stats['capex_2025']:.0f}B in disclosed capex (2025) and ~\\${stats['guidance_2026_point']:.0f}B guided for 2026.
+    documented about \\${stats['capex_2025']:.0f}B in disclosed capital expenditure (2025) and about \\${stats['guidance_2026_point']:.0f}B guided for 2026.
     This notebook asks the harder question: how much of that is becoming operating
     infrastructure, on what timeline, and with what physical footprint?
 
@@ -30,7 +30,7 @@ def _(mo, stats):
     capital. It is the physical sequence: land, permits, grid interconnection, construction,
     equipment, energization.
 
-    The infrastructure that *does* get built will outlast the demand thesis by decades.
+    The infrastructure that *does* get built will outlast the demand outlook by decades.
     Understanding the asset-life distribution is the key to understanding lock-in.
 
     """)
@@ -233,9 +233,9 @@ def _(mo, stats):
     | **Policy-dependent** | Nuclear restarts, SMR, rate structures | Varies | If regime holds |
     | **Demand-thesis-dependent** | GPU clusters, AI cooling, inference HW | 3-6 yrs | No |
 
-    FY2024 10-K property schedules (EDGAR) imply ~{stats['decomp_const_pct']}% of gross PP&E is
+    FY2024 10-K property schedules (EDGAR) imply about {stats['decomp_const_pct']}% of gross PP&E is
     construction-class assets (land, buildings, leasehold improvements, CIP) and
-    ~{stats['decomp_equip_pct']}% is equipment-class (servers, network gear, machinery). In practice,
+    about {stats['decomp_equip_pct']}% is equipment-class (servers, network gear, machinery). In practice,
     the split varies: Meta skews toward construction; Microsoft skews toward equipment.
     The range across the three companies with clear disclosure is {stats['decomp_const_low']}–{stats['decomp_const_high']}%.
 
@@ -340,7 +340,7 @@ def _(COLORS, CONTEXT, FIGSIZE, FONTS, cfg, chart_title, plt, save_fig, stats):
     _ax.tick_params(axis="x", labelsize=FONTS["tick_label"])
     chart_title(
         fig_decomp,
-        f"{stats['decomp_const_pct']}% of capex creates 20\u201340 year assets \u2014 the rest depreciates in under 6",
+        f"{stats['decomp_const_pct']}% of capital expenditure creates 20\u201340 year assets \u2014 the rest depreciates in under 6",
     )
     plt.tight_layout()
     save_fig(fig_decomp, cfg.img_dir / "dd001_capex_decomposition.png")
@@ -353,11 +353,11 @@ def _(cfg, mo, stats):
         src=(cfg.img_dir / "dd001_capex_decomposition.png").read_bytes(), width=850
     )
     mo.md(f"""
-    # {stats['decomp_const_pct']}% of capex creates 20-40 year assets — the rest depreciates in under 6
+    # {stats['decomp_const_pct']}% of capital expenditure creates 20-40 year assets — the rest depreciates in under 6
 
     {_chart}
 
-    *Takeaway: about {stats['decomp_const_pct']}% of AI-era capex maps to long-lived construction assets, which creates infrastructure lock-in that outlasts 3-5 year demand visibility. Source: FY2024 10-K property schedules.*
+    *Takeaway: about {stats['decomp_const_pct']}% of AI-era capital expenditure went into long-lived construction assets, creating infrastructure lock-in beyond 3-5 year demand visibility. Source: FY2024 10-K property schedules.*
 
     This is the lock-in asymmetry. Investment risk is often evaluated on a 3–5 year
     return horizon, but much of the physical footprint lasts far longer. A gas plant
@@ -370,7 +370,7 @@ def _(cfg, mo, stats):
 
     **The current binding constraint on conversion is not capital — it is the physical
     sequence.** Of all phases, grid interconnection imposes the longest lag: a national
-    median of ~5 years from request to commercial operation, up from ~3 years a decade
+    median of about 5 years from request to commercial operation, up from about 3 years a decade
     ago (Rand et al., LBNL, 2025). The physical constraint sequence is detailed in the
     next section.
     """)
@@ -434,7 +434,7 @@ def _(cfg, mo):
 def _(mo, stats):
     _capex_low = stats["capex_2025"] * stats["analyst_const_pct_low"] / 100
     mo.md(f"""
-    **Decision implication:** do not treat announced capex as delivered infrastructure.
+    **Decision implication:** do not treat announced capital expenditure as delivered infrastructure.
     The central gap is conversion, not commitment. Announcements are large, but
     delivery is constrained by interconnection timelines, permitting, and equipment
     bottlenecks:
@@ -442,7 +442,7 @@ def _(mo, stats):
     - **Stargate Project:** \\${stats['stargate_announced_bn']}B announced intent (White House
       press conference, Jan 21, 2025 — no binding construction commitment at announcement).
       \\${stats['stargate_initial_bn']}B Phase 1 committed and under active deployment.
-      SoftBank's balance sheet had ~\\$30-40B deployable capital at announcement time;
+      SoftBank's balance sheet had about \\$30-40B deployable capital at announcement time;
       financial structure and timeline for the remaining \\${stats['stargate_announced_bn'] - stats['stargate_initial_bn']}B remain opaque.
       *(Sources: White House announcement, Jan 2025; FT analysis)*
     - **U.S. Interconnection Queue:** Over {stats['queue_total_gw']:,} GW of generation and storage capacity
@@ -452,13 +452,13 @@ def _(mo, stats):
       reached commercial operation.**
     - **Large Load (Data Center) Requests:** For the first time, LBNL tracked load-side
       interconnection: over **100 GW** of large load requests (predominantly data
-      centers), with PJM alone accounting for ~80 GW — up from ~5 GW just two years
+      centers), with PJM alone accounting for about 80 GW — up from about 5 GW just two years
       earlier *(Rand et al., 2025)*. PJM's Board initiated a "Critical Issue Fast Path"
       process in February 2025 to handle the unprecedented volume.
 
     The binding constraint is **power availability**. The typical time from
-    interconnection request to commercial operation has grown to ~5 years nationally,
-    up from ~3 years a decade ago *(Rand et al., 2025)*. This is a physical bottleneck
+    interconnection request to commercial operation has grown to about 5 years nationally,
+    up from about 3 years a decade ago *(Rand et al., 2025)*. This is a physical bottleneck
     that no amount of capital can instantly resolve.
 
     **Context on completion rates:** The {stats['queue_completion_pct']}% headline figure is partly a censoring
@@ -471,14 +471,14 @@ def _(mo, stats):
     to first-ready, first-served processing to address this.
 
     The queue composition is shifting: natural gas requests grew significantly to
-    ~{stats['queue_gas_gw']} GW (end-2024), likely reflecting data center demand for firm,
-    dispatchable power. Solar remains dominant at ~{stats['queue_solar_gw']:,} GW ({stats['queue_solar_pct']}% of total queue),
-    storage ~{stats['queue_storage_gw']:,} GW ({stats['queue_storage_pct']}%), wind ~{stats['queue_wind_gw']} GW ({stats['queue_wind_pct']}%).
+    about {stats['queue_gas_gw']} GW (end-2024), likely reflecting data center demand for firm,
+    dispatchable power. Solar remains dominant at about {stats['queue_solar_gw']:,} GW ({stats['queue_solar_pct']}% of total queue),
+    storage about {stats['queue_storage_gw']:,} GW ({stats['queue_storage_pct']}%), wind about {stats['queue_wind_gw']} GW ({stats['queue_wind_pct']}%).
 
-    For planning, this implies a conversion haircut: when programs depend on queue
+    For planning, this implies a delivery haircut: when programs depend on queue
     outcomes, treat only a minority of announced capacity as likely near-term delivery.
 
-    Supply-side constraints that capex figures don't capture — visualized in the
+    Supply-side constraints that capital expenditure figures don't capture — visualized in the
     next chart.
     """)
     return
@@ -574,21 +574,21 @@ def _(mo, stats):
     **Scale and timeline:**
     - 1,200 acres of former cornfield, 15 miles west of South Bend
     - {stats['rainier_gw']} GW planned capacity — enough to power a million homes
-    - ~{stats['rainier_dc_planned']} data centers planned; {stats['rainier_dc_built_jun2025']} built by June 2025 (each larger than
+    - about {stats['rainier_dc_planned']} data centers planned; {stats['rainier_dc_built_jun2025']} built by June 2025 (each larger than
       a football stadium), with four construction firms working simultaneously
-    - ~{stats['rainier_workers_weekly']:,} construction workers on site weekly
+    - about {stats['rainier_workers_weekly']:,} construction workers on site weekly
 
     **Public subsidy and cost:**
-    - Indiana legislature: 50-year sales tax break (~\\${stats['rainier_tax_break_sales_bn']}B, per Citizens Action
+    - Indiana legislature: 50-year sales tax break (about \\${stats['rainier_tax_break_sales_bn']}B, per Citizens Action
       Coalition estimate)
-    - County property/technology tax breaks: ~\\${stats['rainier_tax_break_property_bn']}B additional over 35 years
-    - Total public subsidy: **~\\${stats['rainier_tax_break_sales_bn'] + stats['rainier_tax_break_property_bn']}B** for one campus
+    - County property/technology tax breaks: about \\${stats['rainier_tax_break_property_bn']}B additional over 35 years
+    - Total public subsidy: **about \\${stats['rainier_tax_break_sales_bn'] + stats['rainier_tax_break_property_bn']}B** for one campus
 
     **Grid impact (the DD-002 connection):**
     - AEP (local utility) told regulators that data centers will more than double
-      Indiana's peak power demand: from {stats['aep_indiana_peak_2024_gw']} GW (2024) to {stats['aep_indiana_peak_2030_gw']}+ GW by ~2030
+      Indiana's peak power demand: from {stats['aep_indiana_peak_2024_gw']} GW (2024) to {stats['aep_indiana_peak_2030_gw']}+ GW by about 2030
     - **Amazon's campus alone accounts for about half of the additional load**
-    - AEP plans to meet ~{stats['aep_gas_share_pct']}% of additional power demand with natural gas —
+    - AEP plans to meet about {stats['aep_gas_share_pct']}% of additional power demand with natural gas —
       directly connecting AI infrastructure to fossil fuel expansion
 
     **The conversion lesson:** Project Rainier shows what "announcement → infrastructure"
@@ -931,13 +931,13 @@ def _(mo, stats):
 
     Infrastructure is converting. But at 2× planned load and {stats['aep_gas_share_pct']}% natural gas.
 
-    The physical buildout is real and underway. The constraint is not whether capital
+    The physical infrastructure expansion is real and underway. The constraint is not whether capital
     converts to infrastructure — it will, given enough time. The constraints are
     *when*, *where*, and *who pays for the grid capacity* needed to power it. Those
     questions are the subject of DD-002.
 
     **Failure movie (2027-2030):** queue completion stays near {stats['queue_completion_pct']}%,
-    utilities still build for projected hyperscaler load, and rate-base obligations are
+    utilities still build for projected large data center load, and rate-base obligations are
     socialized before durable local benefits materialize. If demand then softens, customers
     still carry a decades-long amortization tail on underutilized assets.
 
@@ -946,7 +946,7 @@ def _(mo, stats):
     under optimistic queue and demand assumptions.
 
     **Next:** [03_risk_and_durability.py](./03_risk_and_durability.py) — Who holds
-    the financial downside if the demand thesis proves incorrect?
+    the financial downside if the demand outlook proves incorrect?
     """)
     return
 

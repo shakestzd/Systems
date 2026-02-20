@@ -393,6 +393,195 @@ def _(cfg, mo):
 
 
 @app.cell
+def _(CATEGORICAL, COLORS, FONTS, cfg, plt, queue_region, save_fig):
+    from pathlib import Path as _Path
+
+    import geopandas as gpd
+
+    # Reuse the shapefile already cached by flowmpl — no network request needed.
+    _shp = (
+        _Path(__file__).resolve().parent.parent.parent
+        / "src" / "flowmpl" / "_data" / "cb_2024_us_state_20m" / "cb_2024_us_state_20m.shp"
+    )
+    # Fallback: locate via the installed package path
+    if not _shp.exists():
+        import flowmpl as _flowmpl
+        _shp = (
+            _Path(_flowmpl.__file__).resolve().parent
+            / "_data" / "cb_2024_us_state_20m" / "cb_2024_us_state_20m.shp"
+        )
+
+    _exclude_fips = {"02", "15", "60", "66", "69", "72", "78"}  # AK, HI, territories
+    _states = gpd.read_file(_shp)
+    _states = _states[~_states["STATEFP"].isin(_exclude_fips)]
+
+    # Assign each state to one ISO/RTO (where split, assign to dominant share)
+    _iso_map = {
+        # PJM — the focal region
+        "VA": "PJM", "MD": "PJM", "PA": "PJM", "OH": "PJM", "WV": "PJM",
+        "DE": "PJM", "NJ": "PJM", "IL": "PJM", "IN": "PJM", "MI": "PJM",
+        "NC": "PJM", "KY": "PJM", "TN": "PJM", "DC": "PJM",
+        # MISO
+        "MN": "MISO", "WI": "MISO", "IA": "MISO", "MO": "MISO",
+        "AR": "MISO", "LA": "MISO", "ND": "MISO", "SD": "MISO", "MS": "MISO",
+        # ERCOT
+        "TX": "ERCOT",
+        # CAISO
+        "CA": "CAISO",
+        # SPP
+        "KS": "SPP", "NE": "SPP", "OK": "SPP",
+        # NYISO
+        "NY": "NYISO",
+        # ISO-NE
+        "CT": "ISO-NE", "MA": "ISO-NE", "ME": "ISO-NE",
+        "NH": "ISO-NE", "RI": "ISO-NE", "VT": "ISO-NE",
+        # Non-ISO Southeast
+        "AL": "Non-ISO Southeast", "FL": "Non-ISO Southeast",
+        "GA": "Non-ISO Southeast", "SC": "Non-ISO Southeast",
+        # Non-ISO West (everything else in the West)
+        "AZ": "Non-ISO West", "CO": "Non-ISO West", "ID": "Non-ISO West",
+        "NV": "Non-ISO West", "NM": "Non-ISO West", "OR": "Non-ISO West",
+        "UT": "Non-ISO West", "WA": "Non-ISO West", "WY": "Non-ISO West",
+        "MT": "Non-ISO West",
+    }
+    _states["iso"] = _states["STUSPS"].map(_iso_map).fillna("Non-ISO West")
+
+    # Color palette: ISO order controls color assignment from CATEGORICAL
+    _iso_order = [
+        "PJM", "MISO", "ERCOT", "CAISO", "SPP",
+        "NYISO", "ISO-NE", "Non-ISO Southeast", "Non-ISO West",
+    ]
+    _iso_colors = {iso: CATEGORICAL[i % len(CATEGORICAL)] for i, iso in enumerate(_iso_order)}
+    _states["color"] = _states["iso"].map(_iso_colors)
+
+    # Queue backlog GW from database (queue_region is sorted DESC by queue_gw)
+    _iso_gw = dict(zip(queue_region["region"], queue_region["queue_gw"]))
+
+    # ISO centroids — approximate geographic centers for bubble placement.
+    # PJM is shifted west of Loudoun to avoid label collision with the accent pin.
+    # NYISO sits in central New York; ISO-NE is over central Vermont/NH.
+    # Northeast centroids are vertically staggered to reduce bubble overlap.
+    _iso_centroids = {
+        "PJM":               (39.5, -83.0),
+        "MISO":              (43.0, -90.0),
+        "ERCOT":             (31.0, -98.0),
+        "CAISO":             (36.5, -119.5),
+        "SPP":               (38.0, -97.0),
+        "NYISO":             (42.6, -75.5),
+        "ISO-NE":            (44.5, -73.0),
+        "Non-ISO Southeast": (33.0, -87.0),
+        "Non-ISO West":      (43.0, -114.0),
+    }
+
+    fig_map, _ax = plt.subplots(figsize=(14, 7))
+
+    # Draw state choropleth
+    for _, _row in _states.iterrows():
+        gpd.GeoDataFrame([_row], crs=_states.crs).plot(
+            ax=_ax, color=_row["color"], edgecolor="white",
+            linewidth=0.4, alpha=0.55,
+        )
+
+    # Circle overlays on ISO centroids — sqrt-scaled so PJM doesn't dwarf all others
+    _max_gw = max(_iso_gw[iso] for iso in _iso_order if iso in _iso_gw)
+    for _iso, (_lat, _lon) in _iso_centroids.items():
+        _gw = _iso_gw.get(_iso, 0)
+        _size = (_gw / _max_gw) ** 0.5 * 2200
+        # White bubble with dark edge
+        _ax.scatter(
+            [_lon], [_lat], s=_size, c="white", alpha=0.45,
+            edgecolors=COLORS["text_dark"], linewidth=1.0, zorder=4,
+        )
+        _ax.text(
+            _lon, _lat, f"{int(_gw)} GW",
+            ha="center", va="center",
+            fontsize=FONTS["small"], fontweight="bold", zorder=5,
+            color=COLORS["text_dark"],
+        )
+
+    # Loudoun County accent pin — the specific place the cost lands.
+    # Label is placed above and slightly left of the star to avoid the NYISO bubble.
+    _ax.scatter(
+        [-77.63], [39.08],
+        c=COLORS["accent"], s=150, zorder=6,
+        marker="*", edgecolors="white", linewidth=0.8,
+    )
+    _ax.annotate(
+        "Loudoun Co.\n(Northern VA)",
+        xy=(-77.63, 39.08),
+        xytext=(-80.2, 40.6),
+        fontsize=FONTS["small"],
+        color=COLORS["accent"],
+        fontweight="bold",
+        zorder=7,
+        arrowprops=dict(arrowstyle="-", color=COLORS["accent"], lw=1.0, alpha=0.7),
+        ha="center",
+    )
+
+    _ax.set_xlim(-125, -64)
+    _ax.set_ylim(24, 50)
+    _ax.set_axis_off()
+
+    # Legend: ISO color patches + bubble-size note
+    _legend_patches = [
+        plt.Rectangle((0, 0), 1, 1, fc=_iso_colors[iso], alpha=0.6, label=iso)
+        for iso in _iso_order
+    ]
+    _legend_patches.append(
+        plt.Line2D(
+            [0], [0], marker="o", color="w",
+            markerfacecolor="white", markeredgecolor=COLORS["text_dark"],
+            markersize=10, label="Circle size = queue GW",
+        )
+    )
+    _ax.legend(
+        handles=_legend_patches,
+        loc="lower left",
+        fontsize=FONTS["small"],
+        frameon=False,
+        ncol=2,
+        bbox_to_anchor=(0.0, 0.0),
+    )
+
+    plt.tight_layout()
+    save_fig(fig_map, cfg.img_dir / "dd002_iso_queue_map.png")
+    return
+
+
+@app.cell(hide_code=True)
+def _(cfg, mo):
+    _map_img = mo.image(
+        src=(cfg.img_dir / "dd002_iso_queue_map.png").read_bytes(), width=850
+    )
+    mo.md(
+        f"""
+    # PJM — home to Northern Virginia's data center corridor — carries the largest interconnection queue on earth
+
+    {_map_img}
+
+    The map makes the geographic concentration visible. PJM covers the mid-Atlantic
+    corridor from Northern Virginia through Ohio — a contiguous region that happens
+    to contain the densest data center cluster on Earth. Its 520 GW backlog is not
+    spread evenly: the demand pressure originates in Loudoun County, VA, and radiates
+    outward across the ratepayer base of every state PJM serves.
+
+    MISO (420 GW) and CAISO (310 GW) are the next-largest queues, but their
+    geography matters differently. MISO's backlog reflects wind-rich Midwest
+    generation trying to reach population centers. CAISO's backlog is driven by
+    California's aggressive renewable mandate. Neither has the same data center
+    demand signature that defines PJM's congestion problem.
+
+    *Circle size is proportional to interconnection queue backlog (GW), sqrt-scaled.
+    State shading indicates ISO/RTO territory. Data: LBNL Queued Up 2025 edition,
+    `energy_data.dd002_queue_region_backlog`. State boundaries: U.S. Census TIGER/Line
+    cb_2024_us_state_20m. Note: states split across ISOs are assigned to the ISO with
+    the largest territorial share.*
+    """
+    )
+    return
+
+
+@app.cell
 def _(CATEGORICAL, COLORS, CONTEXT, FUEL_COLORS, cfg, queue_comp, save_fig, stacked_bar):
     _colors = {
         "solar_gw": {"color": FUEL_COLORS["solar"], "label": "Solar"},

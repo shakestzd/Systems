@@ -784,6 +784,39 @@ wheels = [
 ]
 
 [[package]]
+name = "flowmpl"
+version = "0.2.0"
+source = { editable = "../flowmpl" }
+dependencies = [
+    { name = "matplotlib" },
+    { name = "numpy" },
+]
+
+[package.optional-dependencies]
+all = [
+    { name = "geopandas" },
+    { name = "pandas" },
+    { name = "requests" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "dlt", extras = ["duckdb"], marker = "extra == 'examples'", specifier = ">=1.0" },
+    { name = "flowmpl", extras = ["charts", "maps"], marker = "extra == 'all'" },
+    { name = "flowmpl", extras = ["charts", "maps", "examples"], marker = "extra == 'dev'" },
+    { name = "geopandas", marker = "extra == 'maps'", specifier = ">=1.0" },
+    { name = "marimo", marker = "extra == 'dev'", specifier = ">=0.10" },
+    { name = "marimo", marker = "extra == 'examples'", specifier = ">=0.10" },
+    { name = "matplotlib", specifier = ">=3.7" },
+    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.8" },
+    { name = "numpy", specifier = ">=1.24" },
+    { name = "pandas", marker = "extra == 'charts'", specifier = ">=2.0" },
+    { name = "requests", marker = "extra == 'maps'", specifier = ">=2.31" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.3" },
+]
+provides-extras = ["charts", "maps", "all", "dev", "examples"]
+
+[[package]]
 name = "fonttools"
 version = "4.61.1"
 source = { registry = "https://pypi.org/simple" }
@@ -4102,6 +4135,7 @@ dependencies = [
     { name = "auto-mix-prep" },
     { name = "dlt", extra = ["duckdb"] },
     { name = "duckdb" },
+    { name = "flowmpl", extra = ["all"] },
     { name = "fredapi" },
     { name = "geopandas" },
     { name = "hmmlearn" },
@@ -4148,6 +4182,7 @@ requires-dist = [
     { name = "auto-mix-prep", specifier = ">=0.2.0" },
     { name = "dlt", extras = ["duckdb"], specifier = ">=1.0" },
     { name = "duckdb", specifier = ">=1.4" },
+    { name = "flowmpl", extras = ["all"], editable = "../flowmpl" },
     { name = "fredapi", specifier = ">=0.5" },
     { name = "geopandas", specifier = ">=1.0" },
     { name = "hmmlearn", specifier = ">=0.3" },

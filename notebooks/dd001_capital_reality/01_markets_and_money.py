@@ -27,10 +27,14 @@ def _(mo, stats):
     whether the revenue base justifies the spend.
 
     Cloud revenue for the three cloud providers (Amazon, Alphabet, Microsoft) was about
-    \\${stats['cloud_rev_2025']:.0f}B in 2025 — against capex of \\${stats['capex_3co_2025']:.0f}B for
-    the same firms. Capex overtook cloud revenue on a quarterly basis in late 2025, a crossover
+    \\${stats['cloud_rev_2025']:.0f}B in 2025 — against capital expenditure of \\${stats['capex_3co_2025']:.0f}B for
+    the same firms. Capital expenditure overtook cloud revenue on a quarterly basis in late 2025, a crossover
     that had never happened in the platform era. Whether AI-driven demand reverses that ratio
-    — or whether it signals persistent overinvestment — is the open question.
+    or signals persistent overinvestment is the open question.
+
+    The spending data through Q4 2025 supports one decision rule: stage additional long-lived
+    AI infrastructure behind explicit revenue and utilization gates rather than treating 2026
+    guidance as baseline.
     """)
     return
 
@@ -277,12 +281,12 @@ def _(
             _ax.text(_left + _gain / 2, 0, f"{company_label(_ticker)}\n+${_gain:.1f}T", ha="center", va="center", fontsize=FONTS["annotation"] - 1, fontweight="bold", color="white")
         _left += _gain
     _ax.axvline(_capex_t, color=COLORS["accent"], linestyle="-", linewidth=2.5, alpha=0.9)
-    _ax.text(_capex_t, 0.38, f"  2025 capex: ${stats['capex_2025']:.0f}B", fontsize=FONTS["annotation"], fontweight="bold", color=COLORS["accent"], va="bottom")
+    _ax.text(_capex_t, 0.38, f"  2025 capital expenditure: ${stats['capex_2025']:.0f}B", fontsize=FONTS["annotation"], fontweight="bold", color=COLORS["accent"], va="bottom")
     _ax.text(_total + 0.12, 0, f"${_total:.1f}T", ha="left", va="center", fontsize=FONTS["value_label"], fontweight="bold", color=COLORS["text_dark"])
     _ax.set_yticks([])
     _ax.set_xlabel("Market cap gain, Jan 2023 → Feb 2026 ($T)", fontsize=FONTS["axis_label"])
     _ax.tick_params(axis="x", labelsize=FONTS["tick_label"])
-    chart_title(fig_mktcap, f"~{stats['ratio_vs_2025']:.0f}x gap between market cap gains and annual capex")
+    chart_title(fig_mktcap, f"about {stats['ratio_vs_2025']:.0f}x gap between market cap gains and annual capital expenditure")
     plt.tight_layout()
     save_fig(fig_mktcap, cfg.img_dir / "dd001_valuation_disconnect.png")
     return
@@ -292,12 +296,12 @@ def _(
 def _(cfg, mo, stats):
     _chart = mo.image(src=(cfg.img_dir / "dd001_valuation_disconnect.png").read_bytes(), width=850)
     mo.md(
-        "# Markets added ~\\${mkt:.1f}T in value against ~\\${capex:.0f}B in annual spending".format(mkt=stats['mkt_gain_t'], capex=stats['capex_2025'])
+        "# Markets added about \\${mkt:.1f}T in value against about \\${capex:.0f}B in annual spending".format(mkt=stats['mkt_gain_t'], capex=stats['capex_2025'])
         + f"""
 
     {_chart}
 
-    *Takeaway: market value has outrun annual infrastructure spend by roughly {stats['ratio_vs_2025']:.0f}x, so today's pricing assumes several years of strong monetization. Source: Yahoo Finance; SEC filings via yfinance.*
+    *Takeaway: market value has outrun annual infrastructure spend by roughly {stats['ratio_vs_2025']:.0f}x, so today's pricing assumes several years of strong revenue growth. Source: Yahoo Finance; SEC filings via yfinance.*
     """)
     return
 
@@ -305,9 +309,9 @@ def _(cfg, mo, stats):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    > **The Tesla/xAI question.** Tesla's \$1.18T market cap gain (Jan 2023–Feb 2026) is overwhelmingly priced on AI, not cars: forward P/E is ~160x vs. the auto sector median of 6.2x. Tesla spent ~\$5B on AI infrastructure in 2024 (44% of total capex) and guides \$20B+ for 2026. Separately, Musk's xAI built the 200,000-GPU "Colossus" supercomputer for ~\$7B — AI infrastructure capital flowing through a web of related entities with overlapping leadership and ambiguous corporate boundaries.
+    > **The Tesla/xAI question.** Tesla's \$1.18T market cap gain (Jan 2023–Feb 2026) is overwhelmingly priced on AI, not cars: forward P/E is about 160x vs. the auto sector median of 6.2x. Tesla spent about \$5B on AI infrastructure in 2024 (44% of total capital expenditure) and guides \$20B+ for 2026. Separately, Musk's xAI built the 200,000-GPU "Colossus" supercomputer for about \$7B — AI infrastructure capital flowing through a web of related entities with overlapping leadership and ambiguous corporate boundaries.
     >
-    > Tesla's capex is excluded from the totals above because its core spend remains automotive, but the AI narrative drives its valuation — making it arguably the most extreme example of the disconnect this analysis tracks.
+    > Tesla's capital expenditure is excluded from the totals above because its core spend remains automotive, but the AI narrative drives its valuation — making it arguably the most extreme example of the disconnect this analysis tracks.
     >
     > *Sources: Tesla 10-K (2024), CNBC, CompaniesMarketCap.*
     """)
@@ -348,13 +352,13 @@ def _(
     _ax.text(2025.15, _v25, f"  ${_v25:.0f}B\n  ({_mult:.1f}× vs 2019)", fontsize=FONTS["annotation"], color=COLORS["accent"], fontweight="bold", va="center")
     _v22 = _hist_capex_4co[2022]
     _ax.axvline(2022, color=COLORS["accent"], linewidth=1, linestyle=":", alpha=0.5, zorder=2)
-    _ax.text(2022.1, _v22 * 1.55, "AI buildout era", fontsize=FONTS["annotation"] - 1, color=COLORS["accent"], alpha=0.85, ha="left")
+    _ax.text(2022.1, _v22 * 1.55, "AI investment era", fontsize=FONTS["annotation"] - 1, color=COLORS["accent"], alpha=0.85, ha="left")
     _ax.set_xlabel("Year", fontsize=FONTS["axis_label"])
-    _ax.set_ylabel("Annual capex, 4 hyperscalers ($B)", fontsize=FONTS["axis_label"])
+    _ax.set_ylabel("Annual capital expenditure, 4 Big Tech firms ($B)", fontsize=FONTS["axis_label"])
     _ax.tick_params(labelsize=FONTS["tick_label"])
     _ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"${x:.0f}B"))
     _ax.set_xlim(2014.5, 2026.5)
-    chart_title(fig_capex_ratio, f"Hyperscaler capex grew {_mult:.1f}× from 2019 to 2025 — the AI buildout has no cloud-era precedent")
+    chart_title(fig_capex_ratio, f"Big Tech capital expenditure is {_mult:.1f}× higher than in 2019")
     plt.tight_layout()
     save_fig(fig_capex_ratio, cfg.img_dir / "dd001_capex_ratio_history.png")
     return
@@ -366,9 +370,9 @@ def _(cfg, mo, stats):
     _capex_4co_2025 = stats["amzn_2025"] + stats["googl_2025"] + stats["msft_2025"] + stats["meta_2025"]
     _mult_4co = _capex_4co_2025 / stats["capex_4co_2019_bn"]
     mo.md(
-        f"# Hyperscaler capex grew {_mult_4co:.1f}× from 2019 to 2025 — the AI buildout has no cloud-era precedent\n\n"
+        f"# Big Tech capital expenditure is {_mult_4co:.1f}× higher than in 2019\n\n"
         f"{_chart_ratio}\n\n"
-        f"*Takeaway: the AI era (2022-2025) is a steeper spend regime than the prior cloud buildout, reaching ~\\${_capex_4co_2025:.0f}B in 2025. Source: SEC filings via yfinance.*"
+        f"*Takeaway: the AI era (2022-2025) is a steeper spending cycle than the prior cloud cycle, reaching about \\${_capex_4co_2025:.0f}B in 2025. Source: SEC filings via yfinance.*"
     )
     return
 
@@ -418,13 +422,13 @@ def _(
         _bottoms += _vals
     _ax.set_xticks(_x)
     _ax.set_xticklabels([company_label(t) for t in _tickers], fontsize=FONTS["tick_label"])
-    _ax.set_ylabel("Cumulative capex, 2022–2026 ($B)", fontsize=FONTS["axis_label"])
+    _ax.set_ylabel("Cumulative capital expenditure, 2022-2026 ($B)", fontsize=FONTS["axis_label"])
     _ax.tick_params(axis="y", labelsize=FONTS["tick_label"])
     # Total labels use text_dark — accent is reserved for the 2026 story bars, not totals
     for _j, _ticker in enumerate(_tickers):
         _ax.text(_j, _bottoms[_j] + 8, f"${_bottoms[_j]:.0f}B", ha="center", fontsize=FONTS["annotation"], fontweight="bold", color=COLORS["text_dark"])
     legend_below(_ax, ncol=len(_all_years))
-    chart_title(fig_capex, "Hyperscaler capex tripled in three years — and 2026 guidance doubles again")
+    chart_title(fig_capex, "Big Tech capital expenditure tripled in three years, and 2026 guidance is even higher")
     plt.tight_layout()
     save_fig(fig_capex, cfg.img_dir / "dd001_capex_acceleration.png")
     return
@@ -434,11 +438,11 @@ def _(
 def _(cfg, mo, stats):
     _chart = mo.image(src=(cfg.img_dir / "dd001_capex_acceleration.png").read_bytes(), width=850)
     mo.md(f"""
-    # Hyperscaler capex tripled in three years — and 2026 guidance doubles again
+    # Big Tech capital expenditure tripled in three years, and 2026 guidance is even higher
 
     {_chart}
 
-    *Takeaway: spend rose from ~\\${stats['capex_2023']:.0f}B (2023) to ~\\${stats['capex_2025']:.0f}B (2025), and 2026 guidance still points higher at ~\\${stats['guidance_2026_point']:.0f}B (range \\${stats['guidance_2026_low']:.0f}–\\${stats['guidance_2026_high']:.0f}B). Source: SEC filings and Q4 2025 guidance calls.*
+    *Takeaway: spend rose from about \\${stats['capex_2023']:.0f}B (2023) to about \\${stats['capex_2025']:.0f}B (2025), and 2026 guidance still points higher at about \\${stats['guidance_2026_point']:.0f}B (range \\${stats['guidance_2026_low']:.0f}–\\${stats['guidance_2026_high']:.0f}B). Source: SEC filings and Q4 2025 guidance calls.*
     """)
     return
 
@@ -446,25 +450,25 @@ def _(cfg, mo, stats):
 @app.cell(hide_code=True)
 def _(mo, stats):
     mo.md(f"""
-    > **What these numbers miss: infrastructure commitments not captured in reported capex.**
-    > The capex figures above capture capital expenditures as reported in SEC filings.
+    > **What these numbers miss: infrastructure commitments not captured in reported capital expenditure.**
+    > The figures above capture capital expenditures as reported in SEC filings.
     > They exclude a parallel — and growing — channel: leased and SPV-financed
     > infrastructure that shows up as operating expenses, not capital investments.
     >
     > In September–November 2025 alone, Microsoft signed over \\${stats['msft_neocloud_total_bn']}B in 3-5 year
     > neocloud leases (Nebius \\${stats['msft_nebius_deal_bn']}B, Nscale \\${stats['msft_nscale_deal_bn']}B, Iren \\${stats['msft_iren_deal_bn']}B, Lambda multi-billion) —
-    > none of which appears in its capex line (NYT, Dec 2025). Meta structured
-    > ~\\${stats['meta_beignet_financing_bn']}B in Louisiana data center financing through a special purpose vehicle
+    > none of which appears in its capital expenditure line (NYT, Dec 2025). Meta structured
+    > about \\${stats['meta_beignet_financing_bn']}B in Louisiana data center financing through a special purpose vehicle
     > (Beignet Investor LLC), with Blue Owl Capital providing 80% of the funding
     > and Pimco selling the underlying bonds. The deal is classified as an operating
-    > lease — so it flows through operating expenses rather than capex, and therefore
+    > lease — so it flows through operating expenses rather than capital expenditure, and therefore
     > does not appear in the capital expenditure figures tracked here. (Note: under
     > FASB ASC 842, effective 2019, operating leases over 12 months do appear on the
     > balance sheet as right-of-use assets and lease liabilities — the critical
-    > accounting distinction is between *capex* and *opex*, not on- vs. off-balance-sheet.)
+    > accounting distinction is between *capital expenditure* and *operating expense*, not on- vs. off-balance-sheet.)
     >
     > This means the true infrastructure commitment is **materially higher** than
-    > the ~\\${stats['capex_2025']:.0f}B in reported capex. The risk distribution of these
+    > about the \\${stats['capex_2025']:.0f}B in reported capital expenditure. The risk distribution of these
     > arrangements is traced in [03_risk_and_durability.py](./03_risk_and_durability.py).
     >
     > *Sources: NYT, "How Tech's Biggest Companies Are Offloading the Risks of the
@@ -487,15 +491,15 @@ def _(mo, stats):
 
     | Metric | 2024 | 2025 | 2026 (guided) |
     | :--- | :--- | :--- | :--- |
-    | Capex (AMZN + GOOGL + MSFT) | ~\\${stats['capex_3co_2024']:.0f}B | ~\\${stats['capex_3co_2025']:.0f}B | ~\\${stats['capex_3co_2026g']:.0f}B\\* |
-    | Cloud revenue (same 3) | ~\\${stats['cloud_rev_2024']:.0f}B | ~\\${stats['cloud_rev_2025']:.0f}B | est. ~\\${stats['cloud_rev_2026_low']}–{stats['cloud_rev_2026_high']}B\\*\\* |
-    | Capex / Revenue ratio | ~{stats['capex_3co_2024'] / stats['cloud_rev_2024']:.1f}x | ~{stats['capex_3co_2025'] / stats['cloud_rev_2025']:.1f}x | ~{stats['capex_3co_2026g'] / stats['cloud_rev_2026_high']:.1f}–{stats['capex_3co_2026g'] / stats['cloud_rev_2026_low']:.1f}x |
+    | Capital expenditure (AMZN + GOOGL + MSFT) | about \\${stats['capex_3co_2024']:.0f}B | about \\${stats['capex_3co_2025']:.0f}B | about \\${stats['capex_3co_2026g']:.0f}B\\* |
+    | Cloud revenue (same 3) | about \\${stats['cloud_rev_2024']:.0f}B | about \\${stats['cloud_rev_2025']:.0f}B | est. about \\${stats['cloud_rev_2026_low']}–{stats['cloud_rev_2026_high']}B\\*\\* |
+    | Capital expenditure / Revenue ratio | about {stats['capex_3co_2024'] / stats['cloud_rev_2024']:.1f}x | about {stats['capex_3co_2025'] / stats['cloud_rev_2025']:.1f}x | about {stats['capex_3co_2026g'] / stats['cloud_rev_2026_high']:.1f}–{stats['capex_3co_2026g'] / stats['cloud_rev_2026_low']:.1f}x |
 
     \\* Management guidance. \\*\\* Analyst consensus estimates.
     *(Extends the revenue-gap framing from Sequoia Capital "AI's \\${stats['sequoia_rev_target_bn']}B Question," Sep 2024, and Goldman Sachs "Gen AI: Too Much Spend, Too Little Return?," Sep 2024, using auditable EDGAR data rather than analyst extrapolations.)*
 
-    **Decision implication:** when capex remains at or above revenue while monetization
-    quality is mixed, additional long-lived AI-dedicated buildout should be staged
+    **Decision implication:** when capital expenditure remains at or above revenue while
+    revenue quality is mixed, additional long-lived AI-dedicated investment should be staged
     behind explicit demand and utilization gates rather than treated as baseline growth.
     """)
     return
@@ -504,10 +508,10 @@ def _(mo, stats):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    ### Decision Risk: One Capex Line, Multiple Demand Theses
+    ### Decision Risk: One Spending Line, Multiple Demand Assumptions
 
     The revenue gap is compounded by a structural issue: the companies building this
-    infrastructure cannot articulate a single demand thesis that justifies the spend.
+    infrastructure cannot articulate a single demand story that justifies the spend.
     A September 2025 industry survey (NYT, Metz & Weise) identified at least six
     overlapping visions being pursued simultaneously — ranging from near-term proven
     revenue to long-horizon bets with no commercial model yet:
@@ -529,7 +533,7 @@ def _(
     fig_rt = flow_diagram(
         nodes={
             # root at same y as medium-term → straight horizontal arrow r→m
-            "r":  ("Six AI Revenue Theses\n(2025 buildout)", 1.0, 1.5, COLORS["accent"], "#ffffff"),
+            "r":  ("Six AI \nRevenue Assumptions\n(2025 spending)", 1.2, 1.5, COLORS["accent"], "#ffffff"),
             "n":  ("Near-term:\nproven revenue", 4.5, 4.9, COLORS["positive"], "#ffffff"),
             "m":  ("Medium-term:\nspeculative", 4.5, 1.5, COLORS["neutral"], COLORS["text_dark"]),
             "l":  ("Long-term:\nno revenue model yet", 4.5, -1.9, CONTEXT, COLORS["text_dark"]),
@@ -569,7 +573,15 @@ def _(
 @app.cell(hide_code=True)
 def _(cfg, mo):
     _chart = mo.image(src=(cfg.img_dir / "dd001_revenue_theses.png").read_bytes(), width=850)
-    mo.md(f"{_chart}")
+    mo.md(f"""
+    # One spending line, six incompatible demand assumptions
+
+    {_chart}
+
+    *Six revenue theses are funded simultaneously from the same capital expenditure pool. Only
+    near-term proven revenue — better search and enterprise software — has demonstrated commercial
+    scale. Source: NYT, "What Exactly Are A.I. Companies Trying to Build?" Sep 2025.*
+    """)
     return
 
 
@@ -577,16 +589,16 @@ def _(cfg, mo):
 def _(mo, stats):
     mo.md(f"""
     **Decision implication:** each vision implies a different revenue trajectory, infrastructure requirement,
-    and risk profile. The capex figures aggregate across all six. Current revenue
+    and risk profile. The capital expenditure figures aggregate across all six. Current revenue
     reflects mainly the near-term theses — better search and productivity tools.
 
     Key signal that demand is real but fragile: Google Cloud's contracted backlog
     surged {stats['gcp_backlog_growth_pct']}% to \\${stats['gcp_backlog_bn']}B, and cloud is growing
     {stats['cloud_yoy_min']:.0f}–{stats['cloud_yoy_max']:.0f}% YoY. But a meaningful portion reflects AI
     services sold to VC-funded startups (\\${stats['vc_ai_2024_bn']}B globally in 2024, PitchBook).
-    Those startups are major cloud customers — if VC funding contracts, cloud revenue
-    contracts with it. McKinsey found ~{stats['mckinsey_no_impact_pct']}% of businesses that tried gen AI
-    reported no significant bottom-line impact. If the medium- and long-term theses
+    Those startups are major cloud customers, so revenue can move with VC cycles. McKinsey's
+    2025 survey found that about {stats['mckinsey_no_impact_pct']}% of businesses testing generative AI
+    had not yet seen significant bottom-line impact. If the medium- and long-term theses
     don't materialize as revenue-generating products, the infrastructure built for them
     becomes capacity in search of demand.
 
@@ -637,7 +649,7 @@ def _(
     for _i in range(1, len(_gaps)):
         if _gaps[_i - 1] > 0 and _gaps[_i] <= 0:
             _ax.annotate(
-                f"Capex overtakes revenue\n\\${_cap_vals[_i]:.0f}B vs \\${_rev_vals[_i]:.0f}B",
+                f"Capital expenditure overtakes revenue\n\\${_cap_vals[_i]:.0f}B vs \\${_rev_vals[_i]:.0f}B",
                 xy=(_i, _cap_vals[_i]), xytext=(_i - 3, _cap_vals[_i] + 15),
                 fontsize=FONTS["annotation"], color=COLORS["accent"], fontweight="bold",
                 arrowprops=dict(arrowstyle="->", color=COLORS["accent"], connectionstyle="arc3,rad=-0.2", linewidth=1.5),
@@ -647,15 +659,21 @@ def _(
     _ax.text(_last, _rev_vals[_last] - 4, f"${_rev_vals[_last]:.0f}B", ha="center", va="top", fontsize=FONTS["annotation"], color=COLORS["text_light"])
     _ax.text(_last + 0.15, _cap_vals[_last] + 1.5, f"${_cap_vals[_last]:.0f}B", ha="left", va="bottom", fontsize=FONTS["annotation"], color=COLORS["accent"], fontweight="bold")
     _ratio = _cap_vals / _rev_vals
-    _ax.text(0, _rev_vals[0] * 0.3, f"Investment intensity:\n{_ratio[0]:.1f}× (capex/cloud rev)", ha="left", va="bottom", fontsize=FONTS["annotation"] - 1, color=COLORS["text_light"])
-    _ax.text(_last, _cap_vals[_last] * 1.08, f"{_ratio[-1]:.1f}×", ha="center", va="bottom", fontsize=FONTS["annotation"], color=COLORS["accent"], fontweight="bold")
+    _ax.text(
+        0.01, 0.06,
+        f"Investment intensity:\n{_ratio[0]:.1f}× (2023 Q1) → {_ratio[-1]:.1f}× (latest)",
+        transform=_ax.transAxes,
+        ha="left", va="bottom", fontsize=FONTS["annotation"] - 1, color=COLORS["text_light"],
+        bbox=dict(boxstyle="round,pad=0.3", facecolor="white", edgecolor="none", alpha=0.85),
+    )
+
     _ax.set_xticks(_x)
     _ax.set_xticklabels(_common, fontsize=FONTS["tick_label"], rotation=45, ha="right")
     _ax.set_ylabel("Quarterly ($B)", fontsize=FONTS["axis_label"])
     _ax.tick_params(axis="y", labelsize=FONTS["tick_label"])
     _ax.set_ylim(0, max(max(_rev_vals), max(_cap_vals)) * 1.25)
-    legend_below(_ax, ncol=2)
-    chart_title(fig_rev, f"Total capex overtook cloud revenue in late 2025 — ~{stats['ai_capex_share_pct']}% AI-attributed (CreditSights)")
+    legend_below(_ax, ncol=2, bbox_to_anchor=(0.5, -0.22))
+    chart_title(fig_rev, f"Total capital expenditure overtook cloud revenue in late 2025 — about {stats['ai_capex_share_pct']}% AI-attributed (CreditSights)")
     plt.tight_layout()
     save_fig(fig_rev, cfg.img_dir / "dd001_revenue_gap.png")
     return
@@ -665,11 +683,11 @@ def _(
 def _(cfg, mo, stats):
     _chart = mo.image(src=(cfg.img_dir / "dd001_revenue_gap.png").read_bytes(), width=850)
     mo.md(f"""
-    # Total capex overtook cloud revenue in late 2025
+    # Total capital expenditure overtook cloud revenue in late 2025
 
     {_chart}
 
-    *Takeaway: by Q4 2025, capex for Amazon, Alphabet, and Microsoft exceeded combined cloud revenue; full-year 2025 was ~\\${stats['capex_3co_2025']:.0f}B vs ~\\${stats['cloud_rev_2025']:.0f}B. Source: SEC 10-Q filings.*
+    *Takeaway: by Q4 2025, capital expenditure for Amazon, Alphabet, and Microsoft exceeded combined cloud revenue; full-year 2025 was about \\${stats['capex_3co_2025']:.0f}B vs about \\${stats['cloud_rev_2025']:.0f}B. Source: SEC 10-Q filings.*
     """)
     return
 
@@ -716,7 +734,7 @@ def _(
         _clr = company_color(_ticker)
         _ax.plot(_pre["date"], _pre["capex_bn"], marker="o", markersize=3, color=CONTEXT, linewidth=1.2, alpha=0.5)
         _ax.plot(_post["date"], _post["capex_bn"], marker="o", markersize=6, color=_clr, linewidth=3, alpha=1.0, label=company_label(_ticker))
-    _ax.set_ylabel("Quarterly capex ($B)", fontsize=FONTS["axis_label"])
+    _ax.set_ylabel("Quarterly capital expenditure ($B)", fontsize=FONTS["axis_label"])
     _ax.tick_params(axis="both", labelsize=FONTS["tick_label"])
     _ax.grid(True, axis="y", linestyle=":", alpha=0.4)
     _ymax = capex_raw[capex_raw["ticker"].isin(_tickers)]["capex_bn"].max()
@@ -724,7 +742,7 @@ def _(
     _ax.text(_deepseek_date, _ymax * 0.98, "  DeepSeek R1", fontsize=FONTS["annotation"], color=COLORS["accent"], fontweight="bold", va="top")
     _ax.text(_deepseek_date + pd.Timedelta(days=200), _ymax * 0.18, "All four accelerated\nafter DeepSeek", fontsize=FONTS["annotation"], color=COLORS["accent"], fontweight="bold", ha="left", va="center", bbox={"boxstyle": "round,pad=0.4", "fc": "white", "ec": COLORS["accent"], "alpha": 0.8})
     legend_below(_ax, ncol=4)
-    chart_title(fig_quarterly, "DeepSeek R1 changed nothing — all four AI builders accelerated capex")
+    chart_title(fig_quarterly, "DeepSeek R1 changed nothing — all four AI builders accelerated capital expenditure")
     plt.tight_layout()
     save_fig(fig_quarterly, cfg.img_dir / "dd001_quarterly_capex.png")
     return
@@ -734,11 +752,11 @@ def _(
 def _(cfg, mo, stats):
     _chart = mo.image(src=(cfg.img_dir / "dd001_quarterly_capex.png").read_bytes(), width=850)
     mo.md(f"""
-    # DeepSeek R1 changed nothing — all four AI builders accelerated capex
+    # DeepSeek R1 changed nothing — all four AI builders accelerated capital expenditure
 
     {_chart}
 
-    *Takeaway: even after DeepSeek R1 (Jan 2025), all four major builders kept accelerating through Q4 2025, despite a ~\\${stats['nvda_deepseek_loss_bn']}B one-day Nvidia repricing. Source: yfinance (SEC filings).*
+    *Takeaway: even after DeepSeek R1 (Jan 2025), all four major builders kept accelerating through Q4 2025, despite an about \\${stats['nvda_deepseek_loss_bn']}B one-day Nvidia repricing. Source: yfinance (SEC filings).*
     """)
     return
 
@@ -750,37 +768,36 @@ def _(mo, stats):
 
     ## Does AI Efficiency Reduce Infrastructure Demand?
 
-    DeepSeek R1 (January 2025) created the sharpest test of this question to date. The reported ~$6M figure for DeepSeek-V3's final training run (arXiv:2412.19437, December 2024) is self-reported and partial — one run, not full development costs — but the directional claim is significant: frontier-capable models may be achievable at costs far below the infrastructure buildout implies.
+    DeepSeek R1 (January 2025) created the sharpest test of this question to date. The reported about $6M figure for DeepSeek-V3's final training run (arXiv:2412.19437, December 2024) is self-reported and partial (one run, not full development costs), but the directional claim is significant: frontier-capable models may be achievable at costs far below what current infrastructure spending implies.
 
     Through four quarters of data, the answer from actual spending is: no slowdown. All major builders accelerated through 2025:
 
     | Company | 2024 actual | 2025 actual | 2026 guidance |
     | :--- | :--- | :--- | :--- |
-    | Amazon | ~\\${stats['amzn_2024']:.0f}B | ~\\${stats['amzn_2025']:.0f}B | \\${stats['amzn_2026g']:.0f}B |
-    | Alphabet | ~\\${stats['googl_2024']:.0f}B | ~\\${stats['googl_2025']:.0f}B | \\${stats['googl_2026g']:.0f}B |
-    | Microsoft | ~\\${stats['msft_2024']:.0f}B | ~\\${stats['msft_2025']:.0f}B | ~\\${stats['msft_2026g']:.0f}B |
-    | Meta | ~\\${stats['meta_2024']:.0f}B | ~\\${stats['meta_2025']:.0f}B | \\${stats['meta_2026g_low']}-{stats['meta_2026g_high']}B |
+    | Amazon | about \\${stats['amzn_2024']:.0f}B | about \\${stats['amzn_2025']:.0f}B | \\${stats['amzn_2026g']:.0f}B |
+    | Alphabet | about \\${stats['googl_2024']:.0f}B | about \\${stats['googl_2025']:.0f}B | \\${stats['googl_2026g']:.0f}B |
+    | Microsoft | about \\${stats['msft_2024']:.0f}B | about \\${stats['msft_2025']:.0f}B | about \\${stats['msft_2026g']:.0f}B |
+    | Meta | about \\${stats['meta_2024']:.0f}B | about \\${stats['meta_2025']:.0f}B | \\${stats['meta_2026g_low']}-{stats['meta_2026g_high']}B |
 
     Plain-language takeaway: compute got much cheaper, but total infrastructure spending
-    still increased. One reason that can happen is that lower unit prices unlock enough
-    extra usage that total demand rises faster than price falls. Economists call this
-    the **Jevons paradox**.
+    still increased. The spending data through Q4 2025 is consistent with both "Jevons wins"
+    and "overinvestment" — it cannot distinguish between them.
 
-    The mechanism is plausible — OpenAI's
-    GPT-4 API pricing fell ~97% from ~\\$60/1M tokens (March 2023) to ~\\$2.50/1M tokens
-    (May 2024). But Jevons only dominates when price elasticity of demand exceeds 1
-    in absolute value. That elasticity is not established for AI inference.
+    The Jevons paradox offers one explanation: lower unit prices unlock enough extra usage
+    that total demand rises faster than price falls. OpenAI's GPT-4 API pricing fell about
+    97% from about \\$60/1M tokens (March 2023) to about \\$2.50/1M tokens (May 2024), and
+    usage volumes rose. But Jevons only dominates when price elasticity of demand exceeds 1
+    in absolute value — and that elasticity is not established for AI inference.
 
-    Three testable conditions must hold simultaneously:
-    1. **Cost continues falling** — verified; ~10× per 18 months (company pricing pages, 2023–2025)
+    Three conditions must hold simultaneously for Jevons to explain the full spending trajectory:
+    1. **Cost continues falling** — verified; about 10× per 18 months (company pricing pages, 2023–2025)
     2. **Use cases expand faster than cost falls** — plausible but unverified at scale
     3. **Net-new applications unlock** — cheaper inference enables new categories, not just cheaper existing ones
 
-    The current spending data is consistent with both "Jevons wins" and "overinvestment" —
-    it cannot distinguish between them. Management guidance suggests conviction in #2 and #3.
+    Management guidance expresses conviction in conditions 2 and 3.
     The revenue data through Q4 2025 does not yet confirm it.
 
-    **Caveat on guidance reliability:** AI capex guidance has historically been revised ±{stats['guidance_max_revision_pct']}% within a single year. Meta cut 2023 guidance {stats['meta_guidance_cut_pct']}% from its original \\${stats['meta_2023_guidance_low']}-{stats['meta_2023_guidance_high']}B range to \\${stats['meta_2023']:.0f}B actual; Microsoft raised FY2025 guidance {stats['msft_guidance_raise_pct']}% in one quarter. The \\${stats['guidance_2026_point']:.0f}B total should be treated as directionally correct but uncertain at the company level. The combined 2026 guidance would consume ~{stats['capex_ocf_2026_pct']:.0f}% of these companies' trailing operating cash flow (~\\${stats['ocf_ttm']:.0f}B TTM), far exceeding the 10-year average of ~{stats['hist_capex_ocf_avg_pct']}% (Bernstein Research, 2024). Amazon individually is at ~{stats['amzn_ocf_pct']:.0f}% (2025 actual capex vs. TTM OCF).
+    **Caveat on guidance reliability:** AI capital expenditure guidance has historically been revised by up to plus or minus {stats['guidance_max_revision_pct']}% within a single year. Meta cut 2023 guidance {stats['meta_guidance_cut_pct']}% from its original \\${stats['meta_2023_guidance_low']}-{stats['meta_2023_guidance_high']}B range to \\${stats['meta_2023']:.0f}B actual; Microsoft raised FY2025 guidance {stats['msft_guidance_raise_pct']}% in one quarter. The \\${stats['guidance_2026_point']:.0f}B total should be treated as directionally correct but uncertain at the company level. The combined 2026 guidance would consume about {stats['capex_ocf_2026_pct']:.0f}% of these companies' trailing twelve-month operating cash flow (OCF; about \\${stats['ocf_ttm']:.0f}B), far exceeding the 10-year average of about {stats['hist_capex_ocf_avg_pct']}% (Bernstein Research, 2024). Amazon individually is at about {stats['amzn_ocf_pct']:.0f}% (2025 actual capital expenditure vs. trailing OCF).
     """)
     return
 
@@ -790,16 +807,16 @@ def _(mo, stats):
     mo.md(f"""
     ## Decision Rules for 2026 Allocation
 
-    Current observed anchor: 2025 capex-to-cloud-revenue ratio for Amazon+Alphabet+Microsoft
+    Current observed anchor: 2025 capital expenditure-to-cloud-revenue ratio for Amazon+Alphabet+Microsoft
     is **{stats['capex_3co_2025'] / stats['cloud_rev_2025']:.2f}x**.
 
-    1. **Scale long-lived buildout** if revenue conversion tightens (ratio trends toward <1.0x)
-       and monetization broadens beyond subsidy-like demand.
+    1. **Scale long-lived investment** if revenue conversion tightens (ratio trends toward <1.0x)
+       and revenue growth broadens beyond subsidy-like demand.
     2. **Hold / sequence** if ratio remains around parity and demand quality is mixed.
     3. **Defer AI-dedicated long-lived assets** if the ratio stays materially above parity
        while measured bottom-line impact remains weak.
 
-    **Failure movie (2028-2030):** spending keeps rising, enterprise monetization lags,
+    **Failure movie (2028-2030):** spending keeps rising, enterprise revenue lags,
     and the system is forced into late write-downs, tariff renegotiations, and stranded
     utility upgrades already placed into long-duration recovery schedules.
     """)
@@ -811,7 +828,7 @@ def _(mo):
     mo.md("""
     ---
 
-    Decision handoff: the spend signal is clear, but buildout speed and lock-in risk
+    Decision handoff: the spend signal is clear, but construction speed and lock-in risk
     depend on conversion physics, not earnings-call intent.
 
     **Next:** [02_conversion_reality.py](./02_conversion_reality.py) — Construction timelines, interconnection queues, and the gap between announcement and operation.

@@ -24,8 +24,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-import matplotlib.pyplot as plt
-
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 
@@ -34,7 +32,6 @@ class NotebookConfig:
     """Immutable notebook configuration paths."""
 
     project_root: Path
-    style_path: Path
     img_dir: Path
     data_dir: Path
     models_dir: Path
@@ -46,19 +43,18 @@ def setup() -> NotebookConfig:
     Call once in your notebook's import cell. Returns a frozen
     config object with all paths pre-resolved.
     """
-    style_path = PROJECT_ROOT / "notebooks" / "shakes.mplstyle"
-    plt.style.use(style_path)
+    from flowmpl import apply_style
+    apply_style()
 
     return NotebookConfig(
         project_root=PROJECT_ROOT,
-        style_path=style_path,
         img_dir=PROJECT_ROOT / "notebooks" / "images",
         data_dir=PROJECT_ROOT / "data",
         models_dir=PROJECT_ROOT / "src" / "dynamics",
     )
 
 
-def save_fig(fig: plt.Figure, path: Path, *, close: bool = True) -> None:
+def save_fig(fig, path: Path, *, close: bool = True) -> None:
     """Save a matplotlib figure to disk and close it.
 
     Intended to be the last call in a chart cell.  The corresponding
@@ -73,6 +69,8 @@ def save_fig(fig: plt.Figure, path: Path, *, close: bool = True) -> None:
         chart = mo.image(src=(cfg.img_dir / "my_chart.png").read_bytes())
         mo.md(f"# Insight-driven title\\n\\n{chart}")
     """
+    import matplotlib.pyplot as plt
+
     path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(path, dpi=300, bbox_inches="tight", facecolor="white")
     if close:

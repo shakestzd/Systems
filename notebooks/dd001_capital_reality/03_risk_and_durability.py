@@ -12,21 +12,21 @@ app = marimo.App(
 @app.cell(hide_code=True)
 def _(mo, stats):
     mo.md(f"""
-    # Who Holds the Downside? Risk Distribution in the AI Buildout
+    # Who Holds the Downside? Risk Distribution in AI Infrastructure
 
     *Thandolwethu Zwelakhe Dlamini*
 
     ---
 
-    The previous two notebooks documented what is being spent (~\\${stats["capex_2025"]:.0f}B in 2025)
+    The previous two notebooks documented what is being spent (about \\${stats["capex_2025"]:.0f}B of capital expenditure in 2025)
     and how slowly it converts to operating infrastructure. This notebook asks the
-    distributional question: when long-lived infrastructure outlasts the demand thesis
+    distributional question: when long-lived infrastructure outlasts the demand outlook
     that justified it, *who holds the loss*?
 
     The answer has shifted materially through 2025. The entities best positioned to
     evaluate AI demand — the tech giants — have systematically moved financial exposure
     outward to entities with less visibility into demand trajectories. Special purpose
-    vehicles, short-term leases, and concentrated neocloud dependencies have distributed
+    vehicles, short-term leases, and concentrated new-cloud-provider dependencies have distributed
     risk to private credit, pension funds, and rural communities — on timescales that
     run decades beyond the companies' exit options.
 
@@ -507,7 +507,7 @@ def _(mo, stats):
     decision-maker and pushes long-duration downside to outside capital.
 
     Meta created Beignet Investor LLC and worked with Blue Owl Capital to borrow
-    ~\\${stats["meta_beignet_financing_bn"]}B for the project. Blue Owl provided 80% of the financing; Pimco
+    about \\${stats["meta_beignet_financing_bn"]}B for the project. Blue Owl provided 80% of the financing; Pimco
     sold bonds maturing in **{stats["beignet_bond_maturity"]}** to its clients — insurers, pension funds,
     endowments, and financial advisers. Meta agreed to "rent" the facility through
     a series of {stats["meta_beignet_lease_years"]}-year leases, classifying the arrangement as operating cost
@@ -756,7 +756,7 @@ def _(mo, stats):
     mo.md(f"""
     ### 2. Neocloud Leases
 
-    **Applied implication:** short-term hyperscaler leases can create long-tail default
+    **Applied implication:** short-term Big Tech leases can create long-tail default
     risk at the neocloud and creditor layers.
 
     Microsoft signed over \\${stats["msft_neocloud_total_bn"]}B in 3-5 year data center leases in a single
@@ -774,7 +774,7 @@ def _(mo):
     mo.md("""
     ### 3. Downstream Concentration: The CoreWeave Chain
 
-    SPVs and neocloud leases both let hyperscalers *offload* balance sheet exposure —
+    SPVs and neocloud leases both let Big Tech companies *offload* balance sheet exposure —
     they are downstream risk layering mechanisms. CoreWeave represents the opposite:
     an independent intermediary that has *absorbed* the exposure directly, building
     capacity on its own balance sheet with concentrated customer and supply risk.
@@ -818,7 +818,7 @@ def _(
         ylim=(-3.0, 3.0),
         font_size=FLOW_FONT_SIZE,
         legend_handles=[
-            mpatches.Patch(fc=CONTEXT,            label="Can exit / dominant (hyperscaler)"),
+            mpatches.Patch(fc=CONTEXT,            label="Can exit / dominant (Big Tech cloud company)"),
             mpatches.Patch(fc=COLORS["negative"], label="Exposed (neocloud)"),
             mpatches.Patch(fc=COLORS["neutral"],  label="Collateral (GPU assets)"),
         ],
@@ -842,7 +842,7 @@ def _(mo, stats):
 
     CoreWeave borrowed billions at {stats["coreweave_interest_rate_pct"]}%+ interest rates to build capacity
     that OpenAI committed to purchase (up to \\${stats["openai_coreweave_commitment_bn"]}B). Microsoft is
-    CoreWeave's dominant customer — ~62% of 2024 revenue *(CoreWeave S-1/A, March 2025,
+    CoreWeave's dominant customer — about 62% of 2024 revenue *(CoreWeave S-1/A, March 2025,
     SEC EDGAR CIK 0001956029, Table of Remaining Performance Obligations)*. OpenAI
     separately committed to route \\${stats["openai_msft_compute_promise_bn"]}B in computing through
     Microsoft, creating a chain: **CoreWeave → OpenAI → Microsoft**.
@@ -980,7 +980,7 @@ def _(mo, stats):
     capital is real and accelerating, conversion is physically constrained, and downside
     is drifting toward entities furthest from the original investment decision.
 
-    Before expanding buildout, the next deep dives should test three decision gates:
+    Before expanding infrastructure investment, the next deep dives should test three decision gates:
 
     - **Gate 1 (DD-002):** does incremental generation create shared grid benefit or
       private bypass? Rainier-scale growth (utility planning at {stats["aep_gas_share_pct"]}% gas) is the live test.
@@ -996,7 +996,7 @@ def _(mo, stats):
 
     *Sources: SEC EDGAR (10-K/10-Q filings via yfinance, through Q4 2025),
     Yahoo Finance (market caps, Feb 2026), FRED (BEA PNFI series, Q2 2025 SAAR),
-    Sequoia Capital ("The \\$600B Question," Sep 2024), CreditSights (AI capex
+    Sequoia Capital ("The \\$600B Question," Sep 2024), CreditSights (AI capital expenditure
     estimates, Jan-Feb 2026), earnings call transcripts (Jan-Feb 2026),
     Rand et al., "Queued Up: Characteristics of Power Plants Seeking Transmission
     Interconnection — As of the End of 2024," LBNL, April 2025 (emp.lbl.gov/queues),
