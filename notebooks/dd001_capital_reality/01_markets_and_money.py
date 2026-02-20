@@ -509,55 +509,59 @@ def _(mo):
 
 
 @app.cell
-def _(COLORS, CONTEXT, FONTS, cfg, plt, save_fig, stats):
-    _years = [2024, 2025, 2026]
-    _labels = ["2024", "2025", "2026\n(guided)"]
-    _r24 = stats["capex_3co_2024"] / stats["cloud_rev_2024"]
-    _r25 = stats["capex_3co_2025"] / stats["cloud_rev_2025"]
-    _r26_mid = stats["capex_3co_2026g"] / ((stats["cloud_rev_2026_low"] + stats["cloud_rev_2026_high"]) / 2)
-    _ratios = [_r24, _r25, _r26_mid]
+def _(CONTEXT, FONTS, capex_annual, cloud_rev, company_color, company_label, cfg, plt, save_fig):
+    _tickers = ["AMZN", "GOOGL", "MSFT"]
 
-    fig_ratio_slope, _ax = plt.subplots(figsize=(5, 3.2))
-    _x = [0, 1, 2]
+    # Annual cloud revenue per company (sum 4 quarters)
+    _cloud_yr = cloud_rev[cloud_rev["ticker"].isin(_tickers)].copy()
+    _cloud_yr["year"] = _cloud_yr["quarter"].str[:4].astype(int)
+    _cloud_yr = _cloud_yr.groupby(["ticker", "year"])["revenue_bn"].sum().reset_index()
 
-    # Reference line at 1.0
+    # Merge with annual capex and compute ratio for reported years
+    _data = capex_annual[capex_annual["ticker"].isin(_tickers)].merge(_cloud_yr, on=["ticker", "year"])
+    _data["ratio"] = _data["capex_bn"] / _data["revenue_bn"]
+    _data = _data[_data["year"].isin([2023, 2024, 2025])].sort_values(["ticker", "year"])
+
+    fig_ratio_slope, _ax = plt.subplots(figsize=(6.5, 3.8))
+
+    # Reference line at 1.0 — label on left to avoid collision with end-of-line labels
     _ax.axhline(1.0, color=CONTEXT, linewidth=1.2, linestyle="--", alpha=0.6, zorder=1)
-    _ax.text(2.08, 1.0, "Spending = Revenue", va="center", fontsize=FONTS["annotation"] - 1, color=CONTEXT)
+    _ax.text(2022.65, 1.03, "Spending = Revenue", va="bottom",
+             fontsize=FONTS["annotation"] - 1, color=CONTEXT)
 
-    # Line + solid markers for reported years, hollow for guided
-    _ax.plot(_x[:2], _ratios[:2], color=COLORS["accent"], linewidth=2.5, zorder=3)
-    _ax.plot(_x[1:], _ratios[1:], color=COLORS["accent"], linewidth=2.5, linestyle="--", alpha=0.7, zorder=3)
-    _ax.scatter(_x[:2], _ratios[:2], color=COLORS["accent"], s=80, zorder=4, edgecolors="white", linewidth=1.5)
-    _ax.scatter([_x[2]], [_ratios[2]], color="white", s=80, zorder=4, edgecolors=COLORS["accent"], linewidth=2)
+    for _t in _tickers:
+        _d = _data[_data["ticker"] == _t].sort_values("year")
+        _c = company_color(_t)
+        _ax.plot(_d["year"], _d["ratio"], color=_c, linewidth=2.2, zorder=3,
+                 marker="o", markersize=6, markerfacecolor=_c,
+                 markeredgecolor="white", markeredgewidth=1.5)
+        _last = _d.iloc[-1]
+        _ax.text(2025.2, _last["ratio"],
+                 f"{company_label(_t)}\n{_last['ratio']:.1f}×",
+                 va="center", fontsize=FONTS["annotation"], color=_c, linespacing=1.4)
 
-    # Point labels
-    for _i, (_xi, _r) in enumerate(zip(_x, _ratios)):
-        _offset = 0.07 if _i < 2 else 0.09
-        _ax.text(_xi, _r + _offset, f"{_r:.1f}×", ha="center", va="bottom",
-                 fontsize=FONTS["annotation"], color=COLORS["accent"], fontweight="bold")
-
-    _ax.set_xticks(_x)
-    _ax.set_xticklabels(_labels, fontsize=FONTS["tick_label"])
-    _ax.set_xlim(-0.4, 3.0)
-    _ax.set_ylim(0.4, 1.65)
+    _ax.set_xticks([2023, 2024, 2025])
+    _ax.set_xticklabels(["2023", "2024", "2025"], fontsize=FONTS["tick_label"])
+    _ax.set_xlim(2022.6, 2027.2)
+    _ax.set_ylim(0.1, 1.85)
     _ax.set_yticks([])
     _ax.spines["left"].set_visible(False)
     plt.tight_layout()
     save_fig(fig_ratio_slope, cfg.img_dir / "dd001_capex_ratio_slope.png")
-    return
+    return (fig_ratio_slope,)
 
 
 @app.cell(hide_code=True)
 def _(cfg, mo, stats):
-    _chart = mo.image(src=(cfg.img_dir / "dd001_capex_ratio_slope.png").read_bytes(), width=420)
+    _chart = mo.image(src=(cfg.img_dir / "dd001_capex_ratio_slope.png").read_bytes(), width=500)
     mo.md(f"""
-    # For the first time, these three companies are spending more on infrastructure than they earn from cloud services
+    # Alphabet crossed first in 2024. Amazon followed in 2025. Microsoft hasn't yet.
 
     {_chart}
 
-    *Spending as a share of cloud revenue (AWS + Azure + Google Cloud). Hollow marker = company guidance, not reported. 2026 uses the midpoint of analyst revenue estimates (\\${stats['cloud_rev_2026_low']}–{stats['cloud_rev_2026_high']}B). Sources: SEC 10-Q filings; Q4 2025 earnings calls. Framing follows Sequoia Capital's "AI's \\${stats['sequoia_rev_target_bn']}B Question" (Sep 2024) and Goldman Sachs "Gen AI: Too Much Spend, Too Little Return?" (Sep 2024).*
+    *Annual capital spending as a share of annual cloud revenue (AWS, Azure, Google Cloud). 2023–2025 are reported figures from SEC 10-K/10-Q filings. Framing follows Sequoia Capital's "AI's \\${stats['sequoia_rev_target_bn']}B Question" (Sep 2024) and Goldman Sachs "Gen AI: Too Much Spend, Too Little Return?" (Sep 2024).*
 
-    Spending crossed above revenue for the first time in 2025. If the 2026 guidance lands as announced, every dollar of new infrastructure will be built ahead of any revenue it has yet earned.
+    The aggregate masks a divergence. Alphabet's infrastructure spending overtook its Google Cloud revenue in 2024 and has kept climbing — it is now spending about 1.6 dollars on infrastructure for every dollar GCP earns. Amazon crossed the same line in 2025. Microsoft, whose Azure revenue base is the largest of the three, is still spending about 70 cents per dollar of cloud revenue — but its spending is rising fastest.
     """)
     return
 
