@@ -253,11 +253,11 @@ def _(
 @app.cell
 def _(
     COLORS,
+    CONTEXT,
     FIGSIZE,
     FONTS,
     cfg,
     chart_title,
-    company_color,
     company_label,
     mkt_cap,
     plt,
@@ -272,8 +272,7 @@ def _(
     for _, _row in _sorted.iterrows():
         _ticker = _row["ticker"]
         _gain = _row["gain_t"]
-        _clr = company_color(_ticker)
-        _ax.barh(0, _gain, left=_left, height=0.55, color=_clr, edgecolor="white", linewidth=1.5, label=company_label(_ticker))
+        _ax.barh(0, _gain, left=_left, height=0.55, color=CONTEXT, edgecolor="white", linewidth=1.5, label=company_label(_ticker))
         if _gain >= 0.8:
             _ax.text(_left + _gain / 2, 0, f"{company_label(_ticker)}\n+${_gain:.1f}T", ha="center", va="center", fontsize=FONTS["annotation"] - 1, fontweight="bold", color="white")
         _left += _gain
@@ -283,7 +282,7 @@ def _(
     _ax.set_yticks([])
     _ax.set_xlabel("Market cap gain, Jan 2023 → Feb 2026 ($T)", fontsize=FONTS["axis_label"])
     _ax.tick_params(axis="x", labelsize=FONTS["tick_label"])
-    chart_title(fig_mktcap, f"about {stats['ratio_vs_2025']:.0f}x gap between market cap gains and annual capital expenditure")
+    chart_title(fig_mktcap, "Market cap gain, Jan 2023 → Feb 2026 (7 companies) vs. 2025 annual capex (6 companies)")
     plt.tight_layout()
     save_fig(fig_mktcap, cfg.img_dir / "dd001_valuation_disconnect.png")
     return
@@ -298,7 +297,7 @@ def _(cfg, mo, stats):
 
     {_chart}
 
-    *Market value grew roughly {stats['ratio_vs_2025']:.0f} times faster than annual infrastructure investment. At that gap, current stock prices only hold up if revenue grows strongly for several more years. Source: Yahoo Finance; SEC filings via yfinance.*
+    *Market value grew roughly {stats['ratio_vs_2025']:.0f} times faster than annual infrastructure investment. Capex line covers Amazon, Alphabet, Microsoft, Meta, Oracle, and Nvidia only. Tesla appears in market cap gains but is excluded from the spending figure. Apple also excluded: at \\$9.4B in FY2024 capex (Apple 10-K, Sep 2024), Apple's infrastructure spending is roughly one-tenth of the hyperscalers; Apple Intelligence routes complex queries to OpenAI's ChatGPT (partnership announced June 2024) and Google's Gemini (confirmed January 2025), running on their infrastructure rather than Apple-built GPU clusters. Source: Yahoo Finance; SEC filings via yfinance.*
     """)
     return
 
@@ -364,7 +363,7 @@ def _(
     _ax.tick_params(labelsize=FONTS["tick_label"])
     _ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"${x:.0f}B"))
     _ax.set_xlim(2014.5, 2026.5)
-    chart_title(fig_capex_ratio, f"Big Tech capital expenditure is {_mult:.1f}× higher than in 2019")
+    chart_title(fig_capex_ratio, "Annual capex, Amazon + Alphabet + Microsoft + Meta, 2015–2025 ($B)")
     plt.tight_layout()
     save_fig(fig_capex_ratio, cfg.img_dir / "dd001_capex_ratio_history.png")
     return
@@ -378,7 +377,7 @@ def _(cfg, mo, stats):
     mo.md(
         f"# Big Tech capital expenditure is {_mult_4co:.1f}× higher than in 2019\n\n"
         f"{_chart_ratio}\n\n"
-        f"*Spending accelerated sharply after 2022. The increase is steeper than the previous wave of cloud infrastructure investment between 2015 and 2021, reaching about \\${_capex_4co_2025:.0f}B in 2025. Source: SEC filings via yfinance.*"
+        f"*Spending accelerated sharply after 2022. The increase is steeper than the previous wave of cloud infrastructure investment between 2015 and 2021, reaching about \\${_capex_4co_2025:.0f}B in 2025. 2022–2025: SEC filings via yfinance. 2015–2021: aggregated from company annual reports (Amazon, Alphabet, Microsoft, Meta).*"
     )
     return
 
@@ -447,7 +446,7 @@ def _(
     for _j, _ticker in enumerate(_tickers):
         _ax.text(_j, _bottoms[_j] + 8, f"${_bottoms[_j]:.0f}B", ha="center", fontsize=FONTS["annotation"], fontweight="bold", color=COLORS["text_dark"])
     legend_below(_ax, ncol=len(_all_years))
-    chart_title(fig_capex, "Amazon leads the cumulative build-out since 2022, with 2026 guidance still pointing higher for all six")
+    chart_title(fig_capex, "Cumulative capex by company, 2022–2025, plus 2026 guidance ($B)")
     plt.tight_layout()
     save_fig(fig_capex, cfg.img_dir / "dd001_capex_acceleration.png")
     return
@@ -497,6 +496,60 @@ def _(mo, stats):
     return
 
 
+@app.cell
+def _(COLORS, CONTEXT, FONTS, cfg, chart_title, plt, save_fig, stats):
+    _companies = ["Microsoft", "Meta"]
+    _reported = [stats["msft_2025"], stats["meta_2025"]]
+    _offbs = [stats["msft_neocloud_total_bn"], stats["meta_beignet_financing_bn"]]
+
+    fig_obs, _ax = plt.subplots(figsize=(6.5, 4.5))
+    _x = [0, 1]
+    _w = 0.5
+
+    _ax.bar(_x, _reported, width=_w, color=CONTEXT, alpha=0.85)
+    _ax.bar(_x, _offbs, bottom=_reported, width=_w,
+            color=COLORS["accent"], hatch="///", alpha=0.75, edgecolor="white")
+
+    for _i, (_r, _o) in enumerate(zip(_reported, _offbs)):
+        _ax.text(_i, _r / 2, f"${_r:.0f}B\nreported",
+                 ha="center", va="center",
+                 fontsize=FONTS["annotation"], color="white", fontweight="bold")
+        _ax.text(_i, _r + _o / 2, f"+${_o:.0f}B",
+                 ha="center", va="center",
+                 fontsize=FONTS["annotation"], color="white", fontweight="bold")
+        _ax.text(_i, _r + _o + 2, f"${_r + _o:.0f}B total",
+                 ha="center", va="bottom",
+                 fontsize=FONTS["annotation"], color=COLORS["text_dark"], fontweight="bold")
+
+    _ax.set_xticks(_x)
+    _ax.set_xticklabels(_companies, fontsize=FONTS["tick_label"])
+    _ax.set_ylabel("Capital commitment ($B)", fontsize=FONTS["axis_label"])
+    _ax.tick_params(axis="y", labelsize=FONTS["tick_label"])
+    _ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"${x:.0f}B"))
+    _msft_pct = round(stats["msft_neocloud_total_bn"] / stats["msft_2025"] * 100)
+    chart_title(fig_obs, "Reported 2025 capex vs. identified off-balance-sheet commitments, Microsoft and Meta ($B)")
+    plt.tight_layout()
+    save_fig(fig_obs, cfg.img_dir / "dd001_off_balance_sheet.png")
+    return
+
+
+@app.cell(hide_code=True)
+def _(cfg, mo, stats):
+    _chart = mo.image(src=(cfg.img_dir / "dd001_off_balance_sheet.png").read_bytes(), width=600)
+    _msft_pct = round(stats["msft_neocloud_total_bn"] / stats["msft_2025"] * 100)
+    mo.md(f"""
+    # Off-balance-sheet leases added {_msft_pct}% to Microsoft's reported capex — in just three months
+
+    {_chart}
+
+    *Microsoft: Nebius \\${stats['msft_nebius_deal_bn']}B, Nscale \\${stats['msft_nscale_deal_bn']}B,
+    Iren \\${stats['msft_iren_deal_bn']}B, plus Lambda (multi-billion) — all signed Sep–Nov 2025, none
+    appearing in reported capex. Meta: Beignet Investor LLC, \\${stats['meta_beignet_financing_bn']}B
+    Louisiana data center, 80% financed by Blue Owl Capital. Source: NYT, Dec 15, 2025 (Weise & Tan).*
+    """)
+    return
+
+
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
@@ -517,6 +570,7 @@ def _(
     FONTS,
     capex_annual,
     cfg,
+    chart_title,
     cloud_rev,
     company_color,
     company_label,
@@ -556,6 +610,7 @@ def _(
     _ax.set_ylim(0.1, 1.85)
     _ax.set_yticks([])
     _ax.spines["left"].set_visible(False)
+    chart_title(fig_ratio_slope, "Annual capex as a share of cloud revenue (AWS, Azure, Google Cloud), 2023–2025")
     plt.tight_layout()
     save_fig(fig_ratio_slope, cfg.img_dir / "dd001_capex_ratio_slope.png")
     return
@@ -579,7 +634,7 @@ def _(cfg, mo, stats):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md("""
-    ### One Spending Line, Multiple Demand Assumptions
+    # One Spending Line, Multiple Demand Assumptions
 
     There is a deeper problem beneath the revenue gap: the companies building this
     infrastructure are not all building it for the same reason. A September 2025 survey
@@ -604,8 +659,8 @@ def _(
     fig_rt = flow_diagram(
         nodes={
             # root at same y as medium-term → straight horizontal arrow r→m
-            "r":  ("Six AI \nRevenue Assumptions\n(2025 spending)", 1.2, 1.5, COLORS["accent"], "#ffffff"),
-            "n":  ("Near-term:\nproven revenue", 4.5, 4.9, COLORS["positive"], "#ffffff"),
+            "r":  ("Six AI \nRevenue Assumptions\n(2025 spending)", 1.2, 1.5, COLORS["accent"], COLORS["background"]),
+            "n":  ("Near-term:\nproven revenue", 4.5, 4.9, COLORS["muted"], COLORS["background"]),
             "m":  ("Medium-term:\nspeculative", 4.5, 1.5, COLORS["neutral"], COLORS["text_dark"]),
             "l":  ("Long-term:\nno revenue model yet", 4.5, -1.9, CONTEXT, COLORS["text_dark"]),
             # leaf nodes at 1.8-unit spacing — required for 2-line boxes at font_size=18
@@ -632,7 +687,7 @@ def _(
         ylim=(-3.8, 6.7),
         font_size=FLOW_FONT_SIZE,
         legend_handles=[
-            mpatches.Patch(facecolor=COLORS["positive"], label="Near-term: proven revenue"),
+            mpatches.Patch(facecolor=COLORS["muted"], label="Near-term: proven revenue"),
             mpatches.Patch(facecolor=COLORS["neutral"], label="Medium-term: speculative"),
             mpatches.Patch(facecolor=CONTEXT, label="Long-term: no revenue model"),
         ],
@@ -732,22 +787,13 @@ def _(
     _last = len(_common) - 1
     _ax.text(_last, _rev_vals[_last] - 4, f"${_rev_vals[_last]:.0f}B", ha="center", va="top", fontsize=FONTS["annotation"], color=COLORS["text_light"])
     _ax.text(_last + 0.15, _cap_vals[_last] + 1.5, f"${_cap_vals[_last]:.0f}B", ha="left", va="bottom", fontsize=FONTS["annotation"], color=COLORS["accent"], fontweight="bold")
-    _ratio = _cap_vals / _rev_vals
-    _ax.text(
-        0.01, 0.06,
-        f"Investment intensity:\n{_ratio[0]:.1f}× (2023 Q1) → {_ratio[-1]:.1f}× (latest)",
-        transform=_ax.transAxes,
-        ha="left", va="bottom", fontsize=FONTS["annotation"] - 1, color=COLORS["text_light"],
-        bbox=dict(boxstyle="round,pad=0.3", facecolor="white", edgecolor="none", alpha=0.85),
-    )
-
     _ax.set_xticks(_x)
     _ax.set_xticklabels(_common, fontsize=FONTS["tick_label"], rotation=45, ha="right")
     _ax.set_ylabel("Quarterly ($B)", fontsize=FONTS["axis_label"])
     _ax.tick_params(axis="y", labelsize=FONTS["tick_label"])
     _ax.set_ylim(0, max(max(_rev_vals), max(_cap_vals)) * 1.25)
     legend_below(_ax, ncol=2, bbox_to_anchor=(0.5, -0.22))
-    chart_title(fig_rev, f"Total capital expenditure overtook cloud revenue in late 2025 — about {stats['ai_capex_share_pct']}% AI-attributed (CreditSights)")
+    chart_title(fig_rev, "Quarterly cloud revenue vs. capital expenditure, Amazon + Alphabet + Microsoft ($B)")
     plt.tight_layout()
     save_fig(fig_rev, cfg.img_dir / "dd001_revenue_gap.png")
     return
@@ -761,7 +807,7 @@ def _(cfg, mo, stats):
 
     {_chart}
 
-    *By Q4 2025, capital expenditure for Amazon, Alphabet, and Microsoft exceeded combined cloud revenue; full-year 2025 was about \\${stats['capex_3co_2025']:.0f}B vs about \\${stats['cloud_rev_2025']:.0f}B. Source: SEC 10-Q filings.*
+    *By Q4 2025, capital expenditure for Amazon, Alphabet, and Microsoft exceeded combined cloud revenue; full-year 2025 was about \\${stats['capex_3co_2025']:.0f}B vs about \\${stats['cloud_rev_2025']:.0f}B. About {stats['ai_capex_share_pct']}% of hyperscaler capex is AI-attributed (CreditSights, "Hyperscaler AI Capex: How Big Is Too Big?", 2024). Source: SEC 10-Q filings.*
     """)
     return
 
@@ -816,7 +862,7 @@ def _(
     _ax.text(_deepseek_date, _ymax * 0.98, "  DeepSeek R1", fontsize=FONTS["annotation"], color=COLORS["accent"], fontweight="bold", va="top")
     _ax.text(_deepseek_date + pd.Timedelta(days=200), _ymax * 0.18, "All four accelerated\nafter DeepSeek", fontsize=FONTS["annotation"], color=COLORS["accent"], fontweight="bold", ha="left", va="center", bbox={"boxstyle": "round,pad=0.4", "fc": "white", "ec": COLORS["accent"], "alpha": 0.8})
     legend_below(_ax, ncol=4)
-    chart_title(fig_quarterly, "DeepSeek R1 changed nothing — all four AI builders accelerated capital expenditure")
+    chart_title(fig_quarterly, "Quarterly capex by company, 2023–2025 ($B)")
     plt.tight_layout()
     save_fig(fig_quarterly, cfg.img_dir / "dd001_quarterly_capex.png")
     return
@@ -843,7 +889,7 @@ def _(mo):
 def _(cfg, mo, stats):
     _chart = mo.image(src=(cfg.img_dir / "dd001_quarterly_capex.png").read_bytes(), width=850)
     mo.md(f"""
-    ## DeepSeek R1 changed nothing — all four AI builders accelerated capital expenditure
+    # DeepSeek R1 changed nothing — all four AI builders accelerated capital expenditure
 
     {_chart}
 
@@ -892,13 +938,88 @@ def _(mo, stats):
     plans by {stats['meta_guidance_cut_pct']}%, from an original range of
     \\${stats['meta_2023_guidance_low']}–{stats['meta_2023_guidance_high']}B down to
     \\${stats['meta_2023']:.0f}B actual. Microsoft raised its fiscal year 2025 plans by
-    {stats['msft_guidance_raise_pct']}% in a single quarter. The \\${stats['guidance_2026_point']:.0f}B
-    combined figure is directionally correct but should not be read as a firm commitment at
-    the company level. It would also require these companies to spend about
-    {stats['capex_ocf_2026_pct']:.0f}% of the cash their operations generated over the past
-    twelve months (about \\${stats['ocf_ttm']:.0f}B total), well above their historical average
-    of about {stats['hist_capex_ocf_avg_pct']}% (Bernstein Research, 2024). Amazon alone is
-    already at about {stats['amzn_ocf_pct']:.0f}% of its operating cash flow.
+    {stats['msft_guidance_raise_pct']}% in a single quarter.
+    """)
+    return
+
+
+@app.cell
+def _(COLORS, CONTEXT, FONTS, cfg, chart_title, plt, save_fig, stats):
+    _meta_pct = -stats["meta_guidance_cut_pct"]    # negative: guidance cut
+    _msft_pct = stats["msft_guidance_raise_pct"]   # positive: guidance raised
+
+    fig_guidance, _ax = plt.subplots(figsize=(8.0, 2.6))
+
+    _ax.axvline(0, color=CONTEXT, linewidth=1.2, linestyle="--", alpha=0.5, zorder=1)
+    _ax.text(0, 1.62, "Initial guidance", ha="center", va="bottom",
+             fontsize=FONTS["annotation"] - 1, color=CONTEXT)
+
+    # Microsoft row (positive: raise)
+    _ax.plot([0, _msft_pct], [1, 1], color=COLORS["accent"], linewidth=2.5,
+             solid_capstyle="round", zorder=2)
+    _ax.scatter([0], [1], s=80, color=CONTEXT, zorder=3)
+    _ax.scatter([_msft_pct], [1], s=120, color=COLORS["accent"], zorder=3)
+    _ax.text(0, 1.12, f"${stats['msft_fy25_initial_g']:.0f}B", ha="center", va="bottom",
+             fontsize=FONTS["annotation"] - 1, color=CONTEXT)
+    _ax.text(_msft_pct + 1, 1, f"${stats['msft_fy25_revised_g']:.0f}B  +{_msft_pct:.0f}%",
+             ha="left", va="center", fontsize=FONTS["annotation"],
+             color=COLORS["accent"], fontweight="bold")
+    _ax.text(-45, 1, "Microsoft FY2025", ha="right", va="center",
+             fontsize=FONTS["tick_label"], color=COLORS["text_dark"])
+
+    # Meta row (negative: cut)
+    _ax.plot([0, _meta_pct], [0, 0], color=COLORS["accent"], linewidth=2.5,
+             solid_capstyle="round", zorder=2)
+    _ax.scatter([0], [0], s=80, color=CONTEXT, zorder=3)
+    _ax.scatter([_meta_pct], [0], s=120, color=COLORS["accent"], zorder=3)
+    _ax.text(0, 0.12, f"${stats['meta_2023_guidance_low']}–{stats['meta_2023_guidance_high']}B",
+             ha="center", va="bottom", fontsize=FONTS["annotation"] - 1, color=CONTEXT)
+    _ax.text(_meta_pct - 1, 0,
+             f"${stats['meta_2023']:.0f}B  {_meta_pct:.0f}%",
+             ha="right", va="center", fontsize=FONTS["annotation"],
+             color=COLORS["accent"], fontweight="bold")
+    _ax.text(-45, 0, "Meta 2023", ha="right", va="center",
+             fontsize=FONTS["tick_label"], color=COLORS["text_dark"])
+
+    _ax.set_xlim(-48, 48)
+    _ax.set_ylim(-0.5, 1.8)
+    _ax.set_yticks([])
+    _ax.spines["left"].set_visible(False)
+    _ax.set_xlabel("Change from initial guidance (%)", fontsize=FONTS["axis_label"])
+    _ax.tick_params(axis="x", labelsize=FONTS["tick_label"])
+    _ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{x:+.0f}%"))
+    chart_title(fig_guidance, "Initial vs. actual capex guidance, selected cases 2023–2025 (% change from initial)")
+    plt.tight_layout()
+    save_fig(fig_guidance, cfg.img_dir / "dd001_guidance_reliability.png")
+    return
+
+
+@app.cell(hide_code=True)
+def _(cfg, mo, stats):
+    _chart = mo.image(src=(cfg.img_dir / "dd001_guidance_reliability.png").read_bytes(), width=750)
+    mo.md(f"""
+    # Guidance has shifted by as much as {stats['guidance_max_revision_pct']}% in a single year
+
+    {_chart}
+
+    *Meta 2023: initial guidance \\${stats['meta_2023_guidance_low']}–{stats['meta_2023_guidance_high']}B,
+    actual \\${stats['meta_2023']:.0f}B (cut {stats['meta_guidance_cut_pct']}%). Microsoft FY2025: initial
+    guidance \\${stats['msft_fy25_initial_g']:.0f}B, revised to \\${stats['msft_fy25_revised_g']:.0f}B
+    (+{stats['msft_guidance_raise_pct']}% in a single quarter). Sources: Meta Q1 2023 earnings call;
+    Microsoft FY2025 Q1 and Q2 earnings calls.*
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo, stats):
+    mo.md(f"""
+    The \\${stats['guidance_2026_point']:.0f}B combined 2026 figure is directionally correct but
+    should not be read as a firm commitment at the company level. It would also require these
+    companies to spend about {stats['capex_ocf_2026_pct']:.0f}% of the cash their operations
+    generated over the past twelve months (about \\${stats['ocf_ttm']:.0f}B total), well above their
+    historical average of about {stats['hist_capex_ocf_avg_pct']}% (Bernstein Research, 2024). Amazon
+    alone is already at about {stats['amzn_ocf_pct']:.0f}% of its operating cash flow.
     """)
     return
 
@@ -908,17 +1029,108 @@ def _(mo, stats):
     mo.md(f"""
     ## What to Watch in 2026
 
-    In 2025, Amazon, Alphabet, and Microsoft spent **{stats['capex_3co_2025'] / stats['cloud_rev_2025']:.2f}
-    dollars** on infrastructure for every dollar of cloud revenue they earned. That ratio
-    crossed above 1.0 for the first time.
+    In 2025, Amazon, Alphabet, and Microsoft spent
+    **{stats['capex_3co_2025'] / stats['cloud_rev_2025']:.2f} dollars** on infrastructure
+    for every dollar of cloud revenue they earned. That ratio crossed above 1.0 for the
+    first time. The right interpretation of subsequent quarters depends on which direction
+    it moves.
+    """)
+    return
 
-    1. **Build more** if the ratio starts falling back toward or below 1.0, and if revenue
-       growth is coming from durable enterprise contracts rather than venture-funded startups.
-    2. **Wait** if the ratio stays near 1.0 and the revenue picture remains mixed.
-    3. **Slow down** if the ratio keeps rising while there is still little evidence that AI
-       is improving the financial results of the businesses using it.
 
-    The scenario where this goes wrong by 2028-2030: spending keeps rising, business
+@app.cell
+def _(COLORS, CONTEXT, FONTS, capex_annual, cfg, chart_title, cloud_rev, plt, save_fig, stats):
+    _tickers = ["AMZN", "GOOGL", "MSFT"]
+
+    # Historical aggregate capex / cloud-revenue ratio
+    _cloud_yr = (
+        cloud_rev[cloud_rev["ticker"].isin(_tickers)]
+        .assign(year=lambda d: d["quarter"].str[:4].astype(int))
+        .groupby("year")["revenue_bn"].sum()
+    )
+    _capex_yr = (
+        capex_annual[capex_annual["ticker"].isin(_tickers)]
+        .groupby("year")["capex_bn"].sum()
+    )
+    _hist_years = [y for y in [2023, 2024, 2025] if y in _cloud_yr.index and y in _capex_yr.index]
+    _hist_ratio = [float(_capex_yr[y] / _cloud_yr[y]) for y in _hist_years]
+    _r2025 = _hist_ratio[-1]
+
+    # Scenario endpoints for 2026 — illustrative, not forecasts
+    _scenarios = [
+        (_r2025 * 0.78, "Demand catches up",    COLORS["positive"]),
+        (_r2025 * 1.03, "Status quo",            CONTEXT),
+        (_r2025 * 1.35, "Overbuilding continues", COLORS["accent"]),
+    ]
+
+    fig_scenarios, _ax = plt.subplots(figsize=(8.5, 4.0))
+
+    _ax.axhline(1.0, color=CONTEXT, linewidth=1, linestyle="--", alpha=0.4, zorder=1)
+    _ax.text(2022.6, 1.02, "Spending = Revenue", va="bottom",
+             fontsize=FONTS["annotation"] - 1, color=CONTEXT, alpha=0.65)
+
+    # Historical line
+    _ax.plot(_hist_years, _hist_ratio, color=COLORS["text_dark"], linewidth=2.5,
+             marker="o", markersize=7, markerfacecolor="white",
+             markeredgecolor=COLORS["text_dark"], markeredgewidth=2.2, zorder=4)
+    for _y, _r in zip(_hist_years, _hist_ratio):
+        _yoff = 0.05 if _r < 1.0 else -0.07
+        _va = "bottom" if _r < 1.0 else "top"
+        _ax.text(_y, _r + _yoff, f"{_r:.2f}×", ha="center", va=_va,
+                 fontsize=FONTS["annotation"] - 1, color=COLORS["text_dark"])
+
+    # Scenario fan from 2025
+    for _r26, _label, _color in _scenarios:
+        _ax.plot([2025, 2026], [_r2025, _r26], color=_color, linewidth=2.2,
+                 linestyle="--", alpha=0.9, zorder=3)
+        _ax.scatter([2026], [_r26], s=80, color=_color, zorder=5,
+                    edgecolors="white", linewidths=1.2)
+        _ax.text(2026.08, _r26, f"{_label}  {_r26:.2f}×", va="center",
+                 fontsize=FONTS["annotation"], color=_color, fontweight="bold")
+
+    _ax.set_xticks(_hist_years + [2026])
+    _ax.set_xticklabels(["2023", "2024", "2025", "2026\n(scenarios)"],
+                        fontsize=FONTS["tick_label"])
+    _ax.set_xlim(2022.5, 2027.5)
+    _ax.set_ylim(0.35, 1.75)
+    _ax.set_yticks([])
+    _ax.spines["left"].set_visible(False)
+    chart_title(
+        fig_scenarios,
+        "Capex-to-cloud-revenue ratio, Amazon + Alphabet + Microsoft, 2023–2026 scenarios",
+    )
+    plt.tight_layout()
+    save_fig(fig_scenarios, cfg.img_dir / "dd001_scenarios_2026.png")
+    return
+
+
+@app.cell(hide_code=True)
+def _(cfg, mo, stats):
+    _chart = mo.image(src=(cfg.img_dir / "dd001_scenarios_2026.png").read_bytes(), width=800)
+    mo.md(f"""
+    # The {stats['capex_3co_2025'] / stats['cloud_rev_2025']:.2f}× ratio is the signal to watch — three paths from here
+
+    {_chart}
+
+    *Annual capex as a share of cloud revenue (Amazon AWS, Microsoft Azure, Google Cloud),
+    2023–2025 reported. 2026 scenarios are illustrative, not forecasts.*
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo, stats):
+    mo.md("""
+    If the ratio falls, demand is catching up and companies can justify continuing to build,
+    provided that revenue growth is coming from durable enterprise contracts rather than
+    venture-funded startups.
+
+    If it holds near 1.0, the picture stays mixed and the right move is to wait for more data.
+
+    If the ratio keeps rising while there is still little evidence that AI is improving the
+    financial results of the businesses using it, that is the overbuilding signal.
+
+    The scenario where this goes wrong by 2028–2030: spending keeps rising, business
     customers don't see returns that justify their AI budgets, enterprise revenue stalls,
     and operators are left holding the costs of infrastructure built for demand that did not
     materialise — including utility grid upgrades that ratepayers will be paying off for
