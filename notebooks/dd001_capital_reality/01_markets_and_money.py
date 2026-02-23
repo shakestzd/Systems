@@ -832,6 +832,7 @@ def _(
     CONTEXT,
     FIGSIZE,
     FONTS,
+    capex_annual,
     capex_raw,
     cfg,
     chart_title,
@@ -858,6 +859,18 @@ def _(
     _ax.tick_params(axis="both", labelsize=FONTS["tick_label"])
     _ax.grid(True, axis="y", linestyle=":", alpha=0.4)
     _ymax = capex_raw[capex_raw["ticker"].isin(_tickers)]["capex_bn"].max()
+    # Annual combined total annotations — extend ylim to create header band
+    _annual_4co = capex_annual[capex_annual["ticker"].isin(_tickers)].groupby("year")["capex_bn"].sum()
+    _ax.set_ylim(0, _ymax * 1.22)
+    for _yr, _mid in [(2023, "2023-07-01"), (2024, "2024-07-01"), (2025, "2025-07-01")]:
+        if _yr not in _annual_4co.index:
+            continue
+        _ax.text(
+            pd.Timestamp(_mid), _ymax * 1.10,
+            f"{_yr}: ${_annual_4co[_yr]:.0f}B combined",
+            fontsize=FONTS["annotation"], color=COLORS["muted"],
+            ha="center", va="center",
+        )
     _ax.axvline(_deepseek_date, color=COLORS["accent"], linestyle="-", linewidth=2, alpha=0.7)
     _ax.text(_deepseek_date, _ymax * 0.98, "  DeepSeek R1", fontsize=FONTS["annotation"], color=COLORS["accent"], fontweight="bold", va="top")
     _ax.text(_deepseek_date + pd.Timedelta(days=200), _ymax * 0.18, "All four accelerated\nafter DeepSeek", fontsize=FONTS["annotation"], color=COLORS["accent"], fontweight="bold", ha="left", va="center", bbox={"boxstyle": "round,pad=0.4", "fc": "white", "ec": COLORS["accent"], "alpha": 0.8})
@@ -901,15 +914,6 @@ def _(cfg, mo, stats):
 @app.cell(hide_code=True)
 def _(mo, stats):
     mo.md(f"""
-    Through four quarters of data, the answer from actual spending is: no slowdown. All major builders accelerated through 2025:
-
-    | Company | 2024 actual | 2025 actual | 2026 guidance |
-    | :--- | :--- | :--- | :--- |
-    | Amazon | about \\${stats['amzn_2024']:.0f}B | about \\${stats['amzn_2025']:.0f}B | \\${stats['amzn_2026g']:.0f}B |
-    | Alphabet | about \\${stats['googl_2024']:.0f}B | about \\${stats['googl_2025']:.0f}B | \\${stats['googl_2026g']:.0f}B |
-    | Microsoft | about \\${stats['msft_2024']:.0f}B | about \\${stats['msft_2025']:.0f}B | about \\${stats['msft_2026g']:.0f}B |
-    | Meta | about \\${stats['meta_2024']:.0f}B | about \\${stats['meta_2025']:.0f}B | \\${stats['meta_2026g_low']}-{stats['meta_2026g_high']}B |
-
     Compute got much cheaper, but total infrastructure spending still increased. The spending
     data through Q4 2025 fits both explanations: companies are investing ahead of real demand,
     or cheaper compute is unlocking so much more usage that total spending rises anyway. The

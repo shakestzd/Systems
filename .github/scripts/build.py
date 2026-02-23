@@ -11,6 +11,7 @@ Usage:
 from __future__ import annotations
 
 import os
+import re
 import subprocess
 import sys
 from html import escape
@@ -267,6 +268,11 @@ def inject_site_nav(html_path: Path) -> None:
         return  # unexpected structure — leave untouched
     insert_at = idx + len(marker)
     html = html[:insert_at] + "\n" + _NOTEBOOK_NAV + "\n" + html[insert_at:]
+
+    # 3. Rewrite in-prose cross-notebook links: ./foo.py -> ./foo.html
+    #    Notebook prose references sibling notebooks by their source filename.
+    #    On GitHub Pages the deployed files are .html, so the href must match.
+    html = re.sub(r'href="(\./[^"]+)\.py"', r'href="\1.html"', html)
 
     html_path.write_text(html, encoding="utf-8")
 
