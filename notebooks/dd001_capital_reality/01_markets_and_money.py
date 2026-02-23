@@ -27,11 +27,11 @@ def _(mo, stats):
 
     The question is whether the spending is backed by real revenue. Amazon, Alphabet, and
     Microsoft together earned about \\${stats['cloud_rev_2025']:.0f}B in cloud revenue in 2025
-    and spent about \\${stats['capex_3co_2025']:.0f}B on infrastructure. For the first time,
-    their quarterly capital investment exceeded their quarterly cloud earnings. Whether
-    AI-driven demand catches up to that level of spending, or whether companies are building
-    well ahead of what customers will actually pay for, is the question this article works
-    through.
+    and spent about \\${stats['capex_3co_2025']:.0f}B on infrastructure. For Alphabet, spending
+    already exceeds what Google Cloud earns — and has since 2024. Amazon crossed the same
+    line in 2025. Whether AI-driven demand catches up to that level of spending, or whether
+    companies are building well ahead of what customers will actually pay for, is the
+    question this article works through.
     """)
     return
 
@@ -559,9 +559,9 @@ def _(cfg, mo, stats):
 
     {_chart}
 
-    *Annual capital spending as a share of annual cloud revenue (AWS, Azure, Google Cloud). 2023–2025 are reported figures from SEC 10-K/10-Q filings. Framing follows Sequoia Capital's "AI's \\${stats['sequoia_rev_target_bn']}B Question" (Sep 2024) and Goldman Sachs "Gen AI: Too Much Spend, Too Little Return?" (Sep 2024).*
+    *Annual capital spending as a share of annual cloud revenue (AWS, Azure, Google Cloud). 2023–2025 are reported figures from mandatory annual (10-K) and quarterly (10-Q) financial filings submitted to the US Securities and Exchange Commission (SEC). Framing follows Sequoia Capital's "AI's \\${stats['sequoia_rev_target_bn']}B Question" (Sep 2024) and Goldman Sachs "Gen AI: Too Much Spend, Too Little Return?" (Sep 2024).*
 
-    The aggregate masks a divergence. Alphabet's infrastructure spending overtook its Google Cloud revenue in 2024 and has kept climbing — it is now spending about 1.6 dollars on infrastructure for every dollar GCP earns. Amazon crossed the same line in 2025. Microsoft, whose Azure revenue base is the largest of the three, is still spending about 70 cents per dollar of cloud revenue — but its spending is rising fastest.
+    The aggregate masks a divergence. Alphabet's infrastructure spending overtook its Google Cloud revenue in 2024 and has kept climbing — it is now spending about 1.6 dollars on infrastructure for every dollar Google Cloud earns. Amazon crossed the same line in 2025. Microsoft, whose Azure revenue base is the largest of the three, is still spending about 70 cents per dollar of cloud revenue — but its spending is rising fastest.
     """)
     return
 
@@ -760,9 +760,9 @@ def _(cfg, mo, stats):
 def _(mo):
     mo.md("""
     The chart above frames a decision test. If major efficiency gains reduce future
-    infrastructure demand, capital intensity should begin to fall. If it does not,
-    current spending behavior should be treated as competition-driven commitment rather
-    than revenue-led expansion.
+    infrastructure demand, the ratio of spending to revenue should begin to fall. If it
+    does not, companies are building ahead of demand rather than in response to it — and
+    the risk of overbuilding is structural, not cyclical.
 
     The DeepSeek moment provides that test: when a major efficiency signal arrived in
     January 2025, did spending slow?
@@ -861,8 +861,9 @@ def _(mo, stats):
 
     The second explanation has a name: the Jevons paradox. When something gets cheaper,
     people use more of it, and total consumption can rise even as the unit price falls.
-    OpenAI's cost to process one million tokens of text fell about 97%, from roughly $60
-    (March 2023) to roughly $2.50 (May 2024), and usage volumes rose. But the paradox only
+    OpenAI's cost to process one million tokens — roughly 750,000 words of text, or about
+    seven novels — fell about 97%, from roughly $60 in March 2023 to roughly $2.50 by
+    May 2024, and usage volumes rose. But the paradox only
     holds when demand responds strongly enough to more than offset the price drop. Whether AI
     usage is that sensitive to price is not yet established.
 
