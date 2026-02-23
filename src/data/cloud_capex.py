@@ -32,37 +32,46 @@ def capex_to_revenue_ratio(
     sorted by [ticker, year]. Raises ValueError if any requested ticker
     has no data after the merge.
     """
-    # Step 1: Aggregate quarterly cloud revenue to annual per ticker
+    _expected_pairs = [(t, y) for t in tickers for y in years]
+
+    # Step 1: Filter quarterly revenue to requested tickers and years
     _cloud = cloud_rev[cloud_rev["ticker"].isin(tickers)].copy()
     _cloud["year"] = _cloud["quarter"].str[:4].astype(int)
-    cloud_annual = (
-        _cloud.groupby(["ticker", "year"])["revenue_bn"]
-        .sum()
-        .reset_index()
-    )
+    _cloud = _cloud[_cloud["year"].isin(years)]
 
-    # Step 2: Filter capex to requested tickers
-    capex_filtered = capex_annual[capex_annual["ticker"].isin(tickers)].copy()
-
-    # Step 3: Inner merge on [ticker, year]
-    merged = capex_filtered.merge(cloud_annual, on=["ticker", "year"], how="inner")
-
-    # Step 4: Filter to requested years
-    merged = merged[merged["year"].isin(years)]
-
-    # Step 5: Compute ratio
-    merged["ratio"] = merged["capex_bn"] / merged["revenue_bn"]
-
-    # Step 6: Check for missing tickers
-    present = set(merged["ticker"].unique())
-    missing = [t for t in tickers if t not in present]
-    if missing:
+    # Step 2: Validate quarter coverage — each (ticker, year) must have exactly 4 quarters
+    _qcounts = _cloud.groupby(["ticker", "year"])["quarter"].count()
+    _incomplete = [
+        (t, y, int(_qcounts.get((t, y), 0)))
+        for t, y in _expected_pairs
+        if _qcounts.get((t, y), 0) != 4
+    ]
+    if _incomplete:
         raise ValueError(
-            f"capex_to_revenue_ratio: no data found for ticker(s) {missing} "
-            f"after merge. Check DB coverage for these symbols."
+            f"capex_to_revenue_ratio: incomplete quarterly revenue coverage — "
+            f"expected 4 quarters per (ticker, year), got: {_incomplete}"
         )
 
-    # Step 7: Return sorted by [ticker, year]
+    # Step 3: Aggregate to annual
+    cloud_annual = _cloud.groupby(["ticker", "year"])["revenue_bn"].sum().reset_index()
+
+    # Step 4: Filter capex to requested tickers and years, check coverage
+    capex_filtered = capex_annual[
+        capex_annual["ticker"].isin(tickers) & capex_annual["year"].isin(years)
+    ].copy()
+    _capex_pairs = set(zip(capex_filtered["ticker"], capex_filtered["year"]))
+    _missing_capex = [(t, y) for t, y in _expected_pairs if (t, y) not in _capex_pairs]
+    if _missing_capex:
+        raise ValueError(
+            f"capex_to_revenue_ratio: missing capex data for (ticker, year) pairs: "
+            f"{_missing_capex}"
+        )
+
+    # Step 5: Inner merge and compute ratio
+    merged = capex_filtered.merge(cloud_annual, on=["ticker", "year"], how="inner")
+    merged["ratio"] = merged["capex_bn"] / merged["revenue_bn"]
+
+    # Step 6: Return sorted by [ticker, year]
     return merged[["ticker", "year", "capex_bn", "revenue_bn", "ratio"]].sort_values(
         ["ticker", "year"]
     ).reset_index(drop=True)

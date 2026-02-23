@@ -27,6 +27,7 @@ def test_tables_returns_dataframe(tmp_db):
 
 
 def test_query_raises_on_bad_table(tmp_db):
-    """query() raises an exception when the table does not exist."""
-    with pytest.raises(Exception):
+    """query() raises a DuckDB error naming the missing table."""
+    import duckdb
+    with pytest.raises(duckdb.Error, match="nonexistent_table"):
         query("SELECT * FROM energy_data.nonexistent_table", db_path=tmp_db)

@@ -64,7 +64,24 @@ def test_missing_ticker_raises_valueerror(capex_df, cloud_rev_df):
 
 def test_ratio_above_one_when_capex_exceeds_revenue(capex_df, cloud_rev_df):
     """When capex exceeds annual cloud revenue, ratio must be > 1.0."""
-    # Build minimal data where capex clearly exceeds revenue
     capex_high = pd.DataFrame([{"ticker": "AMZN", "year": 2024, "capex_bn": 999.0}])
     result = capex_to_revenue_ratio(capex_high, cloud_rev_df, ["AMZN"], [2024])
     assert result.iloc[0]["ratio"] > 1.0
+
+
+def test_partial_year_quarters_raises_valueerror(capex_df, cloud_rev_df):
+    """Missing a quarter for a requested year must raise ValueError naming the pair."""
+    # Drop AMZN Q3 2024 — leaves only 3 quarters for that year
+    partial = cloud_rev_df[
+        ~((cloud_rev_df["ticker"] == "AMZN") & (cloud_rev_df["quarter"] == "2024-Q3"))
+    ]
+    with pytest.raises(ValueError, match="AMZN"):
+        capex_to_revenue_ratio(capex_df, partial, ["AMZN"], [2024])
+
+
+def test_missing_capex_year_raises_valueerror(capex_df, cloud_rev_df):
+    """A ticker present in capex but missing a requested year must raise ValueError."""
+    # Remove AMZN 2025 capex row — AMZN is present but 2025 is absent
+    capex_no_2025 = capex_df[~((capex_df["ticker"] == "AMZN") & (capex_df["year"] == 2025))]
+    with pytest.raises(ValueError, match="AMZN"):
+        capex_to_revenue_ratio(capex_no_2025, cloud_rev_df, ["AMZN"], [2024, 2025])
