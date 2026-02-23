@@ -1053,6 +1053,12 @@ def _(COLORS, CONTEXT, FONTS, capex_annual, cfg, chart_title, cloud_rev, plt, sa
         .groupby("year")["capex_bn"].sum()
     )
     _hist_years = [y for y in [2023, 2024, 2025] if y in _cloud_yr.index and y in _capex_yr.index]
+    _missing_years = {2023, 2024, 2025} - set(_hist_years)
+    if _missing_years:
+        raise ValueError(
+            f"Scenario chart: missing coverage for years {sorted(_missing_years)} in "
+            "cloud_rev or capex_annual. Check DB pipeline coverage."
+        )
     _hist_ratio = [float(_capex_yr[y] / _cloud_yr[y]) for y in _hist_years]
     _r2025 = _hist_ratio[-1]
 

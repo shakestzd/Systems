@@ -85,3 +85,54 @@ def test_missing_capex_year_raises_valueerror(capex_df, cloud_rev_df):
     capex_no_2025 = capex_df[~((capex_df["ticker"] == "AMZN") & (capex_df["year"] == 2025))]
     with pytest.raises(ValueError, match="AMZN"):
         capex_to_revenue_ratio(capex_no_2025, cloud_rev_df, ["AMZN"], [2024, 2025])
+
+
+def test_scenario_chart_missing_year_detected():
+    """Scenario chart year-validation logic: missing 2025 from both sources is detected."""
+    _tickers = ["AMZN", "GOOGL", "MSFT"]
+    # Build cloud_rev with only 2023 and 2024 — 2025 absent
+    _cloud = pd.DataFrame([
+        {"ticker": t, "quarter": f"{y}-Q{q}", "revenue_bn": 10.0}
+        for t in _tickers
+        for y in [2023, 2024]
+        for q in [1, 2, 3, 4]
+    ])
+    _capex = pd.DataFrame([
+        {"ticker": t, "year": y, "capex_bn": 50.0}
+        for t in _tickers
+        for y in [2023, 2024]
+    ])
+    _cloud_yr = (
+        _cloud[_cloud["ticker"].isin(_tickers)]
+        .assign(year=lambda d: d["quarter"].str[:4].astype(int))
+        .groupby("year")["revenue_bn"].sum()
+    )
+    _capex_yr = _capex[_capex["ticker"].isin(_tickers)].groupby("year")["capex_bn"].sum()
+    _hist_years = [y for y in [2023, 2024, 2025] if y in _cloud_yr.index and y in _capex_yr.index]
+    _missing = {2023, 2024, 2025} - set(_hist_years)
+    assert _missing == {2025}
+
+
+def test_scenario_chart_full_coverage_no_missing():
+    """Scenario chart year-validation logic: all three years present yields empty missing set."""
+    _tickers = ["AMZN", "GOOGL", "MSFT"]
+    _cloud = pd.DataFrame([
+        {"ticker": t, "quarter": f"{y}-Q{q}", "revenue_bn": 10.0}
+        for t in _tickers
+        for y in [2023, 2024, 2025]
+        for q in [1, 2, 3, 4]
+    ])
+    _capex = pd.DataFrame([
+        {"ticker": t, "year": y, "capex_bn": 50.0}
+        for t in _tickers
+        for y in [2023, 2024, 2025]
+    ])
+    _cloud_yr = (
+        _cloud[_cloud["ticker"].isin(_tickers)]
+        .assign(year=lambda d: d["quarter"].str[:4].astype(int))
+        .groupby("year")["revenue_bn"].sum()
+    )
+    _capex_yr = _capex[_capex["ticker"].isin(_tickers)].groupby("year")["capex_bn"].sum()
+    _hist_years = [y for y in [2023, 2024, 2025] if y in _cloud_yr.index and y in _capex_yr.index]
+    _missing = {2023, 2024, 2025} - set(_hist_years)
+    assert _missing == set()
