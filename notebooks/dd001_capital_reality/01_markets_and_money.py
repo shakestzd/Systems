@@ -383,6 +383,19 @@ def _(cfg, mo, stats):
     return
 
 
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    That aggregate figure is concentrated in a small number of companies. Amazon,
+    Alphabet, Microsoft, and Meta account for most of it, with Oracle and Nvidia
+    building at a smaller but rapidly growing scale. Not all of them are building
+    for the same reason or at the same rate, and the 2026 guidance figures vary
+    considerably by company. Breaking the spend down shows who is driving the
+    build-out and what each has committed to.
+    """)
+    return
+
+
 @app.cell
 def _(
     COLORS,
@@ -434,7 +447,7 @@ def _(
     for _j, _ticker in enumerate(_tickers):
         _ax.text(_j, _bottoms[_j] + 8, f"${_bottoms[_j]:.0f}B", ha="center", fontsize=FONTS["annotation"], fontweight="bold", color=COLORS["text_dark"])
     legend_below(_ax, ncol=len(_all_years))
-    chart_title(fig_capex, "Big Tech capital expenditure tripled in three years, and 2026 guidance is even higher")
+    chart_title(fig_capex, "Amazon leads the cumulative build-out since 2022, with 2026 guidance still pointing higher for all six")
     plt.tight_layout()
     save_fig(fig_capex, cfg.img_dir / "dd001_capex_acceleration.png")
     return
@@ -444,7 +457,7 @@ def _(
 def _(cfg, mo, stats):
     _chart = mo.image(src=(cfg.img_dir / "dd001_capex_acceleration.png").read_bytes(), width=850)
     mo.md(f"""
-    # Big Tech capital expenditure tripled in three years, and 2026 guidance is even higher
+    # Amazon leads the cumulative build-out since 2022, with 2026 guidance still pointing higher
 
     {_chart}
 
@@ -499,24 +512,27 @@ def _(mo):
 
 
 @app.cell
-def _(CONTEXT, FONTS, capex_annual, cloud_rev, company_color, company_label, cfg, plt, save_fig):
+def _(
+    CONTEXT,
+    FONTS,
+    capex_annual,
+    cfg,
+    cloud_rev,
+    company_color,
+    company_label,
+    plt,
+    save_fig,
+):
+    from src.data.cloud_capex import capex_to_revenue_ratio
+
     _tickers = ["AMZN", "GOOGL", "MSFT"]
-
-    # Annual cloud revenue per company (sum 4 quarters)
-    _cloud_yr = cloud_rev[cloud_rev["ticker"].isin(_tickers)].copy()
-    _cloud_yr["year"] = _cloud_yr["quarter"].str[:4].astype(int)
-    _cloud_yr = _cloud_yr.groupby(["ticker", "year"])["revenue_bn"].sum().reset_index()
-
-    # Merge with annual capex and compute ratio for reported years
-    _data = capex_annual[capex_annual["ticker"].isin(_tickers)].merge(_cloud_yr, on=["ticker", "year"])
-    _data["ratio"] = _data["capex_bn"] / _data["revenue_bn"]
-    _data = _data[_data["year"].isin([2023, 2024, 2025])].sort_values(["ticker", "year"])
+    _data = capex_to_revenue_ratio(capex_annual, cloud_rev, _tickers, [2023, 2024, 2025])
 
     fig_ratio_slope, _ax = plt.subplots(figsize=(6.5, 3.8))
 
     # Reference line at 1.0 — label on left to avoid collision with end-of-line labels
     _ax.axhline(1.0, color=CONTEXT, linewidth=1.2, linestyle="--", alpha=0.6, zorder=1)
-    _ax.text(2022.65, 1.03, "Spending = Revenue", va="bottom",
+    _ax.text(2026.65, 1.03, "Spending = Revenue", va="bottom",
              fontsize=FONTS["annotation"] - 1, color=CONTEXT)
 
     _missing = [t for t in _tickers if _data[_data["ticker"] == t].empty]
@@ -542,7 +558,7 @@ def _(CONTEXT, FONTS, capex_annual, cloud_rev, company_color, company_label, cfg
     _ax.spines["left"].set_visible(False)
     plt.tight_layout()
     save_fig(fig_ratio_slope, cfg.img_dir / "dd001_capex_ratio_slope.png")
-    return (fig_ratio_slope,)
+    return
 
 
 @app.cell(hide_code=True)

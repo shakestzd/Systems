@@ -7,7 +7,7 @@ from src.notebook import save_fig, setup
 
 def test_setup_returns_path_objects(monkeypatch):
     """setup() returns a NotebookConfig where all path fields are Path instances."""
-    monkeypatch.setattr("src.notebook.plt.style.use", lambda *a, **kw: None)
+    monkeypatch.setattr("flowmpl.apply_style", lambda *a, **kw: None)
     cfg = setup()
     assert isinstance(cfg.project_root, Path)
     assert isinstance(cfg.img_dir, Path)
