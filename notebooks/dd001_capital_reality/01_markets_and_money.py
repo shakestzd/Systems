@@ -325,16 +325,6 @@ def _(mo):
 
 
 @app.cell
-def _():
-    return
-
-
-@app.cell
-def _():
-    return
-
-
-@app.cell
 def _(
     COLORS,
     CONTEXT,
@@ -528,6 +518,10 @@ def _(CONTEXT, FONTS, capex_annual, cloud_rev, company_color, company_label, cfg
     _ax.axhline(1.0, color=CONTEXT, linewidth=1.2, linestyle="--", alpha=0.6, zorder=1)
     _ax.text(2022.65, 1.03, "Spending = Revenue", va="bottom",
              fontsize=FONTS["annotation"] - 1, color=CONTEXT)
+
+    _missing = [t for t in _tickers if _data[_data["ticker"] == t].empty]
+    if _missing:
+        raise ValueError(f"Per-company ratio chart: missing data for {_missing}. Check DB coverage.")
 
     for _t in _tickers:
         _d = _data[_data["ticker"] == _t].sort_values("year")
