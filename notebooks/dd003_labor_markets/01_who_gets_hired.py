@@ -914,19 +914,20 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     import altair as alt
+
     from src.altair_theme import register as _reg
     from src.data.db import query as _query
 
     _reg()
 
-    _SERIES = {
+    _series = {
         "CES6054150001": "Computer systems design",
         "USCONS": "Construction",
         "USINFO": "Information",
         "MANEMP": "Manufacturing",
     }
 
-    _series_in = ", ".join(f"'{s}'" for s in _SERIES)
+    _series_in = ", ".join(f"'{s}'" for s in _series)
     _raw = _query(
         f"SELECT series_id, date, value FROM energy_data.fred_series "
         f"WHERE series_id IN ({_series_in}) "
@@ -941,7 +942,7 @@ def _(mo):
     )
     _df = _raw.merge(_base, on="series_id")
     _df["indexed"] = _df["value"] / _df["base"] * 100
-    _df["sector"] = _df["series_id"].map(_SERIES)
+    _df["sector"] = _df["series_id"].map(_series)
 
     _sel = alt.selection_point(fields=["sector"], bind="legend")
 
@@ -968,10 +969,8 @@ def _(mo):
         .interactive()
     )
 
-    _LITE = (
-        "https://lite.datasette.io/?url=https://shakes-tzd.github.io/Systems"
-        "/data/research.sqlite&install=datasette-plot#/research/fred_series"
-    )
+    from src.notebook import SITE_URL as _SITE_URL
+    _lite = f"https://lite.datasette.io/?url={_SITE_URL}/data/research.sqlite#/research/fred_series"
 
     mo.accordion({
         "Explore the data": mo.vstack([
@@ -980,7 +979,7 @@ def _(mo):
                 "Hover for exact index values and underlying employment counts."
             ),
             _chart,
-            mo.md(f"[Open `fred_series` in Datasette →]({_LITE})"),
+            mo.md(f"[Open `fred_series` in Datasette →]({_lite})"),
         ], gap="0.75rem"),
     })
     return

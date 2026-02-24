@@ -26,6 +26,10 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
+# Canonical GitHub Pages base URL — single source of truth for site links.
+# Notebooks and build scripts import this rather than hardcoding the domain.
+SITE_URL = "https://shakes-tzd.github.io/Systems"
+
 
 @dataclass(frozen=True)
 class NotebookConfig:

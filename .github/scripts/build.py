@@ -20,6 +20,11 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 SITE_DIR = PROJECT_ROOT / "_site"
 
+# Make project modules importable (scripts/export_sqlite, src/, etc.)
+sys.path.insert(0, str(PROJECT_ROOT))
+from scripts.export_sqlite import TABLES as _EXPORT_TABLES  # noqa: E402
+from scripts.export_sqlite import export as _export_sqlite  # noqa: E402
+
 # ---------------------------------------------------------------------------
 # Site identity — single source of truth for title, subtitle, and URLs
 # ---------------------------------------------------------------------------
@@ -33,6 +38,8 @@ SITE = {
         "regulatory regimes."
     ),
     "github_url": "https://github.com/Shakes-tzd/Systems",
+    # Canonical GitHub Pages base URL — used in Datasette Lite links.
+    "pages_url": "https://shakes-tzd.github.io/Systems",
 }
 
 # ---------------------------------------------------------------------------
@@ -1191,30 +1198,10 @@ def generate_about() -> str:
 # Data portal page generation
 # ---------------------------------------------------------------------------
 
-# Table metadata mirrored from scripts/export_sqlite.py — kept here as a
-# lightweight inline list so build.py has no import dependency on that script.
+# Derived from scripts/export_sqlite.TABLES — single source of truth.
+# label uses html.escape so PP&E renders correctly in the template.
 _DATA_TABLES = [
-    ("hyperscaler_capex",              "Hyperscaler Capital Expenditure",         "DD-001"),
-    ("capex_guidance",                 "CapEx Guidance (Forward-Looking)",         "DD-001"),
-    ("cloud_revenue",                  "Cloud Revenue (Quarterly)",                "DD-001"),
-    ("hyperscaler_ocf",                "Operating Cash Flow",                     "DD-001"),
-    ("mag7_market_caps",               "Market Capitalizations",                  "DD-001"),
-    ("edgar_xbrl_facts",               "SEC EDGAR XBRL Facts",                    "DD-001"),
-    ("edgar_ppe_schedule",             "PP&amp;E Schedule",                        "DD-001"),
-    ("lbnl_queue",                     "LBNL Interconnection Queue",              "DD-002"),
-    ("lbnl_queue_summary",             "LBNL Queue Summary (Annual)",             "DD-002"),
-    ("dd002_queue_region_backlog",     "Queue Backlog by ISO/RTO Region",         "DD-002"),
-    ("dd002_cost_allocation",          "Network Upgrade Cost Allocation",         "DD-002"),
-    ("dd002_hyperscaler_region_weights","Hyperscaler Regional CapEx Weights",     "DD-002"),
-    ("dd002_projection_priors",        "Grid Projection Priors",                  "DD-002"),
-    ("dd002_policy_events",            "Regulatory Policy Events",                "DD-002"),
-    ("eia860_generators",              "EIA Form 860 Generators",                 "DD-002"),
-    ("fred_series",                    "FRED Economic Time Series",               "DD-001, DD-002"),
-    ("oews_wages",                     "BLS OEWS Occupational Wages",             "DD-003"),
-    ("dd004_pjm_zone_demand",          "PJM Zone Demand Requests",               "DD-004"),
-    ("dd004_iurc_cases",               "Indiana Utility Regulatory Cases",        "DD-004"),
-    ("bea_nipa_investment",            "BEA NIPA Private Fixed Investment",       "DD-001"),
-    ("source_citations",               "Source Citations Registry",               "All"),
+    (t["name"], escape(t["label"]), t["case_study"]) for t in _EXPORT_TABLES
 ]
 
 _LITE_BASE = "https://lite.datasette.io"
@@ -1428,13 +1415,13 @@ DATA_TEMPLATE = """\
 </html>
 """
 
-_GITHUB_PAGES_BASE = "https://shakes-tzd.github.io/Systems"
+_GITHUB_PAGES_BASE = SITE["pages_url"]
 
 
 def _lite_url(table: str | None = None) -> str:
     """Build a Datasette Lite URL for the hosted SQLite file."""
     db_url = f"{_GITHUB_PAGES_BASE}/data/research.sqlite"
-    url = f"{_LITE_BASE}/?url={db_url}&install=datasette-plot"
+    url = f"{_LITE_BASE}/?url={db_url}"
     if table:
         url += f"#/research/{table}"
     return url
@@ -1523,14 +1510,14 @@ def main() -> int:
     # Step 3: Export SQLite for Datasette Lite
     print("\n[3/5] Exporting data to SQLite...")
     row_counts: dict[str, int] = {}
+    _sqlite_export_ok = True
     db_path = PROJECT_ROOT / "data" / "research.duckdb"
     if db_path.exists():
         try:
             _sqlite_path = SITE_DIR / "data" / "research.sqlite"
-            sys.path.insert(0, str(PROJECT_ROOT))
-            from scripts.export_sqlite import export as _export_sqlite
             row_counts = _export_sqlite(db_path, _sqlite_path.parent)
         except Exception as exc:
+            _sqlite_export_ok = False
             print(f"  WARN  SQLite export failed: {exc}")
     else:
         print("  SKIP  research.duckdb not found")
@@ -1558,11 +1545,11 @@ def main() -> int:
     print(f"Output: {SITE_DIR.relative_to(PROJECT_ROOT)}/")
     print(f"{'=' * 60}")
 
-    # In strict mode (CI), fail if any notebook couldn't be exported.
+    # In strict mode (CI), fail if any notebook or the SQLite export failed.
     # Locally, partial exports are fine — failed notebooks appear grayed out.
     # Set STRICT_BUILD=1 in CI to enable strict mode.
     strict = os.environ.get("STRICT_BUILD", "0") == "1"
-    if strict and ok < total:
+    if strict and (ok < total or not _sqlite_export_ok):
         print("  STRICT_BUILD=1: returning non-zero (use locally without STRICT_BUILD to allow partial exports)")
         return 1
     return 0

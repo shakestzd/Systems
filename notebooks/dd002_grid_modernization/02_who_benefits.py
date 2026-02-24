@@ -1220,6 +1220,7 @@ def _(cfg, mo):
 @app.cell(hide_code=True)
 def _(mo):
     import altair as alt
+
     from src.altair_theme import register as _reg
     from src.data.db import query as _query
 
@@ -1276,10 +1277,8 @@ def _(mo):
         .interactive()
     )
 
-    _LITE = (
-        "https://lite.datasette.io/?url=https://shakes-tzd.github.io/Systems"
-        "/data/research.sqlite&install=datasette-plot#/research/dd002_queue_region_backlog"
-    )
+    from src.notebook import SITE_URL as _SITE_URL
+    _lite = f"https://lite.datasette.io/?url={_SITE_URL}/data/research.sqlite#/research/dd002_queue_region_backlog"
 
     mo.accordion({
         "Explore the data": mo.vstack([
@@ -1289,7 +1288,7 @@ def _(mo):
             ),
             _bar,
             _line,
-            mo.md(f"[Open `dd002_queue_region_backlog` in Datasette →]({_LITE})"),
+            mo.md(f"[Open `dd002_queue_region_backlog` in Datasette →]({_lite})"),
         ], gap="0.75rem"),
     })
     return
