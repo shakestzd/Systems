@@ -84,6 +84,7 @@ def save_fig(fig, path: Path, *, close: bool = True) -> None:
     import matplotlib.pyplot as plt
 
     path.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(path, dpi=300, bbox_inches="tight", facecolor="white")
+    from flowmpl import PAPER
+    fig.savefig(path, dpi=300, bbox_inches="tight", facecolor=PAPER)
     if close:
         plt.close(fig)

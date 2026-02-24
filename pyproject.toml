@@ -14,7 +14,7 @@ license = {text = "MIT"}
 
 dependencies = [
     # Visualization design system and flow diagram renderer
-    "flowmpl[all]>=0.1.1",
+    "flowmpl[all]>=0.3.0",
     # Core scientific computing
     "numpy>=1.24",
     "pandas>=2.0",
@@ -71,6 +71,11 @@ select = ["E", "F", "I", "N", "W", "UP"]
 # minified JS) that cannot be meaningfully wrapped.
 ".github/scripts/build.py" = ["E501"]
 "scripts/export_sqlite.py" = ["E501"]
+
+[tool.uv.sources]
+# Use the local development version of flowmpl while 0.3.0 is not yet on PyPI.
+# Remove this section after publishing to PyPI and running `uv sync`.
+flowmpl = { path = "../flowmpl", editable = true }
 
 [tool.marimo]
 [tool.marimo.display]
