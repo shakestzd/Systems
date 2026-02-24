@@ -1190,6 +1190,40 @@ def bea_nipa_investment() -> dlt.sources.DltResource:
 
 
 # ---------------------------------------------------------------------------
+# People to Follow (researchers, creators, data journalists, data viz)
+# ---------------------------------------------------------------------------
+
+
+@dlt.resource(write_disposition="replace")
+def people_to_follow() -> dlt.sources.DltResource:
+    """Load curated list of researchers, creators, and practitioners to follow.
+
+    Covers the project's analytical intersection: AI infrastructure, energy
+    transition, labor markets, public policy, data journalism, and data viz.
+    Source: data/external/people_to_follow.csv
+    """
+    path = PROJECT_ROOT / "data" / "external" / "people_to_follow.csv"
+    if not path.exists():
+        logger.warning("people_to_follow CSV not found at %s", path)
+        return
+
+    df = pd.read_csv(path)
+    for _, row in df.iterrows():
+        yield {
+            "name": str(row["name"]),
+            "affiliation": str(row["affiliation"]),
+            "category": str(row["category"]),
+            "topics": str(row["topics"]),
+            "platform": str(row["platform"]),
+            "url": str(row["url"]),
+            "description": str(row["description"]),
+            "relevance_tags": str(row["relevance_tags"]),
+            "paywalled": str(row.get("paywalled", "false")).lower() == "true",
+            "added": str(row.get("added", "")),
+        }
+
+
+# ---------------------------------------------------------------------------
 # Pipeline Runner
 # ---------------------------------------------------------------------------
 
@@ -1291,6 +1325,8 @@ def run_reference() -> None:
     logger.info("DD-004 PJM zone demand: %s", info)
     info = pipeline.run(dd004_iurc_cases())
     logger.info("DD-004 IURC cases: %s", info)
+    info = pipeline.run(people_to_follow())
+    logger.info("People to follow: %s", info)
 
 
 def run_edgar() -> None:
