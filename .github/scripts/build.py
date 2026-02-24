@@ -272,7 +272,10 @@ def inject_site_nav(html_path: Path) -> None:
     # 3. Rewrite in-prose cross-notebook links: ./foo.py -> ./foo.html
     #    Notebook prose references sibling notebooks by their source filename.
     #    On GitHub Pages the deployed files are .html, so the href must match.
+    #    Marimo embeds notebook content as a JSON payload, so links appear in
+    #    two forms: raw HTML (href="./foo.py") and JSON-escaped (href=\"./foo.py\").
     html = re.sub(r'href="(\./[^"]+)\.py"', r'href="\1.html"', html)
+    html = re.sub(r'href=\\"(\./[^"\\]+)\.py\\"', r'href=\\"\1.html\\"', html)
 
     html_path.write_text(html, encoding="utf-8")
 
