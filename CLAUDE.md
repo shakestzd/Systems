@@ -154,7 +154,7 @@ update that touches both theme files and `build.py` simultaneously.
   ```
 - Test a single notebook:
   ```
-  bash scripts/test_notebooks.sh notebooks/dd001_capital_reality/01_capex_vs_reality.py
+  bash scripts/test_notebooks.sh notebooks/dd001_capital_reality/01_markets_and_money.py
   ```
 - Structural check (fast, no execution): `uv run marimo check notebooks/**/*.py`
 - Lint check: `uv run ruff check src/ notebooks/`

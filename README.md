@@ -1,5 +1,7 @@
 # Where AI Capital Lands
 
+**Live site:** https://shakes-tzd.github.io/Systems/
+
 ## Core Question
 
 AI companies are deploying over $200 billion per year in capital expenditure. That
@@ -31,25 +33,20 @@ the infrastructure path dependencies they create. The analytical framework combi
 
 | ID | Focus | Status |
 | :--- | :--- | :--- |
-| **CS-1** | Transformer manufacturing and grid equipment | Draft complete |
-| **CS-2** | Power generation mix and asset lock-in | Not started |
-| **CS-3** | Grid interconnection and transmission | Not started |
-| **CS-4** | Material supply chains (GOES, copper, critical minerals) | Not started |
-| **CS-5** | Labor and workforce | Not started |
-
-## Project Status
-
-**Phase 1:** Tightening CS-1 (transformer case study) and establishing the
-analytical framework for publication.
+| **DD-001** | AI Valuations vs Physical Infrastructure Reality | Active |
+| **DD-002** | AI Capital and Grid Modernization | Active |
+| **DD-003** | AI Capital Flows and Labor Impact | Active |
+| **DD-004** | AI Capital and Who Pays for the Grid | Scoping |
 
 ## Repository Contents
 
 - `research-framework.md` — Analytical framework, case study plans, reference list
-- `data-sources.md` — Catalog of data sources with access information
-- `src/` — Python source code for models and data pipelines
-- `notebooks/` — Marimo notebooks for analysis (.py files, not Jupyter)
+- `src/` — Python source code for data pipelines, plotting, and dynamics models
+- `notebooks/` — Marimo notebooks for analysis (`.py` files, not Jupyter)
 - `data/` — Raw and processed datasets (not committed to git)
 - `tests/` — Unit and integration tests
+- `.github/scripts/build.py` — Exports notebooks to static HTML for GitHub Pages
+- `scripts/deploy.sh` — Builds the site and pushes to the `gh-pages` branch
 
 ## Getting Started
 
@@ -58,10 +55,16 @@ analytical framework for publication.
 uv sync
 
 # Open a notebook
-uv run marimo edit notebooks/dd001_learning_curves/01_investigation.py
+uv run marimo edit notebooks/dd001_capital_reality/01_markets_and_money.py
 
 # Run tests
 uv run pytest
+
+# Build the site locally
+uv run python .github/scripts/build.py
+
+# Deploy to GitHub Pages
+bash scripts/deploy.sh
 ```
 
 ## License
