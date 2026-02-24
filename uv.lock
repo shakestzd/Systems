@@ -843,10 +843,14 @@ wheels = [
 [[package]]
 name = "flowmpl"
 version = "0.3.0"
-source = { editable = "../flowmpl" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "matplotlib" },
     { name = "numpy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/21/9c/7c4e228284a1430920178ac00dfeac174b8b6635853487025f079ecbd5f6/flowmpl-0.3.0.tar.gz", hash = "sha256:323041ea60abd8505cd57a57c290ed30c6ce857470cf59d4fd31ccfccb0a4a1b", size = 6899029, upload-time = "2026-02-24T21:38:41.923Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/79/65/ed34db7a33e84d45465218ab26711a6101054be3685f798fd8fef07cce8e/flowmpl-0.3.0-py3-none-any.whl", hash = "sha256:29666f70e2936905d8a1e8da50b25647ea6044fd536e8b704beaff2be9dd255d", size = 226263, upload-time = "2026-02-24T21:38:39.699Z" },
 ]
 
 [package.optional-dependencies]
@@ -858,26 +862,6 @@ all = [
     { name = "pyconify" },
     { name = "requests" },
 ]
-
-[package.metadata]
-requires-dist = [
-    { name = "cairosvg", marker = "extra == 'icons'", specifier = ">=2.7" },
-    { name = "dlt", extras = ["duckdb"], marker = "extra == 'examples'", specifier = ">=1.0" },
-    { name = "flowmpl", extras = ["charts", "maps", "icons"], marker = "extra == 'all'" },
-    { name = "flowmpl", extras = ["charts", "maps", "icons", "examples"], marker = "extra == 'dev'" },
-    { name = "geopandas", marker = "extra == 'maps'", specifier = ">=1.0" },
-    { name = "marimo", marker = "extra == 'dev'", specifier = ">=0.10" },
-    { name = "marimo", marker = "extra == 'examples'", specifier = ">=0.10" },
-    { name = "matplotlib", specifier = ">=3.7" },
-    { name = "mypy", marker = "extra == 'dev'", specifier = ">=1.8" },
-    { name = "numpy", specifier = ">=1.24" },
-    { name = "pandas", marker = "extra == 'charts'", specifier = ">=2.0" },
-    { name = "pillow", marker = "extra == 'icons'", specifier = ">=9.0" },
-    { name = "pyconify", marker = "extra == 'icons'", specifier = ">=0.1" },
-    { name = "requests", marker = "extra == 'maps'", specifier = ">=2.31" },
-    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.3" },
-]
-provides-extras = ["charts", "maps", "icons", "all", "dev", "examples"]
 
 [[package]]
 name = "fonttools"
@@ -4345,7 +4329,7 @@ requires-dist = [
     { name = "auto-mix-prep", specifier = ">=0.2.0" },
     { name = "dlt", extras = ["duckdb"], specifier = ">=1.0" },
     { name = "duckdb", specifier = ">=1.4" },
-    { name = "flowmpl", extras = ["all"], editable = "../flowmpl" },
+    { name = "flowmpl", extras = ["all"], specifier = ">=0.3.0" },
     { name = "fredapi", specifier = ">=0.5" },
     { name = "geopandas", specifier = ">=1.0" },
     { name = "hmmlearn", specifier = ">=0.3" },

@@ -72,11 +72,6 @@ select = ["E", "F", "I", "N", "W", "UP"]
 ".github/scripts/build.py" = ["E501"]
 "scripts/export_sqlite.py" = ["E501"]
 
-[tool.uv.sources]
-# Use the local development version of flowmpl while 0.3.0 is not yet on PyPI.
-# Remove this section after publishing to PyPI and running `uv sync`.
-flowmpl = { path = "../flowmpl", editable = true }
-
 [tool.marimo]
 [tool.marimo.display]
 # Force light (paper) theme in the editor — consistent with the published site.
