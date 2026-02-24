@@ -46,6 +46,14 @@ def setup() -> NotebookConfig:
     from flowmpl import apply_style
     apply_style()
 
+    # Register Altair theme if altair is installed — soft dependency so
+    # notebooks that don't use Altair are unaffected.
+    try:
+        from src.altair_theme import register as _register_altair
+        _register_altair()
+    except ImportError:
+        pass
+
     return NotebookConfig(
         project_root=PROJECT_ROOT,
         img_dir=PROJECT_ROOT / "notebooks" / "images",

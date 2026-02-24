@@ -37,6 +37,8 @@ dependencies = [
     "duckdb>=1.4",
     "dlt[duckdb]>=1.0",
     "pyarrow>=14.0",
+    # Interactive visualization (Vega-Lite, for exploration sections in notebooks)
+    "altair>=5.0",
     # Geographic visualization
     "geopandas>=1.0",
     # Notebooks (Marimo, not Jupyter)
@@ -65,6 +67,10 @@ select = ["E", "F", "I", "N", "W", "UP"]
 # F821: marimo injects cell dependencies at runtime — ruff can't see the DAG.
 # E501: markdown tables inside mo.md() strings can't be line-wrapped.
 "notebooks/**/*.py" = ["N803", "F821", "E501"]
+# Build scripts embed long HTML template strings (SVG data URLs, Google Fonts,
+# minified JS) that cannot be meaningfully wrapped.
+".github/scripts/build.py" = ["E501"]
+"scripts/export_sqlite.py" = ["E501"]
 
 [tool.marimo]
 [tool.marimo.display]

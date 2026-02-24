@@ -2,7 +2,7 @@ import marimo
 
 __generated_with = "0.19.11"
 app = marimo.App(
-    width="medium",
+    width="compact",
     app_title="DD-004 Data Centers and Rural Communities",
     css_file="../../src/notebook_theme/custom.css",
     html_head_file="../../src/notebook_theme/head.html",
@@ -809,6 +809,62 @@ def _(mo, stats):
     - IURC Cause 46301 Final Order (Jan 2026) — EGR Plan and capacity deficit figures
     - PJM Load Analysis Subcommittee, Nov 2025 presentation — AEP and RTO demand requests
     """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    import altair as alt
+    from src.altair_theme import register as _reg
+    from src.data.db import query as _query
+
+    _reg()
+
+    _df = _query("""
+        SELECT zone, year, requested_mw
+        FROM energy_data.dd004_pjm_zone_demand
+        ORDER BY zone, year
+    """)
+
+    _sel = alt.selection_point(fields=["zone"], bind="legend")
+
+    _chart = (
+        alt.Chart(_df)
+        .mark_line(point=alt.OverlayMarkDef(size=30))
+        .encode(
+            x=alt.X("year:O", title=None),
+            y=alt.Y("requested_mw:Q", title="Requested Capacity (MW)"),
+            color=alt.Color("zone:N", title="PJM Zone"),
+            opacity=alt.condition(_sel, alt.value(1.0), alt.value(0.1)),
+            tooltip=[
+                alt.Tooltip("year:O", title="Year"),
+                alt.Tooltip("zone:N", title="PJM Zone"),
+                alt.Tooltip("requested_mw:Q", title="Requested (MW)", format=",.0f"),
+            ],
+        )
+        .add_params(_sel)
+        .properties(
+            width="container", height=320,
+            title="PJM Zone Demand Requests (2025–2046)",
+        )
+        .interactive()
+    )
+
+    _LITE = (
+        "https://lite.datasette.io/?url=https://shakes-tzd.github.io/Systems"
+        "/data/research.sqlite&install=datasette-plot#/research/dd004_pjm_zone_demand"
+    )
+
+    mo.accordion({
+        "Explore the data": mo.vstack([
+            mo.md(
+                "Click a zone in the legend to compare individual trajectories. "
+                "AEP zone shows the sharpest projected growth driven by hyperscaler load."
+            ),
+            _chart,
+            mo.md(f"[Open `dd004_pjm_zone_demand` in Datasette →]({_LITE})"),
+        ], gap="0.75rem"),
+    })
     return
 
 

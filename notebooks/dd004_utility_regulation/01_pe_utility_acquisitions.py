@@ -2,6 +2,7 @@ import marimo
 
 __generated_with = "0.19.11"
 app = marimo.App(
+    width="compact",
     css_file="../../src/notebook_theme/custom.css",
     html_head_file="../../src/notebook_theme/head.html",
 )

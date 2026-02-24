@@ -2,7 +2,7 @@ import marimo
 
 __generated_with = "0.19.11"
 app = marimo.App(
-    width="medium",
+    width="compact",
     app_title="AI Capital and Labor Markets",
     css_file="../../src/notebook_theme/custom.css",
     html_head_file="../../src/notebook_theme/head.html",
@@ -908,6 +908,81 @@ def _(mo):
         ),
         kind="info",
     )
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    import altair as alt
+    from src.altair_theme import register as _reg
+    from src.data.db import query as _query
+
+    _reg()
+
+    _SERIES = {
+        "CES6054150001": "Computer systems design",
+        "USCONS": "Construction",
+        "USINFO": "Information",
+        "MANEMP": "Manufacturing",
+    }
+
+    _series_in = ", ".join(f"'{s}'" for s in _SERIES)
+    _raw = _query(
+        f"SELECT series_id, date, value FROM energy_data.fred_series "
+        f"WHERE series_id IN ({_series_in}) "
+        "AND date >= '2020-01-01' ORDER BY series_id, date"
+    )
+
+    _base = (
+        _raw.sort_values("date")
+        .groupby("series_id")
+        .first()["value"]
+        .rename("base")
+    )
+    _df = _raw.merge(_base, on="series_id")
+    _df["indexed"] = _df["value"] / _df["base"] * 100
+    _df["sector"] = _df["series_id"].map(_SERIES)
+
+    _sel = alt.selection_point(fields=["sector"], bind="legend")
+
+    _chart = (
+        alt.Chart(_df)
+        .mark_line()
+        .encode(
+            x=alt.X("date:T", title=None, axis=alt.Axis(format="%Y")),
+            y=alt.Y("indexed:Q", title="Index (Jan 2020 = 100)"),
+            color=alt.Color("sector:N", title="Sector"),
+            opacity=alt.condition(_sel, alt.value(1.0), alt.value(0.12)),
+            tooltip=[
+                alt.Tooltip("date:T", title="Month", format="%b %Y"),
+                alt.Tooltip("sector:N", title="Sector"),
+                alt.Tooltip("indexed:Q", title="Index", format=".1f"),
+                alt.Tooltip("value:Q", title="Employment (thousands)", format=",.0f"),
+            ],
+        )
+        .add_params(_sel)
+        .properties(
+            width="container", height=300,
+            title="Employment Index by Sector (Jan 2020 = 100)",
+        )
+        .interactive()
+    )
+
+    _LITE = (
+        "https://lite.datasette.io/?url=https://shakes-tzd.github.io/Systems"
+        "/data/research.sqlite&install=datasette-plot#/research/fred_series"
+    )
+
+    mo.accordion({
+        "Explore the data": mo.vstack([
+            mo.md(
+                "Click a sector in the legend to isolate it. "
+                "Hover for exact index values and underlying employment counts."
+            ),
+            _chart,
+            mo.md(f"[Open `fred_series` in Datasette →]({_LITE})"),
+        ], gap="0.75rem"),
+    })
     return
 
 

@@ -2,6 +2,7 @@ import marimo
 
 __generated_with = "0.19.11"
 app = marimo.App(
+    width="compact",
     app_title="DD-001: Markets and Money",
     css_file="../../src/notebook_theme/custom.css",
     html_head_file="../../src/notebook_theme/head.html",
@@ -1160,6 +1161,55 @@ def _(mo):
 
     **Next:** [02_conversion_reality.py](./02_conversion_reality.py): construction timelines, grid interconnection queues, and the gap between announcement and operation.
     """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    import altair as alt
+    from src.altair_theme import register as _reg
+    from src.data.db import query as _query
+
+    _reg()
+
+    _df = _query("""
+        SELECT ticker, date, capex_bn
+        FROM energy_data.hyperscaler_capex
+        ORDER BY ticker, date
+    """)
+
+    _chart = (
+        alt.Chart(_df)
+        .mark_line(point=alt.OverlayMarkDef(size=30))
+        .encode(
+            x=alt.X("date:T", title=None, axis=alt.Axis(format="%Y")),
+            y=alt.Y("capex_bn:Q", title="CapEx ($ billions)"),
+            color=alt.Color("ticker:N", title="Company"),
+            tooltip=[
+                alt.Tooltip("date:T", title="Quarter", format="%b %Y"),
+                alt.Tooltip("ticker:N", title="Company"),
+                alt.Tooltip("capex_bn:Q", title="CapEx ($B)", format=".2f"),
+            ],
+        )
+        .properties(width="container", height=300)
+        .interactive()
+    )
+
+    _LITE = (
+        "https://lite.datasette.io/?url=https://shakes-tzd.github.io/Systems"
+        "/data/research.sqlite&install=datasette-plot#/research/hyperscaler_capex"
+    )
+
+    mo.accordion({
+        "Explore the data": mo.vstack([
+            mo.md(
+                "Quarterly CapEx by hyperscaler. Hover for exact values; "
+                "click and drag to zoom; double-click to reset."
+            ),
+            _chart,
+            mo.md(f"[Open `hyperscaler_capex` in Datasette →]({_LITE})"),
+        ], gap="0.75rem"),
+    })
     return
 
 

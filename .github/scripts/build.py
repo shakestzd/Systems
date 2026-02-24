@@ -225,6 +225,7 @@ _NOTEBOOK_NAV = (
     '<div class="snb">'
     '<a href="../index.html">&#8592; Research</a>'
     '<a href="../about.html">About</a>'
+    '<a href="../data.html">Data</a>'
     '<span style="flex:1"></span>'
     '<button class="nb-tog" id="nb-tog" onclick="nbTog()" title="Toggle theme">◑</button>'
     f'<a href="{SITE["github_url"]}">GitHub</a>'
@@ -648,16 +649,19 @@ INDEX_TEMPLATE = """\
             .cs-meta { display: flex; align-items: center; gap: 1rem; }
             .site-footer { padding: 2rem 1.25rem; }
         }
+        .site-main { max-width: 740px; margin: 0 auto; }
     </style>
 </head>
 <body>
     <nav class="site-nav">
         <a href="index.html" class="active">Research</a>
         <a href="about.html">About</a>
+        <a href="data.html">Data</a>
         <span class="nav-spacer"></span>
         <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light mode">◑</button>
         <a href="__GITHUB_URL__">GitHub</a>
     </nav>
+    <main class="site-main">
     <div class="masthead">
         <p class="kicker">Independent Research</p>
         <h1 class="site-title">__SITE_TITLE__</h1>
@@ -680,6 +684,7 @@ INDEX_TEMPLATE = """\
         <span>Built with <a href="https://marimo.io">marimo</a></span>
         <a href="__GITHUB_URL__">Source on GitHub</a>
     </footer>
+    </main>
     <script>
         (function() {
             var root = document.documentElement;
@@ -762,8 +767,8 @@ def generate_index(exported: dict[str, bool]) -> str:
             f'            <div class="nb-list">\n'
             + "\n".join(nb_rows)
             + "\n            </div>\n"
-            f'        </div>\n'
-            f'    </div>'
+            '        </div>\n'
+            '    </div>'
         )
 
     html = INDEX_TEMPLATE
@@ -1029,16 +1034,19 @@ ABOUT_TEMPLATE = """\
             .about-body { padding: 2.5rem 1.25rem 4rem; }
             .site-footer { padding: 2rem 1.25rem; }
         }
+        .site-main { max-width: 740px; margin: 0 auto; }
     </style>
 </head>
 <body>
     <nav class="site-nav">
         <a href="index.html">Research</a>
         <a href="about.html" class="active">About</a>
+        <a href="data.html">Data</a>
         <span class="nav-spacer"></span>
         <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light mode">◑</button>
         <a href="__GITHUB_URL__">GitHub</a>
     </nav>
+    <main class="site-main">
     <div class="about-header">
         <p class="kicker">About the Research</p>
         <h1 class="page-title">Thandolwethu Zwelakhe Dlamini</h1>
@@ -1142,6 +1150,7 @@ ABOUT_TEMPLATE = """\
         <span>Built with <a href="https://marimo.io">marimo</a></span>
         <a href="__GITHUB_URL__">Source on GitHub</a>
     </footer>
+    </main>
     <script>
         (function() {
             var root = document.documentElement;
@@ -1179,6 +1188,308 @@ def generate_about() -> str:
 
 
 # ---------------------------------------------------------------------------
+# Data portal page generation
+# ---------------------------------------------------------------------------
+
+# Table metadata mirrored from scripts/export_sqlite.py — kept here as a
+# lightweight inline list so build.py has no import dependency on that script.
+_DATA_TABLES = [
+    ("hyperscaler_capex",              "Hyperscaler Capital Expenditure",         "DD-001"),
+    ("capex_guidance",                 "CapEx Guidance (Forward-Looking)",         "DD-001"),
+    ("cloud_revenue",                  "Cloud Revenue (Quarterly)",                "DD-001"),
+    ("hyperscaler_ocf",                "Operating Cash Flow",                     "DD-001"),
+    ("mag7_market_caps",               "Market Capitalizations",                  "DD-001"),
+    ("edgar_xbrl_facts",               "SEC EDGAR XBRL Facts",                    "DD-001"),
+    ("edgar_ppe_schedule",             "PP&amp;E Schedule",                        "DD-001"),
+    ("lbnl_queue",                     "LBNL Interconnection Queue",              "DD-002"),
+    ("lbnl_queue_summary",             "LBNL Queue Summary (Annual)",             "DD-002"),
+    ("dd002_queue_region_backlog",     "Queue Backlog by ISO/RTO Region",         "DD-002"),
+    ("dd002_cost_allocation",          "Network Upgrade Cost Allocation",         "DD-002"),
+    ("dd002_hyperscaler_region_weights","Hyperscaler Regional CapEx Weights",     "DD-002"),
+    ("dd002_projection_priors",        "Grid Projection Priors",                  "DD-002"),
+    ("dd002_policy_events",            "Regulatory Policy Events",                "DD-002"),
+    ("eia860_generators",              "EIA Form 860 Generators",                 "DD-002"),
+    ("fred_series",                    "FRED Economic Time Series",               "DD-001, DD-002"),
+    ("oews_wages",                     "BLS OEWS Occupational Wages",             "DD-003"),
+    ("dd004_pjm_zone_demand",          "PJM Zone Demand Requests",               "DD-004"),
+    ("dd004_iurc_cases",               "Indiana Utility Regulatory Cases",        "DD-004"),
+    ("bea_nipa_investment",            "BEA NIPA Private Fixed Investment",       "DD-001"),
+    ("source_citations",               "Source Citations Registry",               "All"),
+]
+
+_LITE_BASE = "https://lite.datasette.io"
+
+DATA_TEMPLATE = """\
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data &mdash; __SITE_TITLE__</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+    <script>
+        (function(){var t=localStorage.getItem('color-theme');if(t)document.documentElement.dataset.colorTheme=t;})();
+    </script>
+    <style>
+        :root {
+            --paper: #f5f1eb; --ink: #1a1917; --ink-mid: #4d4a46;
+            --ink-light: #9a9490; --rule: #d6cfc7; --accent: #b84c2a;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-color-theme]) {
+                --paper: #14120f; --ink: #e5e0d8; --ink-mid: #ada89f;
+                --ink-light: #5a5650; --rule: #2e2b27; --accent: #d4634a;
+            }
+        }
+        :root[data-color-theme="dark"] {
+            --paper: #14120f; --ink: #e5e0d8; --ink-mid: #ada89f;
+            --ink-light: #5a5650; --rule: #2e2b27; --accent: #d4634a;
+        }
+        :root[data-color-theme="light"] {
+            --paper: #f5f1eb; --ink: #1a1917; --ink-mid: #4d4a46;
+            --ink-light: #9a9490; --rule: #d6cfc7; --accent: #b84c2a;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            background: var(--paper); color: var(--ink);
+            font-family: 'DM Sans', sans-serif; font-weight: 300;
+            line-height: 1.6; min-height: 100vh;
+        }
+        body::after {
+            content: ''; position: fixed; inset: 0; pointer-events: none;
+            z-index: 999;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+        }
+        .site-nav {
+            display: flex; align-items: center; gap: 2rem;
+            padding: 1.2rem 2.5rem; border-bottom: 1px solid var(--rule);
+            position: sticky; top: 0; background: var(--paper); z-index: 50;
+        }
+        .site-nav a {
+            font-family: 'DM Mono', monospace; font-size: 0.67rem;
+            letter-spacing: 0.12em; text-transform: uppercase;
+            color: var(--ink-light); text-decoration: none; transition: color 0.14s;
+        }
+        .site-nav a.active { color: var(--ink); }
+        .site-nav a:hover { color: var(--ink); }
+        .nav-spacer { flex: 1; }
+        .theme-toggle {
+            background: none; border: none; cursor: pointer;
+            font-family: 'DM Mono', monospace; font-size: 0.82rem;
+            color: var(--ink-light); padding: 0; line-height: 1; transition: color 0.14s;
+        }
+        .theme-toggle:hover { color: var(--ink); }
+        .site-main { max-width: 740px; margin: 0 auto; }
+        .data-header {
+            padding: 4rem 2.5rem 3rem; border-bottom: 1px solid var(--rule);
+        }
+        .kicker {
+            display: flex; align-items: center; gap: 0.75rem;
+            font-family: 'DM Mono', monospace; font-size: 0.64rem;
+            letter-spacing: 0.15em; text-transform: uppercase;
+            color: var(--ink-light); margin-bottom: 1.25rem;
+        }
+        .kicker::before {
+            content: ''; display: inline-block; width: 1.75rem; height: 1px;
+            background: var(--accent);
+        }
+        .page-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(2rem, 4vw, 3.25rem); font-weight: 300;
+            line-height: 1.08; letter-spacing: -0.02em; color: var(--ink);
+        }
+        .data-intro {
+            padding: 2.5rem 2.5rem; border-bottom: 1px solid var(--rule);
+        }
+        .data-intro p {
+            font-size: 0.93rem; color: var(--ink-mid); line-height: 1.8;
+            max-width: 600px; margin-bottom: 1rem;
+        }
+        .data-intro p:last-child { margin-bottom: 0; }
+        .open-btn {
+            display: inline-block; margin-top: 1.5rem;
+            border: 1px solid var(--accent); color: var(--accent);
+            text-decoration: none; padding: 0.55rem 1.2rem;
+            font-family: 'DM Mono', monospace; font-size: 0.67rem;
+            letter-spacing: 0.1em; text-transform: uppercase;
+            transition: background 0.14s, color 0.14s;
+        }
+        .open-btn:hover { background: var(--accent); color: var(--paper); }
+        .table-section {
+            padding: 2.5rem 2.5rem 1rem;
+        }
+        .section-label {
+            font-family: 'DM Mono', monospace; font-size: 0.64rem;
+            letter-spacing: 0.12em; text-transform: uppercase;
+            color: var(--ink-light); margin-bottom: 1.25rem;
+            padding-bottom: 0.5rem; border-bottom: 1px solid var(--rule);
+        }
+        .table-row {
+            display: grid; grid-template-columns: 1fr auto;
+            gap: 0 1rem; padding: 0.75rem 0;
+            border-bottom: 1px solid var(--rule);
+            align-items: baseline;
+        }
+        .table-row:last-child { border-bottom: none; }
+        .table-name {
+            font-family: 'DM Mono', monospace; font-size: 0.72rem;
+            letter-spacing: 0.04em; color: var(--ink); margin-bottom: 0.2rem;
+        }
+        .table-label { font-size: 0.82rem; color: var(--ink-mid); font-weight: 300; }
+        .table-meta {
+            display: flex; gap: 0.75rem; align-items: center; flex-shrink: 0;
+        }
+        .table-rows {
+            font-family: 'DM Mono', monospace; font-size: 0.6rem;
+            color: var(--ink-light); white-space: nowrap;
+        }
+        .table-link {
+            font-family: 'DM Mono', monospace; font-size: 0.6rem;
+            letter-spacing: 0.08em; text-transform: uppercase;
+            color: var(--accent); text-decoration: none;
+            transition: color 0.14s;
+        }
+        .table-link:hover { color: var(--ink); }
+        .data-footer {
+            padding: 2.5rem 2.5rem; border-top: 1px solid var(--rule);
+            font-family: 'DM Mono', monospace; font-size: 0.64rem;
+            letter-spacing: 0.05em; color: var(--ink-light);
+        }
+        .data-footer a { color: var(--ink-light); text-decoration: none; }
+        .data-footer a:hover { color: var(--ink); }
+        @media (max-width: 680px) {
+            .site-nav { padding: 1rem 1.25rem; gap: 1.5rem; }
+            .data-header { padding: 3rem 1.25rem 2rem; }
+            .data-intro { padding: 2rem 1.25rem; }
+            .table-section { padding: 2rem 1.25rem 0.5rem; }
+            .data-footer { padding: 2rem 1.25rem; }
+            .table-row { grid-template-columns: 1fr; gap: 0.4rem; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="site-nav">
+        <a href="index.html">Research</a>
+        <a href="about.html">About</a>
+        <a href="data.html" class="active">Data</a>
+        <span class="nav-spacer"></span>
+        <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle dark/light mode">&#9681;</button>
+        <a href="__GITHUB_URL__">GitHub</a>
+    </nav>
+    <main class="site-main">
+    <div class="data-header">
+        <p class="kicker">Research Data</p>
+        <h1 class="page-title">The Data Behind the Analysis</h1>
+    </div>
+    <div class="data-intro">
+        <p>Every number in this research is derived from public data. The full
+        database is available for browsing, querying, and download below &mdash;
+        no sign-up required.</p>
+        <p>The <a href="__GITHUB_URL__">source repository</a> contains the pipelines
+        that produced each table. Data definitions and methodology are documented
+        in each case study&rsquo;s Methods &amp; Sources notebook.</p>
+        <a class="open-btn" href="__LITE_URL__" target="_blank" rel="noopener">
+            Open in Datasette &rarr;
+        </a>
+    </div>
+    __TABLE_ROWS__
+    <div class="data-footer">
+        <span>Data updated when case studies are revised &mdash; </span>
+        <a href="__GITHUB_URL__">view pipeline source</a>
+    </div>
+    </main>
+    <script>
+        (function() {
+            var root = document.documentElement;
+            var btn = document.getElementById('theme-toggle');
+            function effective() {
+                var s = localStorage.getItem('color-theme');
+                return s || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            }
+            function apply(theme) {
+                root.dataset.colorTheme = theme;
+                if (btn) btn.textContent = theme === 'dark' ? '\\u25d0' : '\\u25d1';
+            }
+            apply(effective());
+            window.toggleTheme = function() {
+                var next = effective() === 'dark' ? 'light' : 'dark';
+                localStorage.setItem('color-theme', next);
+                apply(next);
+            };
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+                if (!localStorage.getItem('color-theme')) apply(e.matches ? 'dark' : 'light');
+            });
+        })();
+    </script>
+</body>
+</html>
+"""
+
+_GITHUB_PAGES_BASE = "https://shakes-tzd.github.io/Systems"
+
+
+def _lite_url(table: str | None = None) -> str:
+    """Build a Datasette Lite URL for the hosted SQLite file."""
+    db_url = f"{_GITHUB_PAGES_BASE}/data/research.sqlite"
+    url = f"{_LITE_BASE}/?url={db_url}&install=datasette-plot"
+    if table:
+        url += f"#/research/{table}"
+    return url
+
+
+def generate_data(row_counts: dict[str, int]) -> str:
+    """Generate data.html from DATA_TEMPLATE.
+
+    Parameters
+    ----------
+    row_counts:
+        Mapping of table name → row count from the SQLite export step.
+        Empty dict if the database was not available (rows column is hidden).
+    """
+    # Group tables by case study
+    by_cs: dict[str, list] = {}
+    for name, label, cs in _DATA_TABLES:
+        by_cs.setdefault(cs, []).append((name, label))
+
+    sections = []
+    for cs_label, tables in by_cs.items():
+        rows_html = []
+        for name, label in tables:
+            count = row_counts.get(name)
+            count_str = f"{count:,} rows" if count is not None else ""
+            explore_href = _lite_url(name)
+            rows_html.append(
+                f'<div class="table-row">'
+                f'<div>'
+                f'<div class="table-name">{name}</div>'
+                f'<div class="table-label">{label}</div>'
+                f'</div>'
+                f'<div class="table-meta">'
+                f'<span class="table-rows">{count_str}</span>'
+                f'<a class="table-link" href="{escape(explore_href)}" '
+                f'target="_blank" rel="noopener">Explore</a>'
+                f'</div>'
+                f'</div>'
+            )
+        sections.append(
+            f'<div class="table-section">'
+            f'<div class="section-label">{escape(cs_label)}</div>'
+            + "\n".join(rows_html)
+            + "</div>"
+        )
+
+    html = DATA_TEMPLATE
+    html = html.replace("__SITE_TITLE__", SITE["title"])
+    html = html.replace("__GITHUB_URL__", SITE["github_url"])
+    html = html.replace("__LITE_URL__", escape(_lite_url()))
+    html = html.replace("__TABLE_ROWS__", "\n".join(sections))
+    return html
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -1192,11 +1503,11 @@ def main() -> int:
     (SITE_DIR / ".nojekyll").touch()
 
     # Step 1: Data
-    print("\n[1/4] Checking data...")
+    print("\n[1/5] Checking data...")
     ensure_data()
 
     # Step 2: Export notebooks
-    print("\n[2/4] Exporting notebooks...")
+    print("\n[2/5] Exporting notebooks...")
     exported: dict[str, bool] = {}
     total, ok = 0, 0
 
@@ -1209,17 +1520,35 @@ def main() -> int:
             if success:
                 ok += 1
 
-    # Step 3: Index
-    print("\n[3/4] Generating index page...")
+    # Step 3: Export SQLite for Datasette Lite
+    print("\n[3/5] Exporting data to SQLite...")
+    row_counts: dict[str, int] = {}
+    db_path = PROJECT_ROOT / "data" / "research.duckdb"
+    if db_path.exists():
+        try:
+            _sqlite_path = SITE_DIR / "data" / "research.sqlite"
+            sys.path.insert(0, str(PROJECT_ROOT))
+            from scripts.export_sqlite import export as _export_sqlite
+            row_counts = _export_sqlite(db_path, _sqlite_path.parent)
+        except Exception as exc:
+            print(f"  WARN  SQLite export failed: {exc}")
+    else:
+        print("  SKIP  research.duckdb not found")
+
+    # Step 4: Index
+    print("\n[4/5] Generating index page...")
     index_html = generate_index(exported)
     (SITE_DIR / "index.html").write_text(index_html)
-    print(f"  OK    index.html")
+    print("  OK    index.html")
 
-    # Step 4: About
-    print("\n[4/4] Generating about page...")
+    # Step 5: About + Data pages
+    print("\n[5/5] Generating about and data pages...")
     about_html = generate_about()
     (SITE_DIR / "about.html").write_text(about_html)
-    print(f"  OK    about.html")
+    print("  OK    about.html")
+    data_html = generate_data(row_counts)
+    (SITE_DIR / "data.html").write_text(data_html)
+    print("  OK    data.html")
 
     # Summary
     print(f"\n{'=' * 60}")
@@ -1234,7 +1563,7 @@ def main() -> int:
     # Set STRICT_BUILD=1 in CI to enable strict mode.
     strict = os.environ.get("STRICT_BUILD", "0") == "1"
     if strict and ok < total:
-        print(f"  STRICT_BUILD=1: returning non-zero (use locally without STRICT_BUILD to allow partial exports)")
+        print("  STRICT_BUILD=1: returning non-zero (use locally without STRICT_BUILD to allow partial exports)")
         return 1
     return 0
 

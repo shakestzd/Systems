@@ -2,7 +2,7 @@ import marimo
 
 __generated_with = "0.19.11"
 app = marimo.App(
-    width="medium",
+    width="compact",
     css_file="../../src/notebook_theme/custom.css",
     html_head_file="../../src/notebook_theme/head.html",
 )
@@ -1217,8 +1217,81 @@ def _(cfg, mo):
     return
 
 
-@app.cell
-def _():
+@app.cell(hide_code=True)
+def _(mo):
+    import altair as alt
+    from src.altair_theme import register as _reg
+    from src.data.db import query as _query
+
+    _reg()
+
+    _df = _query("""
+        SELECT year, region, queue_gw, is_major_dc_region
+        FROM energy_data.dd002_queue_region_backlog
+        ORDER BY year, queue_gw DESC
+    """)
+
+    _latest = int(_df["year"].max())
+    _bar_df = _df[_df["year"] == _latest].sort_values("queue_gw", ascending=False)
+
+    _bar = (
+        alt.Chart(_bar_df)
+        .mark_bar()
+        .encode(
+            x=alt.X("queue_gw:Q", title="Queue Backlog (GW)"),
+            y=alt.Y("region:N", sort="-x", title=None),
+            color=alt.condition(
+                "datum.is_major_dc_region",
+                alt.value("#b84c2a"),
+                alt.value("#9a9490"),
+            ),
+            tooltip=[
+                alt.Tooltip("region:N", title="ISO/RTO"),
+                alt.Tooltip("queue_gw:Q", title="Queue (GW)", format=".1f"),
+            ],
+        )
+        .properties(width="container", height=260, title=f"Queue Backlog by Region ({_latest})")
+    )
+
+    _sel = alt.selection_point(fields=["region"], bind="legend")
+    _line = (
+        alt.Chart(_df)
+        .mark_line(point=alt.OverlayMarkDef(size=30))
+        .encode(
+            x=alt.X("year:O", title=None),
+            y=alt.Y("queue_gw:Q", title="Queue (GW)"),
+            color=alt.Color("region:N", title="ISO/RTO"),
+            opacity=alt.condition(_sel, alt.value(1.0), alt.value(0.1)),
+            tooltip=[
+                alt.Tooltip("year:O", title="Year"),
+                alt.Tooltip("region:N", title="ISO/RTO"),
+                alt.Tooltip("queue_gw:Q", title="Queue (GW)", format=".1f"),
+            ],
+        )
+        .add_params(_sel)
+        .properties(
+            width="container", height=240,
+            title="Trends Over Time — click a region in the legend to filter",
+        )
+        .interactive()
+    )
+
+    _LITE = (
+        "https://lite.datasette.io/?url=https://shakes-tzd.github.io/Systems"
+        "/data/research.sqlite&install=datasette-plot#/research/dd002_queue_region_backlog"
+    )
+
+    mo.accordion({
+        "Explore the data": mo.vstack([
+            mo.md(
+                "Terracotta bars mark major data center regions. "
+                "Click a region in the bottom legend to isolate its trend."
+            ),
+            _bar,
+            _line,
+            mo.md(f"[Open `dd002_queue_region_backlog` in Datasette →]({_LITE})"),
+        ], gap="0.75rem"),
+    })
     return
 
 

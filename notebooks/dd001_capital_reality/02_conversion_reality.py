@@ -2,7 +2,7 @@ import marimo
 
 __generated_with = "0.19.11"
 app = marimo.App(
-    width="medium",
+    width="compact",
     app_title="DD-001: Conversion Reality",
     css_file="../../src/notebook_theme/custom.css",
     html_head_file="../../src/notebook_theme/head.html",
