@@ -6,20 +6,26 @@
 
 ## What This Project Is
 
-A research project analyzing how AI capital expenditure ($200B+/year) converts into
-physical infrastructure and creates durable path dependencies in supply chains, labor
-markets, trade patterns, and grid topology.
+An investigative research project analyzing how technology capital flows land in the
+physical economy — covering AI infrastructure, energy transition, climate finance, and
+their intersections — and what path dependencies they create for workers, communities,
+ratepayers, and the physical systems they depend on.
 
-**Core question:** Where does AI capex land in the physical economy, what does it
-lock in, and how do current regulatory decisions amplify or distort those outcomes?
+**Core questions:**
+1. Where does capital convert from financial commitment to physical asset?
+2. How durable is that infrastructure, and what does it lock in?
+3. Who benefits and who bears the costs?
+4. How do public policy decisions amplify or distort these outcomes?
+5. Where are the feedback loops and leverage points?
 
 The analytical framework combines:
-1. **Capital flow mapping** — Trace where AI capex converts to physical assets
+1. **Capital flow mapping** — Trace where technology capital converts to physical assets
 2. **Durability taxonomy** — Classify investments as structural, policy-dependent,
    or demand-thesis-dependent
-3. **Regulatory interaction analysis** — How trade, energy, and utility policy shapes
-   where capital lands
-4. **Systems dynamics modeling** (PySD) — Map feedback architecture and leverage points
+3. **Regulatory interaction analysis** — How trade, energy, utility, and industrial
+   policy shapes where capital lands
+4. **People and distribution** — Workers, communities, ratepayers, decision-makers
+5. **Systems dynamics modeling** (PySD) — Map feedback architecture and leverage points
 
 See `research-framework.md` for the full framework and references.
 
@@ -93,6 +99,37 @@ notebook directory, then run the sync script. Do NOT edit PROJECT_STATUS.md by h
 - Read files before editing them
 - Use absolute paths
 - Do not auto-commit unless explicitly asked
+
+### Policy Currency
+
+Technology, energy, and climate policy are in active flux. A claim accurate in 2023
+may be wrong by mid-2025. **Before writing any policy claim, use the researcher agent
+to verify current status.**
+
+Rules:
+- Cite specific statutory provisions by section number (e.g., §45Y, §45X), not just
+  program names — names change, section numbers are stable
+- Date every policy reference: "as of [month year]"
+- Note when a policy is under legal challenge or pending rulemaking
+- Flag when a policy reference is more than 6 months old and may need re-verification
+
+**Reliable primary sources (zero-budget, publicly accessible):**
+- [Congress.gov](https://congress.gov) — statutory text and bill status
+- [FERC.gov](https://www.ferc.gov) — orders, dockets, interconnection queue
+- [EIA.gov](https://www.eia.gov) — energy data, generation capacity, fuel mix
+- [NERC.org](https://www.nerc.com) — reliability assessments, demand forecasts
+- [LBNL Electricity Markets & Policy](https://emp.lbl.gov) — grid and clean energy research
+- State PUC websites — utility rate cases and IRP filings
+- [SEC EDGAR](https://www.sec.gov/cgi-bin/browse-edgar) — company 10-K/10-Q filings
+
+**Known policy state as of February 2026 (verify before citing):**
+- One Big Beautiful Act (H.R.1, signed July 4, 2025): eliminated 30D consumer EV
+  credits; terminated 25C/25D residential credits by 12/31/2025; set 12/31/2031
+  sunset for 45Y/48E (utility-scale wind/solar); preserved 45X (battery manufacturing),
+  48C (advanced manufacturing), 45Q (carbon capture), 45V (hydrogen), 45Z (clean fuels)
+- US Paris Agreement withdrawal: initiated January 20, 2025; effective January 2026
+- FERC Order 2023 (interconnection reform): in effect, ISOs/RTOs compliant
+- FERC Order 1920 (transmission planning): under 8th Circuit legal challenge
 
 ### Code Style
 - Use `ruff` for linting and formatting
