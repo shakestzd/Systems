@@ -98,6 +98,8 @@ The following are non-negotiable:
 - Prose after (caption or following paragraph) should explain methodology, caveats, and data source — not restate what the chart shows
 - The caption should disclose: data source, time range covered, any fiscal-year-to-calendar-year adjustments, and geographic scope
 - Claims in prose that are not visible in the chart are a coherence failure
+- **Parenthetical anchor:** The headline figure should be pinned directly in the prose sentence that introduces the chart (e.g., "...now at a $42B annualized pace"). If the reader must hunt for the key number in the axis, the prose has not done its job.
+- **No re-narration:** Prose after the chart should interpret, not describe. "As the chart shows, spending rose" is a failure — the reader saw the chart. Flag any sentence that describes what is already visible.
 
 ## Review Process
 
@@ -159,6 +161,8 @@ Flag any of the following explicitly:
 - Truncated y-axes that exaggerate differences (flag — sometimes legitimate, always disclose)
 - Missing zero baseline on bar charts (bars must start at zero)
 - Hex colors embedded in notebook cells instead of design system imports
+- Re-narration: prose after the chart that describes what is already visible ("As the chart shows...")
+- Missing parenthetical anchor: the headline figure is not pinned in the prose that introduces the chart
 
 ### Step 8: Alternative Framing Assessment
 If the chart type is suboptimal, suggest a better alternative with brief justification. Common substitutions:
@@ -202,6 +206,8 @@ Produce structured feedback in this exact format. Do not soften findings — cal
 - H1 title match: [does the title match what the chart shows?]
 - Caption completeness: [source, time range, methodology — present/missing?]
 - Prose setup: [does the preceding prose frame the question correctly?]
+- Parenthetical anchor: [is the headline figure pinned in the prose? Quote it or flag missing.]
+- Re-narration: [does prose after the chart describe what's already visible? Flag the sentence.]
 
 ### Anti-Patterns Detected
 [List any: dual axes, pie charts, hardcoded hex, missing zero baseline, etc. — or "None"]
