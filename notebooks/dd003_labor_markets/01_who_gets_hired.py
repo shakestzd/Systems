@@ -126,7 +126,13 @@ def _(pd, query):
 
     # Pivot to wide format: index=date, columns=series_id
     empl_wide_raw = _fred.pivot(index="date", columns="series_id", values="value")
-    empl_wide_raw.index = pd.to_datetime(empl_wide_raw.index)
+    # FRED dates are end-of-month (Jan 31, Feb 28, …). Normalize to month-start
+    # so .loc[Timestamp("2020-01-01")] works. Strip timezone if present
+    # (DuckDB may return TIMESTAMPTZ as tz-aware or tz-naive depending on driver).
+    _idx = pd.to_datetime(empl_wide_raw.index)
+    if _idx.tz is not None:
+        _idx = _idx.tz_localize(None)
+    empl_wide_raw.index = _idx.to_period("M").to_timestamp()
     empl_wide_raw = empl_wide_raw.sort_index()
 
     # Index to January 2020 = 100 (pre-pandemic, pre-AI-surge baseline)
