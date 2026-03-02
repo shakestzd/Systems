@@ -2,7 +2,6 @@ import marimo
 
 __generated_with = "0.19.11"
 app = marimo.App(
-    width="compact",
     app_title="DD-001: Conversion Reality",
     css_file="../../src/notebook_theme/custom.css",
     html_head_file="../../src/notebook_theme/head.html",
@@ -32,7 +31,6 @@ def _(mo, stats):
 
     The infrastructure that *does* get built will outlast the demand outlook by decades.
     Understanding the asset-life distribution is the key to understanding lock-in.
-
     """)
     return
 
@@ -57,6 +55,8 @@ def _():
         FIGSIZE,
         FLOW_FONT_SIZE,
         FONTS,
+        add_brand_mark,
+        add_source,
         chart_title,
         flow_diagram,
         legend_below,
@@ -70,6 +70,8 @@ def _():
         FLOW_FONT_SIZE,
         FONTS,
         Path,
+        add_brand_mark,
+        add_source,
         cfg,
         chart_title,
         flow_diagram,
@@ -81,7 +83,6 @@ def _():
         plt,
         query,
         save_fig,
-        us_scatter_map,
     )
 
 
@@ -246,7 +247,17 @@ def _(mo, stats):
 
 
 @app.cell(hide_code=True)
-def _(COLORS, CONTEXT, FLOW_FONT_SIZE, cfg, flow_diagram, mpatches, save_fig):
+def _(
+    COLORS,
+    CONTEXT,
+    FLOW_FONT_SIZE,
+    add_brand_mark,
+    add_source,
+    cfg,
+    flow_diagram,
+    mpatches,
+    save_fig,
+):
     fig_dt = flow_diagram(
         nodes={
             "q1": ("Is it physically\nembedded in the grid?", 6.5, 4.5, CONTEXT, COLORS["text_dark"]),
@@ -274,6 +285,8 @@ def _(COLORS, CONTEXT, FLOW_FONT_SIZE, cfg, flow_diagram, mpatches, save_fig):
             mpatches.Patch(facecolor=COLORS["negative"], label="Demand-thesis-dependent (3–6 yr)"),
         ],
     )
+    add_source(fig_dt, "Source: Author's framework; EIA asset lifetime estimates")
+    add_brand_mark(fig_dt, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_dt, cfg.img_dir / "dd001_durability_taxonomy.png")
     return
 
@@ -286,7 +299,19 @@ def _(cfg, mo):
 
 
 @app.cell
-def _(COLORS, CONTEXT, FIGSIZE, FONTS, cfg, chart_title, plt, save_fig, stats):
+def _(
+    COLORS,
+    CONTEXT,
+    FIGSIZE,
+    FONTS,
+    add_brand_mark,
+    add_source,
+    cfg,
+    chart_title,
+    plt,
+    save_fig,
+    stats,
+):
     _total_capex = round(stats["capex_2025"])
     _equip = _total_capex * stats["decomp_equip_pct"] / 100
     _const = _total_capex * stats["decomp_const_pct"] / 100
@@ -342,7 +367,9 @@ def _(COLORS, CONTEXT, FIGSIZE, FONTS, cfg, chart_title, plt, save_fig, stats):
         fig_decomp,
         f"{stats['decomp_const_pct']}% of capital expenditure creates 20\u201340 year assets \u2014 the rest depreciates in under 6",
     )
-    plt.tight_layout()
+    plt.tight_layout(rect=[0.02, 0.08, 1, 1])
+    add_source(fig_decomp, "Source: SEC 10-K filings via yfinance; SemiAnalysis")
+    add_brand_mark(fig_decomp, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_decomp, cfg.img_dir / "dd001_capex_decomposition.png")
     return
 
@@ -390,6 +417,8 @@ def _(
     COLORS,
     CONTEXT,
     FLOW_FONT_SIZE,
+    add_brand_mark,
+    add_source,
     cfg,
     flow_diagram,
     mpatches,
@@ -419,6 +448,8 @@ def _(
             mpatches.Patch(facecolor=CONTEXT, label="Speculative / unverified"),
         ],
     )
+    add_source(fig_sg, "Source: Microsoft, SoftBank, OpenAI announcements (January 2025)")
+    add_brand_mark(fig_sg, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_sg, cfg.img_dir / "dd001_stargate_commitment.png")
     return
 
@@ -485,7 +516,19 @@ def _(mo, stats):
 
 
 @app.cell
-def _(COLORS, CONTEXT, FIGSIZE, FONTS, cfg, chart_title, np, plt, save_fig):
+def _(
+    COLORS,
+    CONTEXT,
+    FIGSIZE,
+    FONTS,
+    add_brand_mark,
+    add_source,
+    cfg,
+    chart_title,
+    np,
+    plt,
+    save_fig,
+):
     # Physical constraint phases: each row shows where time is consumed
     # before a data center can operate. Data from LBNL Queued Up 2025 + industry sources.
     _phases = [
@@ -541,7 +584,9 @@ def _(COLORS, CONTEXT, FIGSIZE, FONTS, cfg, chart_title, np, plt, save_fig):
     _ax.spines[["top", "right"]].set_visible(False)
     chart_title(fig_constraints,
                 "Physical constraints stack — grid interconnection alone takes 5 years")
-    plt.tight_layout()
+    plt.tight_layout(rect=[0.02, 0.08, 1, 1])
+    add_source(fig_constraints, "Source: Author's framework; industry sources")
+    add_brand_mark(fig_constraints, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_constraints, cfg.img_dir / "dd001_constraint_phases.png")
     return
 
@@ -605,7 +650,19 @@ def _(mo, stats):
 
 
 @app.cell
-def _(COLORS, CONTEXT, FIGSIZE, FONTS, cfg, chart_title, plt, save_fig, stats):
+def _(
+    COLORS,
+    CONTEXT,
+    FIGSIZE,
+    FONTS,
+    add_brand_mark,
+    add_source,
+    cfg,
+    chart_title,
+    plt,
+    save_fig,
+    stats,
+):
     _built = stats["rainier_dc_built_jun2025"]
     _planned = stats["rainier_dc_planned"]
     _remaining = _planned - _built
@@ -655,11 +712,13 @@ def _(COLORS, CONTEXT, FIGSIZE, FONTS, cfg, chart_title, plt, save_fig, stats):
     _ax_time.get_yaxis().set_visible(False)
     _ax_time.spines[["top", "right", "left"]].set_visible(False)
 
-    plt.tight_layout(h_pad=1.2)
+    plt.tight_layout(h_pad=1.2, rect=[0.02, 0.08, 1, 1])
     chart_title(
         fig_rainier,
         f"Project Rainier: {_pct_done:.0f}% built after 2 years — at {stats['rainier_gw']} GW, it doubles Indiana's peak load",
     )
+    add_source(fig_rainier, "Source: Microsoft announcements; company filings")
+    add_brand_mark(fig_rainier, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_rainier, cfg.img_dir / "dd001_rainier_progress.png")
     return
 
@@ -680,7 +739,17 @@ def _(cfg, mo, stats):
 
 
 @app.cell(hide_code=True)
-def _(COLORS, CONTEXT, FONTS, Path, cfg, plt, save_fig):
+def _(
+    COLORS,
+    CONTEXT,
+    FONTS,
+    Path,
+    add_brand_mark,
+    add_source,
+    cfg,
+    plt,
+    save_fig,
+):
     import io as _io
     import zipfile as _zipfile
 
@@ -812,7 +881,9 @@ def _(COLORS, CONTEXT, FONTS, Path, cfg, plt, save_fig):
     _ax_in.set_ylim(37.7, 42.2)
     _ax_in.set_axis_off()
 
-    plt.tight_layout(pad=1.0, w_pad=0.5)
+    plt.tight_layout(pad=1.0, w_pad=0.5, rect=[0.02, 0.08, 1, 1])
+    add_source(fig_rainier_map, "Source: Microsoft public data; LBNL data center database")
+    add_brand_mark(fig_rainier_map, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_rainier_map, cfg.img_dir / "dd001_rainier_combined_map.png")
     return
 
@@ -849,6 +920,8 @@ def _(
     COLORS,
     CONTEXT,
     FONTS,
+    add_brand_mark,
+    add_source,
     cfg,
     chart_title,
     legend_below,
@@ -905,6 +978,8 @@ def _(
         _fig_queue,
         "U.S. interconnection queue surpassed 3,000 GW \u2014 but most projects never get built",
     )
+    add_source(_fig_queue, "Source: LBNL 'Queued Up' 2024 Edition; FERC interconnection data")
+    add_brand_mark(_fig_queue, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(_fig_queue, cfg.img_dir / "dd001_queue_funnel.png")
     return
 

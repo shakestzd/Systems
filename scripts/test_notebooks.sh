@@ -22,6 +22,7 @@ NOTEBOOKS=(
     "notebooks/dd002_grid_modernization/02_who_benefits.py"
     "notebooks/dd002_grid_modernization/99_methods_and_sources.py"
     "notebooks/dd002_grid_modernization/03_feedback_architecture.py"
+    "notebooks/dd003_labor_markets/01_who_gets_hired.py"
     "notebooks/dd004_utility_regulation/01_pe_utility_acquisitions.py"
     "notebooks/dd004_utility_regulation/02_data_center_community_impact.py"
     "notebooks/dd004_utility_regulation/03_cost_liability_map.py"

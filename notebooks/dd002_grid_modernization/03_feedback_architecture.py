@@ -33,7 +33,7 @@ def _(mo):
 
 
 @app.cell
-def _():
+def _(add_brand_mark, add_source):
     import sys
 
     import marimo as mo
@@ -46,13 +46,23 @@ def _():
     import pysd
 
     from src.notebook import save_fig, setup
-    from src.plotting import CATEGORICAL, COLORS, FONTS, legend_below, multi_panel
+    from src.plotting import (
+        CATEGORICAL,
+        COLORS,
+        FONTS,
+        add_brand_mark,
+        add_source,
+        legend_below,
+        multi_panel,
+    )
 
     cfg = setup()
     return (
         CATEGORICAL,
         COLORS,
         FONTS,
+        add_brand_mark,
+        add_source,
         cfg,
         legend_below,
         mo,
@@ -141,7 +151,7 @@ def _(mo):
 
 
 @app.cell
-def _(FONTS, cfg, legend_below, mpatches, np, plt, save_fig):
+def _(FONTS, add_brand_mark, add_source, cfg, legend_below, mpatches, np, plt, save_fig):
     # Draw the Causal Loop Diagram
     fig_cld, ax = plt.subplots(figsize=(18, 14))
     ax.set_xlim(-1.3, 1.3)
@@ -166,7 +176,7 @@ def _(FONTS, cfg, legend_below, mpatches, np, plt, save_fig):
 
     # Draw nodes — larger radius and font for readability
     for label, (x, y) in _nodes.items():
-        ax.add_patch(plt.Circle((x, y), 0.16, color="white", ec="black", lw=2, zorder=3))
+        ax.add_patch(plt.Circle((x, y), 0.16, color="white", ec=COLORS["text_dark"], lw=2, zorder=3))
         ax.text(x, y, label, ha="center", va="center", fontsize=FONTS["annotation"], fontweight="bold", zorder=4)
 
     # Edge drawing helper
@@ -254,6 +264,8 @@ def _(FONTS, cfg, legend_below, mpatches, np, plt, save_fig):
         mpatches.Patch(color=_b3, label="B3: Stranded Asset Risk"),
     ]
     legend_below(ax, handles=_legend_items, ncol=3)
+    add_source(fig_cld, "Source: PySD model; author's causal loop diagram")
+    add_brand_mark(fig_cld, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_cld, cfg.img_dir / "dd002_cld.png")
     return
 
@@ -360,7 +372,7 @@ def _(baseline):
 
 
 @app.cell
-def _(CATEGORICAL, COLORS, FONTS, baseline, cfg, multi_panel, save_fig):
+def _(CATEGORICAL, COLORS, FONTS, add_brand_mark, add_source, baseline, cfg, multi_panel, save_fig):
     _panels = [
         {
             "columns": {
@@ -431,6 +443,8 @@ def _(CATEGORICAL, COLORS, FONTS, baseline, cfg, multi_panel, save_fig):
                       fontweight="bold", ha="right",
                       arrowprops=dict(arrowstyle="->", color=COLORS["positive"], lw=0.8))
 
+    add_source(fig_baseline, "Source: PySD simulation; grid_modernization.mdl parameters")
+    add_brand_mark(fig_baseline, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_baseline, cfg.img_dir / "dd002_baseline_simulation.png")
     return
 
@@ -541,7 +555,7 @@ def _(CATEGORICAL, COLORS, FONTS, baseline, btm_cost_slider, grid_inv_slider, le
     _b_idx_2035 = baseline.index.get_indexer([2035], method="nearest")[0]
     baseline_spillover_2035 = float(baseline["grid spillover index"].iloc[_b_idx_2035])
 
-    plt.tight_layout()
+    plt.tight_layout(rect=[0.02, 0.08, 1, 1])
 
     mo.vstack([
         mo.as_html(_fig),
@@ -582,7 +596,7 @@ def _(mo):
 
 
 @app.cell
-def _(FONTS, cfg, model, np, plt, save_fig):
+def _(FONTS, add_brand_mark, add_source, cfg, model, np, plt, save_fig):
     # Sensitivity analysis: BTM cost advantage × Regulatory favorability → spillover index
     _btm_range = np.arange(0.5, 2.1, 0.1)
     _reg_range = np.arange(0.1, 1.0, 0.05)
@@ -610,20 +624,20 @@ def _(FONTS, cfg, model, np, plt, save_fig):
     _ax.contour(
         _btm_range, _reg_range, _spillover,
         levels=[0.5],
-        colors=["black"],
+        colors=[COLORS["text_dark"]],
         linewidths=[2],
         linestyles=["--"],
     )
 
     # Mark current best estimate
-    _ax.plot(1.2, 0.5, "k*", markersize=15, zorder=5)
+    _ax.plot(1.2, 0.5, "*", color=COLORS["text_dark"], markersize=15, zorder=5)
     _ax.annotate(
         "Current\nestimate",
         xy=(1.2, 0.5),
         xytext=(1.5, 0.35),
         fontsize=FONTS["annotation"],
-        arrowprops=dict(arrowstyle="->", color="black"),
-        bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="black"),
+        arrowprops=dict(arrowstyle="->", color=COLORS["text_dark"]),
+        bbox=dict(boxstyle="round,pad=0.3", fc="white", ec=COLORS["text_dark"]),
     )
 
     # Regime labels
@@ -634,6 +648,8 @@ def _(FONTS, cfg, model, np, plt, save_fig):
 
     _ax.set_xlabel("BTM Cost Advantage", fontsize=FONTS["axis_label"])
     _ax.set_ylabel("Regulatory Favorability", fontsize=FONTS["axis_label"])
+    add_source(fig_sensitivity, "Source: PySD sensitivity sweep; parameter ranges in notebook")
+    add_brand_mark(fig_sensitivity, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_sensitivity, cfg.img_dir / "dd002_sensitivity.png")
     return
 

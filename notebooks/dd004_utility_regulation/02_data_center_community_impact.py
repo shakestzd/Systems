@@ -42,7 +42,7 @@ def _(mo):
 
 
 @app.cell
-def _():
+def _(add_brand_mark, add_source):
     import io
     import sys
     import zipfile
@@ -65,6 +65,8 @@ def _():
         CONTEXT,
         FIGSIZE,
         FONTS,
+        add_brand_mark,
+        add_source,
         horizontal_bar_ranking,
         legend_below,
         us_scatter_map,
@@ -78,12 +80,14 @@ def _():
         CONTEXT,
         FIGSIZE,
         FONTS,
+        add_brand_mark,
+        add_source,
         cfg,
         horizontal_bar_ranking,
         io,
         legend_below,
-        mpatches,
         mo,
+        mpatches,
         np,
         pd,
         plt,
@@ -290,7 +294,7 @@ def _(dc, us_median_income, us_median_poverty, us_median_unemployment):
 
 
 @app.cell
-def _(COMPANY_COLORS, CONTEXT, cfg, dc, mpatches, pd, plt, save_fig, us_scatter_map):
+def _(COMPANY_COLORS, CONTEXT, add_brand_mark, add_source, cfg, dc, mpatches, pd, plt, save_fig, us_scatter_map):
     # Operator → color, falling back to categorical palette if ticker not in COMPANY_COLORS
     _ops = dc[["operator", "ticker"]].drop_duplicates().sort_values("operator")
     _fallback = ["#d97444", "#5a7eb0", "#7bb87d", "#9b6bb5", "#d4a843", "#9ecae1", "#e07b39"]
@@ -321,6 +325,8 @@ def _(COMPANY_COLORS, CONTEXT, cfg, dc, mpatches, pd, plt, save_fig, us_scatter_
         legend_handles=_handles,
         alpha=0.78,
     )
+    add_source(fig_us_map, "Source: see methods section")
+    add_brand_mark(fig_us_map, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_us_map, cfg.img_dir / "dd004_us_siting_map.png")
     plt.close(fig_us_map)
     return (fig_us_map,)
@@ -345,7 +351,7 @@ def _(cfg, geo_stats, mo):
 
 
 @app.cell
-def _(COLORS, CONTEXT, FONTS, cfg, dc, plt, save_fig, us_median_income, us_median_poverty):
+def _(COLORS, CONTEXT, FONTS, add_brand_mark, add_source, cfg, dc, plt, save_fig, us_median_income, us_median_poverty):
     _dc = dc.dropna(subset=["median_household_income", "poverty_rate"]).copy()
 
     fig_bimodal, _ax = plt.subplots(figsize=(9, 6))
@@ -402,7 +408,9 @@ def _(COLORS, CONTEXT, FONTS, cfg, dc, plt, save_fig, us_median_income, us_media
     _ax.set_xlabel("Median Household Income ($K)", fontsize=FONTS["axis_label"])
     _ax.set_ylabel("Poverty Rate (%)", fontsize=FONTS["axis_label"])
     _ax.spines[["top", "right"]].set_visible(False)
-    plt.tight_layout()
+    plt.tight_layout(rect=[0.02, 0.08, 1, 1])
+    add_source(fig_bimodal, "Source: see methods section")
+    add_brand_mark(fig_bimodal, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_bimodal, cfg.img_dir / "dd004_bimodal_siting.png")
     plt.close(fig_bimodal)
     return (fig_bimodal,)
@@ -435,7 +443,7 @@ def _(cfg, geo_stats, mo):
 
 
 @app.cell
-def _(COLORS, CONTEXT, FONTS, cfg, plt, save_fig):
+def _(COLORS, CONTEXT, FONTS, add_brand_mark, add_source, cfg, plt, save_fig):
     # Capital intensity: investment per permanent job
     # Point estimates from publicly available sources; cited in comments
     _industries = [
@@ -470,7 +478,9 @@ def _(COLORS, CONTEXT, FONTS, cfg, plt, save_fig):
     _ax.set_xlim(0, max(_values) * 1.3)
     _ax.spines[["top", "right", "left"]].set_visible(False)
     _ax.tick_params(left=False)
-    plt.tight_layout()
+    plt.tight_layout(rect=[0.02, 0.08, 1, 1])
+    add_source(fig_capint, "Source: see methods section")
+    add_brand_mark(fig_capint, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_capint, cfg.img_dir / "dd004_capital_intensity.png")
     plt.close(fig_capint)
     return (fig_capint,)
@@ -538,7 +548,7 @@ def _(mo, stats):
 
 
 @app.cell
-def _(COLORS, CONTEXT, FIGSIZE, FONTS, cfg, io, mpatches, plt, save_fig, stats, zipfile):
+def _(COLORS, CONTEXT, FIGSIZE, FONTS, add_brand_mark, add_source, cfg, io, mpatches, plt, save_fig, stats, zipfile):
     # Chart: Virginia county map — data center concentration vs. ratepayer cost distribution
     from pathlib import Path
 
@@ -603,7 +613,9 @@ def _(COLORS, CONTEXT, FIGSIZE, FONTS, cfg, io, mpatches, plt, save_fig, stats, 
     )
 
     _ax.set_axis_off()
-    plt.tight_layout()
+    plt.tight_layout(rect=[0.02, 0.08, 1, 1])
+    add_source(fig_va_map, "Source: see methods section")
+    add_brand_mark(fig_va_map, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_va_map, cfg.img_dir / "dd004_virginia_county_map.png")
     return (fig_va_map,)
 
@@ -631,7 +643,7 @@ def _(cfg, mo, stats):
 
 
 @app.cell
-def _(COLORS, CONTEXT, FONTS, cfg, pd, plt, save_fig, stats):
+def _(COLORS, CONTEXT, FONTS, add_brand_mark, add_source, cfg, pd, plt, save_fig, stats):
     # Chart: Indiana hyperscaler investment vs. load growth — two axes
     _companies = ["Amazon\n(Project Rainier)", "Microsoft", "Others"]
     _investments = [
@@ -663,8 +675,10 @@ def _(COLORS, CONTEXT, FONTS, cfg, pd, plt, save_fig, stats):
     _ax.invert_yaxis()
     _ax.spines[["top", "right", "left"]].set_visible(False)
     _ax.tick_params(left=False)
-    plt.tight_layout()
+    plt.tight_layout(rect=[0.02, 0.08, 1, 1])
 
+    add_source(fig_inv, "Source: see methods section")
+    add_brand_mark(fig_inv, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_inv, cfg.img_dir / "dd004_indiana_investment.png")
     return (fig_inv,)
 
@@ -694,7 +708,7 @@ def _(cfg, mo, stats):
 
 
 @app.cell
-def _(COLORS, CONTEXT, FIGSIZE, FONTS, aep_demand, cfg, plt, pjm_demand, rto, save_fig):
+def _(COLORS, CONTEXT, FIGSIZE, FONTS, add_brand_mark, add_source, aep_demand, cfg, pjm_demand, plt, rto, save_fig):
     # Chart: AEP zone vs. PJM RTO demand requests 2026-2030
     _years = list(range(2026, 2031))
 
@@ -739,7 +753,9 @@ def _(COLORS, CONTEXT, FIGSIZE, FONTS, aep_demand, cfg, plt, pjm_demand, rto, sa
     _ax2.legend(fontsize=FONTS["annotation"])
     _ax2.spines[["top", "right"]].set_visible(False)
 
-    plt.tight_layout()
+    plt.tight_layout(rect=[0.02, 0.08, 1, 1])
+    add_source(fig_pjm, "Source: see methods section")
+    add_brand_mark(fig_pjm, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_pjm, cfg.img_dir / "dd004_pjm_demand_pressure.png")
     return (fig_pjm,)
 

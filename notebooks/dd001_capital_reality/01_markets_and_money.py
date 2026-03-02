@@ -38,7 +38,7 @@ def _(mo, stats):
 
 
 @app.cell
-def _():
+def _(add_brand_mark, add_source):
     import sys
 
     import marimo as mo
@@ -51,11 +51,15 @@ def _():
     from src.data.db import query
     from src.notebook import save_fig, setup
     from src.plotting import (
+        CATEGORICAL,
         COLORS,
         CONTEXT,
         FIGSIZE,
         FLOW_FONT_SIZE,
         FONTS,
+        add_brand_mark,
+        add_rule,
+        add_source,
         chart_title,
         company_color,
         company_label,
@@ -64,11 +68,15 @@ def _():
     )
     cfg = setup()
     return (
+        CATEGORICAL,
         COLORS,
         CONTEXT,
         FIGSIZE,
         FLOW_FONT_SIZE,
         FONTS,
+        add_brand_mark,
+        add_rule,
+        add_source,
         cfg,
         chart_title,
         company_color,
@@ -253,10 +261,12 @@ def _(
 
 @app.cell
 def _(
+    CATEGORICAL,
     COLORS,
-    CONTEXT,
     FIGSIZE,
     FONTS,
+    add_brand_mark,
+    add_source,
     cfg,
     chart_title,
     company_label,
@@ -273,7 +283,7 @@ def _(
     for _, _row in _sorted.iterrows():
         _ticker = _row["ticker"]
         _gain = _row["gain_t"]
-        _ax.barh(0, _gain, left=_left, height=0.55, color=CONTEXT, edgecolor="white", linewidth=1.5, label=company_label(_ticker))
+        _ax.barh(0, _gain, left=_left, height=0.55, color=CATEGORICAL[0], edgecolor="white", linewidth=1.5, label=company_label(_ticker))
         if _gain >= 0.8:
             _ax.text(_left + _gain / 2, 0, f"{company_label(_ticker)}\n+${_gain:.1f}T", ha="center", va="center", fontsize=FONTS["annotation"] - 1, fontweight="bold", color="white")
         _left += _gain
@@ -284,7 +294,9 @@ def _(
     _ax.set_xlabel("Market cap gain, Jan 2023 → Feb 2026 ($T)", fontsize=FONTS["axis_label"])
     _ax.tick_params(axis="x", labelsize=FONTS["tick_label"])
     chart_title(fig_mktcap, "Market cap gain, Jan 2023 → Feb 2026 (7 companies) vs. 2025 annual capex (6 companies)")
-    plt.tight_layout()
+    plt.tight_layout(rect=[0.02, 0.08, 1, 1])
+    add_source(fig_mktcap, "Source: Yahoo Finance via yfinance; SEC 10-K filings")
+    add_brand_mark(fig_mktcap, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_mktcap, cfg.img_dir / "dd001_valuation_disconnect.png")
     return
 
@@ -330,6 +342,9 @@ def _(
     CONTEXT,
     FIGSIZE,
     FONTS,
+    add_brand_mark,
+    add_rule,
+    add_source,
     capex_annual,
     cfg,
     chart_title,
@@ -360,12 +375,15 @@ def _(
     _ax.axvline(2022, color=COLORS["accent"], linewidth=1, linestyle=":", alpha=0.5, zorder=2)
     _ax.text(2022.1, _v22 * 1.55, "AI investment era", fontsize=FONTS["annotation"] - 1, color=COLORS["accent"], alpha=0.85, ha="left")
     _ax.set_xlabel("Year", fontsize=FONTS["axis_label"])
-    _ax.set_ylabel("Annual capital expenditure, 4 Big Tech firms ($B)", fontsize=FONTS["axis_label"])
+    _ax.set_ylabel("Capex ($B, annual)", fontsize=FONTS["axis_label"])
     _ax.tick_params(labelsize=FONTS["tick_label"])
     _ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"${x:.0f}B"))
     _ax.set_xlim(2014.5, 2026.5)
     chart_title(fig_capex_ratio, "Annual capex, Amazon + Alphabet + Microsoft + Meta, 2015–2025 ($B)")
-    plt.tight_layout()
+    plt.tight_layout(rect=[0.02, 0.08, 1, 1])
+    add_rule(_ax)
+    add_source(fig_capex_ratio, "Source: SEC 10-K filings via yfinance (2022–2025); company annual reports (2015–2021)")
+    add_brand_mark(fig_capex_ratio, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_capex_ratio, cfg.img_dir / "dd001_capex_ratio_history.png")
     return
 
@@ -402,6 +420,9 @@ def _(
     CONTEXT,
     FIGSIZE,
     FONTS,
+    add_brand_mark,
+    add_rule,
+    add_source,
     capex_annual,
     cfg,
     chart_title,
@@ -441,14 +462,17 @@ def _(
         _bottoms += _vals
     _ax.set_xticks(_x)
     _ax.set_xticklabels([company_label(t) for t in _tickers], fontsize=FONTS["tick_label"])
-    _ax.set_ylabel("Cumulative capital expenditure, 2022-2026 ($B)", fontsize=FONTS["axis_label"])
+    _ax.set_ylabel("Capex ($B, cumulative)", fontsize=FONTS["axis_label"])
     _ax.tick_params(axis="y", labelsize=FONTS["tick_label"])
     # Total labels use text_dark — accent is reserved for the 2026 story bars, not totals
     for _j, _ticker in enumerate(_tickers):
         _ax.text(_j, _bottoms[_j] + 8, f"${_bottoms[_j]:.0f}B", ha="center", fontsize=FONTS["annotation"], fontweight="bold", color=COLORS["text_dark"])
     legend_below(_ax, ncol=len(_all_years))
     chart_title(fig_capex, "Cumulative capex by company, 2022–2025, plus 2026 guidance ($B)")
-    plt.tight_layout()
+    plt.tight_layout(rect=[0.02, 0.08, 1, 1])
+    add_rule(_ax)
+    add_source(fig_capex, "Source: SEC 10-K filings via yfinance")
+    add_brand_mark(fig_capex, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_capex, cfg.img_dir / "dd001_capex_acceleration.png")
     return
 
@@ -498,7 +522,7 @@ def _(mo, stats):
 
 
 @app.cell
-def _(COLORS, CONTEXT, FONTS, cfg, chart_title, plt, save_fig, stats):
+def _(COLORS, CONTEXT, FONTS, add_brand_mark, add_source, cfg, chart_title, plt, save_fig, stats):
     _companies = ["Microsoft", "Meta"]
     _reported = [stats["msft_2025"], stats["meta_2025"]]
     _offbs = [stats["msft_neocloud_total_bn"], stats["meta_beignet_financing_bn"]]
@@ -529,7 +553,9 @@ def _(COLORS, CONTEXT, FONTS, cfg, chart_title, plt, save_fig, stats):
     _ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"${x:.0f}B"))
     _msft_pct = round(stats["msft_neocloud_total_bn"] / stats["msft_2025"] * 100)
     chart_title(fig_obs, "Reported 2025 capex vs. identified off-balance-sheet commitments, Microsoft and Meta ($B)")
-    plt.tight_layout()
+    plt.tight_layout(rect=[0.02, 0.08, 1, 1])
+    add_source(fig_obs, "Source: Microsoft/Meta/Google announcements; SEC filings")
+    add_brand_mark(fig_obs, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_obs, cfg.img_dir / "dd001_off_balance_sheet.png")
     return
 
@@ -612,7 +638,10 @@ def _(
     _ax.set_yticks([])
     _ax.spines["left"].set_visible(False)
     chart_title(fig_ratio_slope, "Annual capex as a share of cloud revenue (AWS, Azure, Google Cloud), 2023–2025")
-    plt.tight_layout()
+    plt.tight_layout(rect=[0.02, 0.08, 1, 1])
+    add_rule(_ax)
+    add_source(fig_ratio_slope, "Source: SEC 10-K filings via yfinance (2015–2025)")
+    add_brand_mark(fig_ratio_slope, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_ratio_slope, cfg.img_dir / "dd001_capex_ratio_slope.png")
     return
 
@@ -651,6 +680,8 @@ def _(
     COLORS,
     CONTEXT,
     FLOW_FONT_SIZE,
+    add_brand_mark,
+    add_source,
     cfg,
     flow_diagram,
     mpatches,
@@ -693,6 +724,8 @@ def _(
             mpatches.Patch(facecolor=CONTEXT, label="Long-term: no revenue model"),
         ],
     )
+    add_source(fig_rt, "Source: SEC 10-Q/K filings via yfinance; company earnings calls")
+    add_brand_mark(fig_rt, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_rt, cfg.img_dir / "dd001_revenue_theses.png")
     return
 
@@ -748,6 +781,9 @@ def _(
     CONTEXT,
     FIGSIZE,
     FONTS,
+    add_brand_mark,
+    add_rule,
+    add_source,
     capex_raw,
     cfg,
     chart_title,
@@ -795,7 +831,10 @@ def _(
     _ax.set_ylim(0, max(max(_rev_vals), max(_cap_vals)) * 1.25)
     legend_below(_ax, ncol=2, bbox_to_anchor=(0.5, -0.22))
     chart_title(fig_rev, "Quarterly cloud revenue vs. capital expenditure, Amazon + Alphabet + Microsoft ($B)")
-    plt.tight_layout()
+    plt.tight_layout(rect=[0.02, 0.08, 1, 1])
+    add_rule(_ax)
+    add_source(fig_rev, "Source: SEC 10-Q filings via yfinance; company earnings calls")
+    add_brand_mark(fig_rev, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_rev, cfg.img_dir / "dd001_revenue_gap.png")
     return
 
@@ -833,6 +872,9 @@ def _(
     CONTEXT,
     FIGSIZE,
     FONTS,
+    add_brand_mark,
+    add_rule,
+    add_source,
     capex_annual,
     capex_raw,
     cfg,
@@ -877,7 +919,10 @@ def _(
     _ax.text(_deepseek_date + pd.Timedelta(days=200), _ymax * 0.18, "All four accelerated\nafter DeepSeek", fontsize=FONTS["annotation"], color=COLORS["accent"], fontweight="bold", ha="left", va="center", bbox={"boxstyle": "round,pad=0.4", "fc": "white", "ec": COLORS["accent"], "alpha": 0.8})
     legend_below(_ax, ncol=4)
     chart_title(fig_quarterly, "Quarterly capex by company, 2023–2025 ($B)")
-    plt.tight_layout()
+    plt.tight_layout(rect=[0.02, 0.08, 1, 1])
+    add_rule(_ax)
+    add_source(fig_quarterly, "Source: SEC 10-Q filings via yfinance")
+    add_brand_mark(fig_quarterly, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_quarterly, cfg.img_dir / "dd001_quarterly_capex.png")
     return
 
@@ -949,7 +994,7 @@ def _(mo, stats):
 
 
 @app.cell
-def _(COLORS, CONTEXT, FONTS, cfg, chart_title, plt, save_fig, stats):
+def _(COLORS, CONTEXT, FONTS, add_brand_mark, add_source, cfg, chart_title, plt, save_fig, stats):
     _meta_pct = -stats["meta_guidance_cut_pct"]    # negative: guidance cut
     _msft_pct = stats["msft_guidance_raise_pct"]   # positive: guidance raised
 
@@ -994,7 +1039,9 @@ def _(COLORS, CONTEXT, FONTS, cfg, chart_title, plt, save_fig, stats):
     _ax.tick_params(axis="x", labelsize=FONTS["tick_label"])
     _ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{x:+.0f}%"))
     chart_title(fig_guidance, "Initial vs. actual capex guidance, selected cases 2023–2025 (% change from initial)")
-    plt.tight_layout()
+    plt.tight_layout(rect=[0.02, 0.08, 1, 1])
+    add_source(fig_guidance, "Source: Company earnings calls; SEC filings")
+    add_brand_mark(fig_guidance, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_guidance, cfg.img_dir / "dd001_guidance_reliability.png")
     return
 
@@ -1044,7 +1091,7 @@ def _(mo, stats):
 
 
 @app.cell
-def _(COLORS, CONTEXT, FONTS, capex_annual, cfg, chart_title, cloud_rev, plt, save_fig, stats):
+def _(COLORS, CONTEXT, FONTS, add_brand_mark, add_source, capex_annual, cfg, chart_title, cloud_rev, plt, save_fig, stats):
     _tickers = ["AMZN", "GOOGL", "MSFT"]
 
     # Historical aggregate capex / cloud-revenue ratio
@@ -1110,7 +1157,9 @@ def _(COLORS, CONTEXT, FONTS, capex_annual, cfg, chart_title, cloud_rev, plt, sa
         fig_scenarios,
         "Capex-to-cloud-revenue ratio, Amazon + Alphabet + Microsoft, 2023–2026 scenarios",
     )
-    plt.tight_layout()
+    plt.tight_layout(rect=[0.02, 0.08, 1, 1])
+    add_source(fig_scenarios, "Source: Company guidance; author projections")
+    add_brand_mark(fig_scenarios, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_scenarios, cfg.img_dir / "dd001_scenarios_2026.png")
     return
 

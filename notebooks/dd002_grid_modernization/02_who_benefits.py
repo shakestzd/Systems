@@ -34,7 +34,7 @@ def _(mo):
 
 
 @app.cell
-def _():
+def _(add_brand_mark, add_source):
     import sys
 
     import marimo as mo
@@ -53,6 +53,9 @@ def _():
         CONTEXT,
         FONTS,
         FUEL_COLORS,
+        add_brand_mark,
+        add_rule,
+        add_source,
         horizontal_bar_ranking,
         legend_below,
         stacked_bar,
@@ -66,6 +69,9 @@ def _():
         CONTEXT,
         FONTS,
         FUEL_COLORS,
+        add_brand_mark,
+        add_rule,
+        add_source,
         cfg,
         horizontal_bar_ranking,
         legend_below,
@@ -336,7 +342,7 @@ def _(cfg, mo, stats):
 
 
 @app.cell
-def _(CATEGORICAL, COLORS, cfg, horizontal_bar_ranking, legend_below, plt, queue_region, save_fig):
+def _(CATEGORICAL, COLORS, add_brand_mark, add_source, cfg, horizontal_bar_ranking, legend_below, plt, queue_region, save_fig):
     _regions = queue_region["region"].tolist()
     _backlog_gw = queue_region["queue_gw"].tolist()
     _highlight = [i for i, flag in enumerate(queue_region["is_major_dc_region"].tolist()) if flag]
@@ -357,6 +363,8 @@ def _(CATEGORICAL, COLORS, cfg, horizontal_bar_ranking, legend_below, plt, queue
                    markersize=14, label="Other region"),
     ]
     legend_below(_ax_q, handles=_legend_handles, ncol=2)
+    add_source(fig_queue, "Source: LBNL 'Queued Up' 2025 Edition")
+    add_brand_mark(fig_queue, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_queue, cfg.img_dir / "dd002_queue_by_region.png")
     return
 
@@ -393,7 +401,7 @@ def _(cfg, mo):
 
 
 @app.cell
-def _(CATEGORICAL, COLORS, FONTS, cfg, plt, queue_region, save_fig):
+def _(CATEGORICAL, COLORS, FONTS, add_brand_mark, add_source, cfg, plt, queue_region, save_fig):
     from pathlib import Path as _Path
 
     import geopandas as gpd
@@ -543,7 +551,9 @@ def _(CATEGORICAL, COLORS, FONTS, cfg, plt, queue_region, save_fig):
         bbox_to_anchor=(0.0, 0.0),
     )
 
-    plt.tight_layout()
+    plt.tight_layout(rect=[0.02, 0.08, 1, 1])
+    add_source(fig_map, "Source: LBNL 'Queued Up' 2025 Edition; ISO/RTO territory boundaries")
+    add_brand_mark(fig_map, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_map, cfg.img_dir / "dd002_iso_queue_map.png")
     return
 
@@ -582,7 +592,7 @@ def _(cfg, mo):
 
 
 @app.cell
-def _(CATEGORICAL, COLORS, CONTEXT, FUEL_COLORS, cfg, queue_comp, save_fig, stacked_bar):
+def _(CATEGORICAL, COLORS, CONTEXT, FUEL_COLORS, add_brand_mark, add_source, cfg, queue_comp, save_fig, stacked_bar):
     _colors = {
         "solar_gw": {"color": FUEL_COLORS["solar"], "label": "Solar"},
         "battery": {"color": FUEL_COLORS["battery"], "label": "Battery Storage"},
@@ -598,6 +608,8 @@ def _(CATEGORICAL, COLORS, CONTEXT, FUEL_COLORS, cfg, queue_comp, save_fig, stac
         "The queue is overwhelmingly clean energy — gas is a shrinking share",
         ylabel="Queue Capacity (GW)",
     )
+    add_source(fig_comp, "Source: LBNL 'Queued Up' 2025 Edition; annual queue composition 2020–2024")
+    add_brand_mark(fig_comp, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_comp, cfg.img_dir / "dd002_queue_composition.png")
     return
 
@@ -633,7 +645,7 @@ def _(cfg, mo):
 
 
 @app.cell
-def _(cfg, cost_alloc, save_fig, stats, waterfall_chart):
+def _(add_brand_mark, add_source, cfg, cost_alloc, save_fig, stats, waterfall_chart):
     _alloc = cost_alloc[~cost_alloc["is_total"]].sort_values("sort_order")
     _items = [
         (row["cost_category"].replace(" ", "\n"), float(row["cost_bn"]))
@@ -645,6 +657,8 @@ def _(cfg, cost_alloc, save_fig, stats, waterfall_chart):
         f"\\${stats['ucs_cost_bn']:.2f}B in PJM data center grid costs shifted to ratepayers in 2024",
         total_label="Total\nsocialized",
     )
+    add_source(fig_cost, "Source: UCS, 'Data Center Demand and the Grid' (September 2025)")
+    add_brand_mark(fig_cost, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_cost, cfg.img_dir / "dd002_cost_allocation.png")
     return
 
@@ -785,7 +799,7 @@ def _(mo, stats):
 
 
 @app.cell
-def _(FONTS, cfg, np, plt, save_fig, stats):
+def _(FONTS, add_brand_mark, add_source, cfg, np, plt, save_fig, stats):
     # Virginia residential bill impact projection (E3/JLARC high-growth scenario)
     _years = np.arange(2024, 2041)
     _endpoint = stats["va_bill_annual"]
@@ -820,8 +834,11 @@ def _(FONTS, cfg, np, plt, save_fig, stats):
     _ax.set_xlim(2024, 2040)
     _ax.set_ylim(0, 520)
     _ax.grid(True, linestyle=":", alpha=0.4)
-    plt.tight_layout()
+    plt.tight_layout(rect=[0.02, 0.08, 1, 1])
 
+    add_rule(_ax)
+    add_source(fig_virginia, "Source: JLARC/E3 December 2024; projection model")
+    add_brand_mark(fig_virginia, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_virginia, cfg.img_dir / "dd002_virginia_bills.png")
     return
 
@@ -1026,7 +1043,7 @@ def _(
     _ax.set_xlim(_x_labels[0] - 0.5, _x_labels[-1] + 0.5)
     _ax.set_ylim(0, _annual_p90.max() * 1.25)
     _ax.legend(loc="upper left", fontsize=FONTS["annotation"] - 1)
-    plt.tight_layout()
+    plt.tight_layout(rect=[0.02, 0.08, 1, 1])
 
     _cum_final_p10 = _cum_p10[-1]
     _cum_final_p50 = _cum_p50[-1]
@@ -1053,7 +1070,7 @@ def _(
 
 
 @app.cell
-def _(COLORS, cfg, horizontal_bar_ranking, lag_by_company_region, save_fig):
+def _(COLORS, add_brand_mark, add_source, cfg, horizontal_bar_ranking, lag_by_company_region, save_fig):
     _lag = (
         lag_by_company_region.dropna(subset=["implied_lag_years"])
         .sort_values("implied_lag_years", ascending=False)
@@ -1073,6 +1090,8 @@ def _(COLORS, cfg, horizontal_bar_ranking, lag_by_company_region, save_fig):
         highlight_indices=[0, 1, 2],
         highlight_color=COLORS["accent"],
     )
+    add_source(fig_lag, "Source: LBNL 'Queued Up' 2025 Edition; PJM/MISO queue data")
+    add_brand_mark(fig_lag, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_lag, cfg.img_dir / "dd002_capex_lag_proxy.png")
     return
 

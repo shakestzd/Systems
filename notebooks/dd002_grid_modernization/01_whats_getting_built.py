@@ -33,7 +33,7 @@ def _(mo):
 
 
 @app.cell
-def _(BAR_DEFAULTS, COLORS, FIGSIZE, FONTS, FUEL_COLORS, cfg, np, plt, save_fig):
+def _(BAR_DEFAULTS, COLORS, FIGSIZE, FONTS, FUEL_COLORS, add_brand_mark, add_source, cfg, np, plt, save_fig):
     # Asset lifetime vs AI forecast horizon — the fundamental mismatch
     _techs = [
         "AI demand forecast",
@@ -93,8 +93,10 @@ def _(BAR_DEFAULTS, COLORS, FIGSIZE, FONTS, FUEL_COLORS, cfg, np, plt, save_fig)
     _ax.set_xlim(2022, 2080)
     _ax.invert_yaxis()
     _ax.grid(True, axis="x", linestyle=":", alpha=0.4)
-    plt.tight_layout()
+    plt.tight_layout(rect=[0.02, 0.08, 1, 1])
 
+    add_source(fig_timeline, "Source: EIA; industry average asset lifetimes")
+    add_brand_mark(fig_timeline, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_timeline, cfg.img_dir / "dd002_asset_timeline.png")
     return
 
@@ -119,7 +121,7 @@ def _(cfg, mo):
 
 
 @app.cell
-def _():
+def _(add_brand_mark, add_source):
     import sys
 
     import marimo as mo
@@ -142,6 +144,9 @@ def _():
         FONTS,
         FUEL_COLORS,
         SCATTER_DEFAULTS,
+        add_brand_mark,
+        add_rule,
+        add_source,
         company_color,
         fuel_color,
         horizontal_bar_ranking,
@@ -161,6 +166,9 @@ def _():
         FONTS,
         FUEL_COLORS,
         SCATTER_DEFAULTS,
+        add_brand_mark,
+        add_rule,
+        add_source,
         cfg,
         company_color,
         fuel_color,
@@ -312,7 +320,7 @@ def _(eia):
 
 
 @app.cell
-def _(COLORS, FONTS, FUEL_COLORS, cfg, gen_pivot, major_fuels, save_fig, stacked_bar):
+def _(COLORS, FONTS, FUEL_COLORS, add_brand_mark, add_source, cfg, gen_pivot, major_fuels, save_fig, stacked_bar):
     # Fuel labels for stacked bar (colors from design system)
     _fuel_labels = {
         "solar": "Solar", "wind": "Wind", "battery": "Battery Storage",
@@ -353,6 +361,8 @@ def _(COLORS, FONTS, FUEL_COLORS, cfg, gen_pivot, major_fuels, save_fig, stacked
             ),
         )
 
+    add_source(fig_mix, "Source: EIA Form 860M, monthly capacity additions through 2024")
+    add_brand_mark(fig_mix, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_mix, cfg.img_dir / "dd002_generation_mix.png")
     return
 
@@ -396,7 +406,7 @@ def _(cfg, mo, stats):
 
 
 @app.cell
-def _(FONTS, cfg, eia, legend_below, np, plt, save_fig):
+def _(FONTS, add_brand_mark, add_source, cfg, eia, legend_below, np, plt, save_fig):
     # Compare nameplate vs energy-equivalent capacity by fuel type since 2020
     _recent = eia[eia["operating_year"] >= 2020].copy()
     _by_fuel = (
@@ -460,8 +470,10 @@ def _(FONTS, cfg, eia, legend_below, np, plt, save_fig):
     _ax.set_xticklabels(_labels)
     _ax.set_ylabel("GW Added Since 2020", fontsize=FONTS["axis_label"])
     legend_below(_ax)
-    plt.tight_layout()
+    plt.tight_layout(rect=[0.02, 0.08, 1, 1])
 
+    add_source(fig_capfactor, "Source: EIA Form 860M/923; capacity factors from generation data")
+    add_brand_mark(fig_capfactor, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_capfactor, cfg.img_dir / "dd002_capacity_factor.png")
     return
 
@@ -526,7 +538,7 @@ def _(mo):
 
 
 @app.cell
-def _(FONTS, cfg, plt, save_fig):
+def _(FONTS, add_brand_mark, add_source, cfg, plt, save_fig):
     # Generation spectrum: 2D positioning by asset life and grid benefit
     _strategies = [
         {
@@ -651,8 +663,10 @@ def _(FONTS, cfg, plt, save_fig):
     _ax.set_xlim(15, 58)
     _ax.set_ylim(-0.05, 1.05)
     _ax.grid(True, linestyle=":", alpha=0.3)
-    plt.tight_layout()
+    plt.tight_layout(rect=[0.02, 0.08, 1, 1])
 
+    add_source(fig_spectrum, "Source: EIA asset lifetime estimates; LBNL interconnection research")
+    add_brand_mark(fig_spectrum, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_spectrum, cfg.img_dir / "dd002_generation_spectrum.png")
     return
 
@@ -680,7 +694,7 @@ def _(cfg, mo):
 
 
 @app.cell
-def _(cfg, eia, horizontal_bar_ranking, legend_below, plt, save_fig):
+def _(add_brand_mark, add_source, cfg, eia, horizontal_bar_ranking, legend_below, plt, save_fig):
     # Top states by new capacity since 2020
     _state_agg = (
         eia[eia["operating_year"] >= 2020]
@@ -713,12 +727,14 @@ def _(cfg, eia, horizontal_bar_ranking, legend_below, plt, save_fig):
                    markersize=14, label="Other state"),
     ]
     legend_below(_ax_st, handles=_legend_handles, ncol=2)
+    add_source(fig_states, "Source: EIA Form 860M, capacity additions 2020–2024")
+    add_brand_mark(fig_states, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_states, cfg.img_dir / "dd002_state_generation.png")
     return
 
 
 @app.cell
-def _(COLORS, CONTEXT, FIGSIZE, FONTS, FUEL_COLORS, cfg, eia, np, plt, save_fig, us_scatter_map):
+def _(COLORS, CONTEXT, FIGSIZE, FONTS, FUEL_COLORS, add_brand_mark, add_source, cfg, eia, np, plt, save_fig, us_scatter_map):
     # Map: new power plants since 2020
     # SWD gray+accent: solar and wind are the geographic story — everything else is context
     _recent_geo = eia[
@@ -773,6 +789,8 @@ def _(COLORS, CONTEXT, FIGSIZE, FONTS, FUEL_COLORS, cfg, eia, np, plt, save_fig,
         columnspacing=1.5,
     )
 
+    add_source(fig_plant_map, "Source: EIA Form 860M, plants ≥10 MW, commercial operation 2020–2024")
+    add_brand_mark(fig_plant_map, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_plant_map, cfg.img_dir / "dd002_plant_map.png")
     return
 
@@ -802,7 +820,7 @@ def _(cfg, mo):
 
 
 @app.cell
-def _(FONTS, cfg, np, plt, save_fig, us_scatter_map):
+def _(FONTS, add_brand_mark, add_source, cfg, np, plt, save_fig, us_scatter_map):
     # Frontier AI data center locations (Epoch AI, February 2025)
     # Filtered to US-based facilities with confirmed power capacity
     _datacenters = [
@@ -978,6 +996,8 @@ def _(FONTS, cfg, np, plt, save_fig, us_scatter_map):
                 ),
             )
 
+    add_source(fig_dc_map, "Source: Custom dataset; publicly announced hyperscaler facilities ≥200 MW, 2024–2025")
+    add_brand_mark(fig_dc_map, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_dc_map, cfg.img_dir / "dd002_datacenter_map.png")
     return
 
@@ -1019,7 +1039,7 @@ def _(cfg, mo):
 
 
 @app.cell
-def _(FONTS, cfg, elec_ppi, legend_below, natgas, pd, plt, save_fig):
+def _(FONTS, add_brand_mark, add_source, cfg, elec_ppi, legend_below, natgas, pd, plt, save_fig):
     # Natural gas price + electricity PPI with AI milestone annotations
     _gas = natgas["2015":].copy()
     _elec = elec_ppi["2015":].copy()
@@ -1079,7 +1099,10 @@ def _(FONTS, cfg, elec_ppi, legend_below, natgas, pd, plt, save_fig):
     _lines2, _labels2 = _ax2.get_legend_handles_labels()
     legend_below(_ax1, handles=_lines1 + _lines2, labels=_labels1 + _labels2)
 
-    plt.tight_layout()
+    plt.tight_layout(rect=[0.02, 0.08, 1, 1])
+    add_rule(_ax1)
+    add_source(fig_gas, "Source: EIA Henry Hub spot price; BLS Producer Price Index (electricity)")
+    add_brand_mark(fig_gas, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_gas, cfg.img_dir / "dd002_energy_prices.png")
     return
 
@@ -1129,7 +1152,7 @@ def _(cfg, mo, stats):
 
 
 @app.cell
-def _(CONTEXT, cfg, horizontal_bar_ranking, save_fig):
+def _(CONTEXT, add_brand_mark, add_source, cfg, horizontal_bar_ranking, save_fig):
     # Hyperscaler renewable portfolio sizes (approximate, from sustainability reports)
     _companies = ["Microsoft", "Amazon", "Meta", "Google"]
     _gw = [34, 32.5, 12, 10]
@@ -1144,6 +1167,8 @@ def _(CONTEXT, cfg, horizontal_bar_ranking, save_fig):
         highlight_color=COLORS["positive"],
         color=CONTEXT,
     )
+    add_source(fig_ppa, "Source: Microsoft/Amazon/Meta/Google sustainability reports, 2024")
+    add_brand_mark(fig_ppa, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_ppa, cfg.img_dir / "dd002_hyperscaler_ppa.png")
     return
 

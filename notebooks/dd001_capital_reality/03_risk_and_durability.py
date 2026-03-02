@@ -50,7 +50,7 @@ def _(mo):
 
 
 @app.cell
-def _():
+def _(add_brand_mark, add_source):
     import io
     import sys
     import zipfile
@@ -75,6 +75,9 @@ def _():
         FIGSIZE,
         FLOW_FONT_SIZE,
         FONTS,
+        add_brand_mark,
+        add_rule,
+        add_source,
         chart_title,
         flow_diagram,
         legend_below,
@@ -89,6 +92,9 @@ def _():
         FLOW_FONT_SIZE,
         FONTS,
         Path,
+        add_brand_mark,
+        add_rule,
+        add_source,
         cfg,
         chart_title,
         flow_diagram,
@@ -163,6 +169,8 @@ def _(
     CONTEXT,
     FIGSIZE,
     FONTS,
+    add_brand_mark,
+    add_source,
     cfg,
     chart_title,
     mpatches,
@@ -239,7 +247,9 @@ def _(
         _fig_matrix,
         "AI infrastructure occupies the structural risk zone",
     )
-    plt.tight_layout()
+    plt.tight_layout(rect=[0.02, 0.08, 1, 1])
+    add_source(_fig_matrix, "Source: Author's risk framework; SEC filings; industry research")
+    add_brand_mark(_fig_matrix, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(_fig_matrix, cfg.img_dir / "dd001_thesis_matrix.png")
     return
 
@@ -265,6 +275,9 @@ def _(
     CONTEXT,
     FIGSIZE,
     FONTS,
+    add_brand_mark,
+    add_rule,
+    add_source,
     cfg,
     chart_title,
     legend_below,
@@ -400,7 +413,10 @@ def _(
         fig_risk,
         "The further from the investment decision, the longer the exposure",
     )
-    plt.tight_layout()
+    plt.tight_layout(rect=[0.02, 0.08, 1, 1])
+    add_rule(_ax)
+    add_source(fig_risk, "Source: SEC filings; CRS reports; author's analysis")
+    add_brand_mark(fig_risk, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_risk, cfg.img_dir / "dd001_risk_exposure_timeline.png")
     return
 
@@ -449,6 +465,8 @@ def _(
     COLORS,
     CONTEXT,
     FLOW_FONT_SIZE,
+    add_brand_mark,
+    add_source,
     cfg,
     flow_diagram,
     mpatches,
@@ -489,6 +507,8 @@ def _(
             mpatches.Patch(fc=COLORS["background"], ec=CONTEXT, lw=1.2, label="Physical asset"),
         ],
     )
+    add_source(fig_spv, "Source: SEC filings; CoreWeave S-1; project finance documents")
+    add_brand_mark(fig_spv, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_spv, cfg.img_dir / "dd001_spv_chain.png")
     return
 
@@ -538,6 +558,8 @@ def _(
     COLORS,
     CONTEXT,
     FONTS,
+    add_brand_mark,
+    add_source,
     cfg,
     mlines,
     save_fig,
@@ -615,6 +637,8 @@ def _(
             arrowprops=dict(arrowstyle="-", color=_color_map[_cat], linewidth=0.8),
         )
 
+    add_source(fig_us_map, "Source: AWS, Meta, Google public infrastructure announcements")
+    add_brand_mark(fig_us_map, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_us_map, cfg.img_dir / "dd001_louisiana_us_overview.png")
     return
 
@@ -648,6 +672,8 @@ def _(
     COLORS,
     FONTS,
     Path,
+    add_brand_mark,
+    add_source,
     cfg,
     gpd,
     io,
@@ -730,7 +756,9 @@ def _(
     )
 
     _ax_la.set_axis_off()
-    plt.tight_layout()
+    plt.tight_layout(rect=[0.02, 0.08, 1, 1])
+    add_source(fig_la, "Source: Louisiana Economic Development; company announcements")
+    add_brand_mark(fig_la, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_la, cfg.img_dir / "dd001_louisiana_parish_zoom.png")
     return
 
@@ -787,6 +815,8 @@ def _(
     COLORS,
     CONTEXT,
     FLOW_FONT_SIZE,
+    add_brand_mark,
+    add_source,
     cfg,
     flow_diagram,
     mpatches,
@@ -823,6 +853,8 @@ def _(
             mpatches.Patch(fc=COLORS["neutral"],  label="Collateral (GPU assets)"),
         ],
     )
+    add_source(fig_cw, "Source: CoreWeave S-1 (March 2025); SEC filings")
+    add_brand_mark(fig_cw, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_cw, cfg.img_dir / "dd001_coreweave_chain.png")
     return
 
@@ -893,7 +925,7 @@ def _(mo):
 
 
 @app.cell(hide_code=True)
-def _(COLORS, CONTEXT, FLOW_FONT_SIZE, cfg, flow_diagram, mpatches, save_fig):
+def _(COLORS, CONTEXT, FLOW_FONT_SIZE, add_brand_mark, add_source, cfg, flow_diagram, mpatches, save_fig):
     fig_ferc = flow_diagram(
         nodes={
             "ferc": ("FERC AD24-11\nNotice of Inquiry\nMay 2024 · pending",             8.0,  3.5, CONTEXT,              COLORS["text_dark"]),
@@ -927,6 +959,8 @@ def _(COLORS, CONTEXT, FLOW_FONT_SIZE, cfg, flow_diagram, mpatches, save_fig):
             mpatches.Patch(fc=COLORS["positive"],   label="Risk to decision-makers"),
         ],
     )
+    add_source(fig_ferc, "Source: FERC Order 2023; EIA data; author's analysis")
+    add_brand_mark(fig_ferc, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_ferc, cfg.img_dir / "dd001_ferc_fork.png")
     return
 

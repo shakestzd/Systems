@@ -50,15 +50,15 @@ def _(mo):
 
 
 @app.cell
-def _():
+def _(add_brand_mark, add_source):
     import sys
 
     import marimo as mo
 
     sys.path.insert(0, str(mo.notebook_dir().parent.parent))
 
-    import matplotlib.pyplot as plt
     import matplotlib.patches as mpatches
+    import matplotlib.pyplot as plt
     import numpy as np
     import pandas as pd
 
@@ -69,6 +69,8 @@ def _():
         CONTEXT,
         FIGSIZE,
         FONTS,
+        add_brand_mark,
+        add_source,
         waterfall_chart,
     )
 
@@ -78,6 +80,8 @@ def _():
         CONTEXT,
         FIGSIZE,
         FONTS,
+        add_brand_mark,
+        add_source,
         cfg,
         mo,
         mpatches,
@@ -286,7 +290,7 @@ def _(mo, stats):
 
 
 @app.cell
-def _(COLORS, CONTEXT, FIGSIZE, FONTS, cfg, plt, save_fig, stats):
+def _(COLORS, CONTEXT, FIGSIZE, FONTS, add_brand_mark, add_source, cfg, plt, save_fig, stats):
     # Chart: Asset lifetime vs. liability holder — visual taxonomy
     _assets = [
         ("Server hardware\n(IT equipment)", 6, "Hyperscaler", COLORS["accent"]),
@@ -321,8 +325,10 @@ def _(COLORS, CONTEXT, FIGSIZE, FONTS, cfg, plt, save_fig, stats):
     _ax.invert_yaxis()
 
     # Labels on each bar already identify the liability holder; no legend needed.
-    plt.tight_layout()
+    plt.tight_layout(rect=[0.02, 0.08, 1, 1])
 
+    add_source(fig_liab, "Source: see methods section")
+    add_brand_mark(fig_liab, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_liab, cfg.img_dir / "dd004_liability_taxonomy.png")
     return (fig_liab,)
 

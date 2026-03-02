@@ -50,7 +50,7 @@ def _(mo):
 
 
 @app.cell
-def _():
+def _(add_brand_mark, add_source):
     import sys
 
     import marimo as mo
@@ -76,6 +76,8 @@ def _():
         CONTEXT,
         FIGSIZE,
         FONTS,
+        add_brand_mark,
+        add_source,
         legend_below,
     )
 
@@ -86,6 +88,10 @@ def _():
         CONTEXT,
         FIGSIZE,
         FONTS,
+        SOC_CODES_TECHNICAL,
+        SOC_CODES_TRADES,
+        add_brand_mark,
+        add_source,
         cfg,
         fetch_oews_soc,
         fetch_qcew_state,
@@ -97,8 +103,6 @@ def _():
         plt,
         query,
         save_fig,
-        SOC_CODES_TECHNICAL,
-        SOC_CODES_TRADES,
         sys,
     )
 
@@ -367,20 +371,7 @@ def _(mo, stats):
 
 
 @app.cell
-def _(
-    CATEGORICAL,
-    COLORS,
-    CONTEXT,
-    FIGSIZE,
-    FONTS,
-    cfg,
-    empl_idx,
-    legend_below,
-    mdates,
-    pd,
-    plt,
-    save_fig,
-):
+def _(CATEGORICAL, COLORS, CONTEXT, FIGSIZE, FONTS, add_brand_mark, add_source, cfg, empl_idx, legend_below, mdates, pd, plt, save_fig):
     # Employment index chart: sector divergence since Jan 2020 = 100
     # Focus: Computer Systems Design (tech hiring signal)
     # Context: Construction, Information, Manufacturing
@@ -472,8 +463,10 @@ def _(
     ax_empl.set_ylabel("Employment index (Jan 2020 = 100)", fontsize=FONTS["axis_label"])
     ax_empl.set_xlim(empl_idx.index.min(), empl_idx.index.max() + pd.Timedelta(days=60))
     legend_below(ax_empl)
-    plt.tight_layout()
+    plt.tight_layout(rect=[0.02, 0.08, 1, 1])
 
+    add_source(fig_empl, "Source: see methods section")
+    add_brand_mark(fig_empl, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_empl, cfg.img_dir / "dd003_employment_index.png")
     return
 
@@ -511,22 +504,7 @@ def _(cfg, mo, stats):
 
 
 @app.cell
-def _(
-    CATEGORICAL,
-    COLORS,
-    CONTEXT,
-    FIGSIZE,
-    FONTS,
-    SOC_CODES_TECHNICAL,
-    SOC_CODES_TRADES,
-    cfg,
-    legend_below,
-    mo,
-    np,
-    plt,
-    save_fig,
-    wages_df,
-):
+def _(CATEGORICAL, COLORS, CONTEXT, FIGSIZE, FONTS, SOC_CODES_TECHNICAL, SOC_CODES_TRADES, add_brand_mark, add_source, cfg, legend_below, mo, np, plt, save_fig, wages_df):
     # OEWS occupational wage time series — technical vs trades
     # Focus: Electricians and Software Developers (the two-workforce story)
     # Context: everything else
@@ -567,7 +545,8 @@ def _(
     fig_wages, ax_wages = plt.subplots(figsize=FIGSIZE["wide"])
 
     for _soc, _label in _all_codes.items():
-        if _soc not in _complete_codes:
+        # Always draw focus codes even if BLS changed the SOC code mid-series
+        if _soc not in _complete_codes and _soc not in (_focus_tech, _focus_trade):
             continue
         _soc_series = (
             _w[_w["occ_code"] == _soc]
@@ -623,7 +602,9 @@ def _(
     ax_wages.set_xlim(_year_min - 0.3, _year_max + 1.2)
     ax_wages.set_xticks(np.arange(_year_min, _year_max + 1))
 
-    plt.tight_layout()
+    plt.tight_layout(rect=[0.02, 0.08, 1, 1])
+    add_source(fig_wages, "Source: see methods section")
+    add_brand_mark(fig_wages, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_wages, cfg.img_dir / "dd003_oews_wages.png")
 
     return
@@ -684,18 +665,7 @@ def _(cfg, mo, stats):
 
 
 @app.cell
-def _(
-    CATEGORICAL,
-    COLORS,
-    FIGSIZE,
-    FONTS,
-    cfg,
-    mo,
-    np,
-    plt,
-    qcew_dc,
-    save_fig,
-):
+def _(CATEGORICAL, COLORS, FIGSIZE, FONTS, add_brand_mark, add_source, cfg, mo, np, plt, qcew_dc, save_fig):
     # QCEW state-level data center employment (NAICS 518210)
     # Most recent year with disclosed data, private sector only.
 
@@ -776,7 +746,9 @@ def _(
         frameon=False,
     )
 
-    plt.tight_layout()
+    plt.tight_layout(rect=[0.02, 0.08, 1, 1])
+    add_source(fig_qcew, "Source: see methods section")
+    add_brand_mark(fig_qcew, logo_path=str(cfg.project_root / 'src/assets/tzdlabs_mark.png'))
     save_fig(fig_qcew, cfg.img_dir / "dd003_qcew_dc_states.png")
 
     return
@@ -812,11 +784,12 @@ def _(cfg, mo, stats):
     or the equipment technicians contracted for installation. It captures only
     the operational employment: the people who run the facilities once built.
 
-    Virginia's dominance is a direct consequence of the Northern Virginia
-    data center cluster in Loudoun County and neighboring Fairfax, Prince William,
-    and Manassas Park localities. The "Data Center Alley" concentration is so
-    extreme that **Loudoun County alone** accounts for a significant portion of
-    state-level NAICS 518210 employment — and Virginia holds approximately
+    Although {stats['dc_empl_top_state']} and Texas dominate in total state employment,
+    Virginia is highlighted here because the Northern Virginia data center cluster
+    in Loudoun County and neighboring Fairfax, Prince William, and Manassas Park
+    localities represents the most concentrated single hub. The "Data Center Alley"
+    concentration is so extreme that **Loudoun County alone** accounts for a significant
+    portion of state-level NAICS 518210 employment — and Virginia holds approximately
     30–40% of the Americas' data center capacity by some industry estimates.
 
     The geographic concentration creates the labor constraint: the demand for

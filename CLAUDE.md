@@ -29,6 +29,21 @@ The analytical framework combines:
 
 See `research-framework.md` for the full framework and references.
 
+## Publication Architecture
+
+See `FRAMING.md` for the full editorial architecture. Short version:
+
+**Scope:** Technology capital in the physical economy — AI infrastructure, energy
+transition, climate finance, materials. The analytical arc is COMMIT → CONVERT → LAND → DISTRIBUTE.
+Current focus: AI (DD-001–004). Framework portable to future case studies.
+
+**Position:** Starts where Politano ends. Politano shows the scale; we show what
+the capital actually buys, what it locks in, and who ends up paying.
+
+Before writing any new section: confirm the content answers the governing question
+for that deep dive (see `FRAMING.md`). Before titling a piece: follow the title
+conventions in `FRAMING.md`.
+
 ## Project Status (auto-generated)
 
 @PROJECT_STATUS.md
@@ -103,7 +118,7 @@ notebook directory, then run the sync script. Do NOT edit PROJECT_STATUS.md by h
 ### Policy Currency
 
 Technology, energy, and climate policy are in active flux. A claim accurate in 2023
-may be wrong by mid-2025. **Before writing any policy claim, use the researcher agent
+may be wrong by mid-2025. **Before writing any policy claim, use the `tzd-labs:researcher` agent
 to verify current status.**
 
 Rules:
@@ -199,6 +214,21 @@ update that touches both theme files and `build.py` simultaneously.
   non-zero on failure. Add new notebooks to the `NOTEBOOKS` array in the script.
 - **Run `bash scripts/test_notebooks.sh` before committing notebook or `src/` changes.**
 
+### Event Annotations
+
+Use `mark_events()` from `src.data.events` for structural inflection points on any
+time-series chart where policy or market context matters:
+
+```python
+from src.data.events import mark_events
+mark_events(ax, categories=["policy", "announcement"])
+```
+
+- Event catalog: `src/data/events.py` — add new events there, not in notebook cells
+- Categories: `"policy"`, `"market"`, `"announcement"`, `"regulatory"`, `"energy"`
+- Call **after** setting axis limits so only events within the visible range are drawn
+- Do NOT hardcode event dates or labels inside notebook cells
+
 ### Chart Review (Storytelling with Data)
 
 Every chart must pass this checklist before committing. Based on Cole Nussbaumer
@@ -227,6 +257,10 @@ Knaflic's *Storytelling with Data* methodology.
 - [ ] White background, no borders
 
 **Post-creation validation:**
+- [ ] `add_source(fig, "Source: ...")` on every published chart
+- [ ] `add_brand_mark(fig, logo_path=...)` applied (requires `src/assets/tzdlabs_mark.png`)
+- [ ] `add_rule(ax)` on time-series charts
+- [ ] `mark_events(ax, categories=[...])` where temporal context matters
 - [ ] Can someone understand the main point in 5 seconds?
 - [ ] Is there anything you can remove without losing meaning?
 - [ ] Does every visual element serve the story?
@@ -296,32 +330,43 @@ a question in public. Write as if explaining to a smart colleague who is not a s
 ## Agent Workflow
 
 Five specialized agents handle distinct phases of the research-to-publication pipeline.
-Delegate to them using the Task tool with `subagent_type` matching the agent name.
+Delegate to them using the Task tool with `subagent_type`.
+
+**CRITICAL: All project agents require the `tzd-labs:` namespace prefix.**
+Always use the full `subagent_type` — never the bare name:
+
+| Correct | Wrong |
+| :--- | :--- |
+| `tzd-labs:researcher` | `researcher` |
+| `tzd-labs:critic` | `critic` |
+| `tzd-labs:notebook-qa` | `notebook-qa` |
+| `tzd-labs:writer` | `writer` |
+| `tzd-labs:fact-checker` | `fact-checker` |
 
 ### Agents
 
-| Agent | Color | Purpose |
+| subagent_type | Color | Purpose |
 | :--- | :--- | :--- |
-| **researcher** | cyan | Finds and validates primary data sources (government databases, academic repos, company filings). Actively searches for contradictory evidence. Zero-budget aware. |
-| **critic** | red | Rigorous intellectual review. Evaluates logical structure, evidence quality, structural omissions, and reference strength. Does not soften criticism. |
-| **notebook-qa** | blue | Data integrity auditor. Verifies every number in prose against the database, identifies hardcoded values that should be data-driven, checks internal consistency between chart code and captions. |
-| **writer** | green | Transforms draft analysis into accessible, rigorous narrative. Applies storytelling principles (inverted pyramid, insight-driven chart titles, Tufte, Knaflic). |
-| **fact-checker** | yellow | Final gate before publication. Verifies every number, citation, date, and entity. Flags unsourced claims and stale data. |
+| **tzd-labs:researcher** | cyan | Finds and validates primary data sources (government databases, academic repos, company filings). Actively searches for contradictory evidence. Zero-budget aware. |
+| **tzd-labs:critic** | red | Rigorous intellectual review. Evaluates logical structure, evidence quality, structural omissions, and reference strength. Does not soften criticism. |
+| **tzd-labs:notebook-qa** | blue | Data integrity auditor. Verifies every number in prose against the database, identifies hardcoded values that should be data-driven, checks internal consistency between chart code and captions. |
+| **tzd-labs:writer** | green | Transforms draft analysis into accessible, rigorous narrative. Applies storytelling principles (inverted pyramid, insight-driven chart titles, Tufte, Knaflic). |
+| **tzd-labs:fact-checker** | yellow | Final gate before publication. Verifies every number, citation, date, and entity. Flags unsourced claims and stale data. |
 
 ### Publication Pipeline
 
 ```
-1. RESEARCH    (researcher)    Find primary data, validate existing references
+1. RESEARCH    (tzd-labs:researcher)    Find primary data, validate existing references
        ↓
-2. DRAFT       (you)           Write the analysis in a Marimo notebook
+2. DRAFT       (you)                    Write the analysis in a Marimo notebook
        ↓
-3. REVIEW      (critic ∥ qa)   Run critic + notebook-qa IN PARALLEL
+3. REVIEW      (tzd-labs:critic ∥ tzd-labs:notebook-qa)   Run IN PARALLEL
        ↓
-4. REVISE      (you)           Address findings from both reviews
+4. REVISE      (you)                    Address findings from both reviews
        ↓
-5. POLISH      (writer)        Rewrite prose for clarity, structure
+5. POLISH      (tzd-labs:writer)        Rewrite prose for clarity, structure
        ↓
-6. VERIFY      (fact-checker)  Check every claim against its source
+6. VERIFY      (tzd-labs:fact-checker)  Check every claim against its source
        ↓
 7. PUBLISH
 ```
@@ -334,8 +379,8 @@ returning to the researcher for additional data.
 When reviewing a notebook, **always launch both agents in parallel**:
 
 ```
-Task(critic):      "Review notebooks/ddXXX/.../notebook.py for logical gaps and evidence quality"
-Task(notebook-qa): "Run data QA on notebooks/ddXXX/.../notebook.py"
+Task(tzd-labs:critic):      "Review notebooks/ddXXX/.../notebook.py for logical gaps and evidence quality"
+Task(tzd-labs:notebook-qa): "Run data QA on notebooks/ddXXX/.../notebook.py"
 ```
 
 The **critic** produces: logical gaps, missing evidence, structural omissions, weak
@@ -370,24 +415,24 @@ inventory, internal consistency checks, missing caveats, data-grounding recommen
 ### How to Delegate
 
 **Full notebook review (most common):**
-> "Run the critic and notebook-qa agents in parallel on notebooks/dd001.../01_capex.py"
+> "Run the `tzd-labs:critic` and `tzd-labs:notebook-qa` agents in parallel on notebooks/dd001.../01_capex.py"
 
 **Data-only check (after data refresh):**
-> "Use the notebook-qa agent to verify all prose claims in DD-001 against the updated data"
+> "Use the `tzd-labs:notebook-qa` agent to verify all prose claims in DD-001 against the updated data"
 
 **Research a topic:**
-> "Use the researcher agent to find primary data on U.S. transformer imports"
+> "Use the `tzd-labs:researcher` agent to find primary data on U.S. transformer imports"
 
 **Polish prose:**
-> "Use the writer agent to improve the narrative structure in the generation mix analysis"
+> "Use the `tzd-labs:writer` agent to improve the narrative structure in the generation mix analysis"
 
 **Pre-publication check:**
-> "Use the fact-checker agent to verify all claims in CS-1 before publishing"
+> "Use the `tzd-labs:fact-checker` agent to verify all claims in CS-1 before publishing"
 
 **Parallel delegation** works when agents don't depend on each other's output:
-- critic + notebook-qa should run simultaneously (they review different dimensions)
-- researcher + critic can run simultaneously on different content
-- writer and fact-checker should run sequentially (writer first, then fact-checker)
+- `tzd-labs:critic` + `tzd-labs:notebook-qa` should run simultaneously (they review different dimensions)
+- `tzd-labs:researcher` + `tzd-labs:critic` can run simultaneously on different content
+- `tzd-labs:writer` and `tzd-labs:fact-checker` should run sequentially (writer first, then fact-checker)
 
 ### Agent Design Principles
 

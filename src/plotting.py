@@ -22,6 +22,7 @@ from flowmpl import (  # noqa: F401
     PAPER,
     RULE,
     SCATTER_DEFAULTS,
+    add_brand_mark,
     add_rule,
     add_source,
     annotate_point,
@@ -41,6 +42,7 @@ from flowmpl import (  # noqa: F401
     us_scatter_map,
     waterfall_chart,
 )
+from src.data.events import EVENTS, Event, mark_events  # noqa: F401
 
 __all__ = [
     "apply_style",
@@ -61,6 +63,7 @@ __all__ = [
     "PAPER",
     "RULE",
     "SCATTER_DEFAULTS",
+    "add_brand_mark",
     "add_rule",
     "add_source",
     "annotate_point",
@@ -78,4 +81,8 @@ __all__ = [
     "stacked_bar",
     "us_scatter_map",
     "waterfall_chart",
+    # Events
+    "EVENTS",
+    "Event",
+    "mark_events",
 ]
