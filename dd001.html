@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="generator" content="Observable Framework v1.13.3">
+<title>AI Valuations vs. Infrastructure Spending | How Capital Becomes Infrastructure</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&amp;display=swap" crossorigin>
+<link rel="preload" as="style" href="./_observablehq/theme-air.aad62322.css">
+<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&amp;display=swap" crossorigin>
+<link rel="stylesheet" type="text/css" href="./_observablehq/theme-air.aad62322.css">
+<link rel="modulepreload" href="./_observablehq/client.30a4a512.js">
+<link rel="modulepreload" href="./_observablehq/runtime.e080113b.js">
+<link rel="modulepreload" href="./_observablehq/stdlib.73a8ec5a.js">
+<link rel="modulepreload" href="./_import/js/charts/valuation.8657686a.js">
+<link rel="modulepreload" href="./_import/js/charts/capex-history.168d28f8.js">
+<link rel="modulepreload" href="./_import/js/animate.48305260.js">
+<link rel="modulepreload" href="./_import/js/charts/stacked-capex.150c0d66.js">
+<link rel="modulepreload" href="./_import/js/charts/off-balance.026cb26f.js">
+<link rel="modulepreload" href="./_import/js/charts/revenue-ratio.c723cd0e.js">
+<link rel="modulepreload" href="./_import/js/charts/revenue-gap.3a1e2f75.js">
+<link rel="modulepreload" href="./_import/js/charts/demand-thesis.c5816ce2.js">
+<link rel="modulepreload" href="./_import/js/charts/guidance.8dbb1158.js">
+<link rel="modulepreload" href="./_import/js/charts/scenarios.e3e8a1a9.js">
+<link rel="modulepreload" href="./_import/js/design.254ccef8.js">
+<link rel="modulepreload" href="./_npm/d3@7.9.0/e324157d.js">
+<link rel="modulepreload" href="./_import/js/tooltip.1f3faffb.js">
+<link rel="modulepreload" href="./_import/js/utils.2e630a24.js">
+<link rel="modulepreload" href="./_npm/d3-array@3.2.4/e93ca09f.js">
+<link rel="modulepreload" href="./_npm/d3-axis@3.0.0/0f2de24d.js">
+<link rel="modulepreload" href="./_npm/d3-brush@3.0.0/65eb105b.js">
+<link rel="modulepreload" href="./_npm/d3-chord@3.0.1/7ef8fb2e.js">
+<link rel="modulepreload" href="./_npm/d3-color@3.1.0/aeb57b94.js">
+<link rel="modulepreload" href="./_npm/d3-contour@4.0.2/1d2aed74.js">
+<link rel="modulepreload" href="./_npm/d3-delaunay@6.0.4/5ced1d52.js">
+<link rel="modulepreload" href="./_npm/d3-dispatch@3.0.1/9ba9c7f3.js">
+<link rel="modulepreload" href="./_npm/d3-drag@3.0.0/4202580c.js">
+<link rel="modulepreload" href="./_npm/d3-dsv@3.0.1/9cffc2bd.js">
+<link rel="modulepreload" href="./_npm/d3-ease@3.0.1/cdd7e898.js">
+<link rel="modulepreload" href="./_npm/d3-fetch@3.0.1/b4e2ad9a.js">
+<link rel="modulepreload" href="./_npm/d3-force@3.0.0/5e804d15.js">
+<link rel="modulepreload" href="./_npm/d3-format@3.1.2/3785bf2d.js">
+<link rel="modulepreload" href="./_npm/d3-geo@3.1.1/40599fb3.js">
+<link rel="modulepreload" href="./_npm/d3-hierarchy@3.1.2/e49e792c.js">
+<link rel="modulepreload" href="./_npm/d3-interpolate@3.0.1/8d1e5425.js">
+<link rel="modulepreload" href="./_npm/d3-path@3.1.0/20d3f133.js">
+<link rel="modulepreload" href="./_npm/d3-polygon@3.0.1/7553081f.js">
+<link rel="modulepreload" href="./_npm/d3-quadtree@3.0.1/0dfd751c.js">
+<link rel="modulepreload" href="./_npm/d3-random@3.0.1/3c90ee06.js">
+<link rel="modulepreload" href="./_npm/d3-scale@4.0.2/720b7f0a.js">
+<link rel="modulepreload" href="./_npm/d3-scale-chromatic@3.1.0/ba24c2e7.js">
+<link rel="modulepreload" href="./_npm/d3-selection@3.0.0/4d94e5b7.js">
+<link rel="modulepreload" href="./_npm/d3-shape@3.2.0/6d3a6726.js">
+<link rel="modulepreload" href="./_npm/d3-time@3.1.0/9f03c579.js">
+<link rel="modulepreload" href="./_npm/d3-time-format@4.1.0/07c9626f.js">
+<link rel="modulepreload" href="./_npm/d3-timer@3.0.1/b58a267d.js">
+<link rel="modulepreload" href="./_npm/d3-transition@3.0.1/004da2ac.js">
+<link rel="modulepreload" href="./_npm/d3-zoom@3.0.0/b5786b3f.js">
+<link rel="modulepreload" href="./_npm/internmap@2.0.3/e08981d9.js">
+<link rel="modulepreload" href="./_npm/delaunator@5.0.1/02d43215.js">
+<link rel="modulepreload" href="./_npm/robust-predicates@3.0.2/aa00730b.js">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&amp;family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&amp;display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./_file/style.fd69dca2.css">
+  
+<script type="module">
+
+import {define} from "./_observablehq/client.30a4a512.js";
+import {registerFile} from "./_observablehq/stdlib.73a8ec5a.js";
+
+registerFile("./data/capex.json", {"name":"./data/capex.json","mimeType":"application/json","path":"./_file/data/capex.4decf7db.json","lastModified":1772434983344,"size":9176});
+registerFile("./data/cloud_rev.json", {"name":"./data/cloud_rev.json","mimeType":"application/json","path":"./_file/data/cloud_rev.8c5eb9ee.json","lastModified":1772434984203,"size":4028});
+registerFile("./data/mktcap.json", {"name":"./data/mktcap.json","mimeType":"application/json","path":"./_file/data/mktcap.ca3e32f2.json","lastModified":1772434983779,"size":732});
+registerFile("./data/stats.json", {"name":"./data/stats.json","mimeType":"application/json","path":"./_file/data/stats.75d50547.json","lastModified":1772434982886,"size":1204});
+
+define({id: "23512830", inputs: ["FileAttachment"], outputs: ["stats","capex","mktcap","cloudRev","byTicker"], body: async (FileAttachment) => {
+// ── Data (Observable FileAttachment — stays here, it's Framework-specific) ─
+const stats    = await FileAttachment("./data/stats.json").json();
+const capex    = await FileAttachment("./data/capex.json").json();
+const mktcap   = await FileAttachment("./data/mktcap.json").json();
+const cloudRev = await FileAttachment("./data/cloud_rev.json").json();
+
+// byTicker is used in the prose below for inline stat interpolation
+const byTicker = Object.fromEntries(mktcap.map(r => [r.ticker, r]));
+return {stats,capex,mktcap,cloudRev,byTicker};
+}});
+
+define({id: "f593d34f", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.mkt_gain_t.toFixed(1)
+))
+}});
+
+define({id: "e3e916d5", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.capex_2025.toFixed(0)
+))
+}});
+
+define({id: "bd8a5310", mode: "inline", inputs: ["byTicker","display"], body: async (byTicker,display) => {
+display(await(
+(byTicker.NVDA?.gain_t ?? 0).toFixed(1)
+))
+}});
+
+define({id: "134c8757", mode: "inline", inputs: ["byTicker","display"], body: async (byTicker,display) => {
+display(await(
+(byTicker.GOOGL?.gain_t ?? 0).toFixed(1)
+))
+}});
+
+define({id: "0a6b3251", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.google_search_ad_rev_qtr_bn
+))
+}});
+
+define({id: "ad1faac5", mode: "inline", inputs: ["byTicker","display"], body: async (byTicker,display) => {
+display(await(
+(byTicker.AAPL?.gain_t ?? 0).toFixed(1)
+))
+}});
+
+define({id: "0607d8c3", mode: "inline", inputs: ["byTicker","display"], body: async (byTicker,display) => {
+display(await(
+(byTicker.META?.gain_t ?? 0).toFixed(1)
+))
+}});
+
+define({id: "ff20963f", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.meta_2026g
+))
+}});
+
+define({id: "2b4a48f9", mode: "inline", inputs: ["byTicker","display"], body: async (byTicker,display) => {
+display(await(
+(byTicker.AMZN?.gain_t ?? 0).toFixed(1)
+))
+}});
+
+define({id: "db5731f1", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.amzn_2025.toFixed(0)
+))
+}});
+
+define({id: "620a6f29", mode: "inline", inputs: ["byTicker","display"], body: async (byTicker,display) => {
+display(await(
+(byTicker.MSFT?.gain_t ?? 0).toFixed(1)
+))
+}});
+
+define({id: "932eaad2", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.msft_neocloud_total_bn
+))
+}});
+
+define({id: "ccc3c640", mode: "inline", inputs: ["byTicker","display"], body: async (byTicker,display) => {
+display(await(
+(byTicker.TSLA?.gain_t ?? 0).toFixed(1)
+))
+}});
+
+define({id: "6ec2cec8", mode: "inline", inputs: ["mktcap","display"], body: async (mktcap,display) => {
+display(await(
+mktcap.reduce((s, r) => s + r.gain_t, 0).toFixed(1)
+))
+}});
+
+define({id: "e3e916d5-1", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.capex_2025.toFixed(0)
+))
+}});
+
+define({id: "0e924968", inputs: ["mktcap","stats"], outputs: ["mountValuation"], body: async (mktcap,stats) => {
+const {mountValuation} = await import("./_import/js/charts/valuation.8657686a.js");
+mountValuation(document.getElementById("scroll-section"), { mktcap, stats });
+return {mountValuation};
+}});
+
+define({id: "f93deb17", inputs: ["capex","stats","display"], outputs: ["createCapexHistory","mountScrollChart","capexHistoryChart"], body: async (capex,stats,display) => {
+const [{createCapexHistory}, {mountScrollChart}] = await Promise.all([import("./_import/js/charts/capex-history.168d28f8.js"), import("./_import/js/animate.48305260.js")]);
+
+const capexHistoryChart = createCapexHistory(capex, stats);
+display(mountScrollChart(capexHistoryChart.node, capexHistoryChart.update, [
+  { prose: "Cloud infrastructure spending grew slowly for years — a reliable but predictable build." },
+  { prose: "Then 2022 happened." },
+  { prose: "Spending doubled in two years. No previous cycle moved this fast." },
+  { prose: `By 2025: $${stats.capex_2025.toFixed(0)}B. Five times what these companies spent in 2019.` },
+]));
+return {createCapexHistory,mountScrollChart,capexHistoryChart};
+}});
+
+define({id: "323642e8", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.guidance_band_pct
+))
+}});
+
+define({id: "6ed5dbe1", inputs: ["capex","stats","display","mountScrollChart"], outputs: ["createStackedCapex","stackedCapexChart"], body: async (capex,stats,display,mountScrollChart) => {
+const {createStackedCapex} = await import("./_import/js/charts/stacked-capex.150c0d66.js");
+
+const stackedCapexChart = createStackedCapex(capex, stats);
+display(mountScrollChart(stackedCapexChart.node, stackedCapexChart.update, [
+  { prose: "Here's the full picture: who spent what, year by year since 2022." },
+  { prose: "Amazon has led cumulative spend from the start." },
+  { prose: `Meta barely registered in 2022. Their 2026 guidance is $${stats.meta_2026g}B.` },
+  { prose: `Across all six companies, 2026 guidance totals $${stats.guidance_2026_point.toFixed(0)}B. That number carries a ±${stats.guidance_band_pct}% revision history.` },
+]));
+return {createStackedCapex,stackedCapexChart};
+}});
+
+define({id: "932eaad2-1", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.msft_neocloud_total_bn
+))
+}});
+
+define({id: "18e55110", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.msft_nebius_deal_bn
+))
+}});
+
+define({id: "b3b93af8", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.msft_nscale_deal_bn
+))
+}});
+
+define({id: "86f6de39", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.msft_iren_deal_bn
+))
+}});
+
+define({id: "b28f648b", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.meta_beignet_financing_bn
+))
+}});
+
+define({id: "deb7cc6b", inputs: ["stats","display","mountScrollChart"], outputs: ["createOffBalance","offBalanceChart"], body: async (stats,display,mountScrollChart) => {
+const {createOffBalance} = await import("./_import/js/charts/off-balance.026cb26f.js");
+
+const offBalanceChart = createOffBalance(stats);
+display(mountScrollChart(offBalanceChart.node, offBalanceChart.update, [
+  { prose: "Here's what the 10-K filings report as capital expenditure." },
+  { prose: "But operating leases and special-purpose vehicles hide billions more — commitments that flow through operating expenses, not capex lines." },
+  { prose: `Microsoft's real 2025 infrastructure commitment: $${(stats.msft_2025 + (stats.msft_neocloud_total_bn ?? 50)).toFixed(0)}B. The filing says $${stats.msft_2025.toFixed(0)}B.` },
+]));
+return {createOffBalance,offBalanceChart};
+}});
+
+define({id: "2725a9ba", inputs: ["capex","cloudRev","display","mountScrollChart"], outputs: ["createRevenueRatio","revenueRatioChart"], body: async (capex,cloudRev,display,mountScrollChart) => {
+const {createRevenueRatio} = await import("./_import/js/charts/revenue-ratio.c723cd0e.js");
+
+const revenueRatioChart = createRevenueRatio(capex, cloudRev);
+display(mountScrollChart(revenueRatioChart.node, revenueRatioChart.update, [
+  { prose: "The 1.0× line is parity: spending equals what the cloud business earns." },
+  { prose: "Through 2023, all three companies stayed below it. Spending less than you earn is sustainable." },
+  { prose: "Alphabet crossed first, in 2024." },
+  { prose: "Amazon followed in 2025. Microsoft is approaching." },
+]));
+return {createRevenueRatio,revenueRatioChart};
+}});
+
+define({id: "ff8eb106", inputs: ["capex","cloudRev","display","mountScrollChart"], outputs: ["createRevenueGap","revenueGapChart"], body: async (capex,cloudRev,display,mountScrollChart) => {
+const {createRevenueGap} = await import("./_import/js/charts/revenue-gap.3a1e2f75.js");
+
+const revenueGapChart = createRevenueGap(capex, cloudRev);
+display(mountScrollChart(revenueGapChart.node, revenueGapChart.update, [
+  { prose: "In early 2023, infrastructure spending and cloud revenue were roughly in sync." },
+  { prose: "Then capex started climbing faster than revenue." },
+  { prose: "For Alphabet and Amazon, capex now exceeds what their cloud businesses earn. The gap is widening." },
+]));
+return {createRevenueGap,revenueGapChart};
+}});
+
+define({id: "40d861fd", inputs: ["display","stats"], outputs: ["createDemandThesis"], body: async (display,stats) => {
+const {createDemandThesis} = await import("./_import/js/charts/demand-thesis.c5816ce2.js");
+display(createDemandThesis(stats));
+return {createDemandThesis};
+}});
+
+define({id: "102c9ea6", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.guidance_2026_point.toFixed(0)
+))
+}});
+
+define({id: "323642e8-1", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.guidance_band_pct
+))
+}});
+
+define({id: "6aa4dd8a", inputs: ["stats","display","mountScrollChart"], outputs: ["createGuidance","guidanceChart"], body: async (stats,display,mountScrollChart) => {
+const {createGuidance} = await import("./_import/js/charts/guidance.8dbb1158.js");
+
+const guidanceChart = createGuidance(stats);
+display(mountScrollChart(guidanceChart.node, guidanceChart.update, [
+  { prose: "Here's what companies actually spent in 2025." },
+  { prose: "And here's what management is claiming for 2026." },
+  { prose: `The problem: guidance has swung by ±${stats.guidance_band_pct}% in a single year before. 2026 carries the same risk.` },
+]));
+return {createGuidance,guidanceChart};
+}});
+
+define({id: "4e86b4ab", inputs: ["stats","display","mountScrollChart"], outputs: ["createScenarios","scenariosChart"], body: async (stats,display,mountScrollChart) => {
+const {createScenarios} = await import("./_import/js/charts/scenarios.e3e8a1a9.js");
+
+const scenariosChart = createScenarios(stats);
+display(mountScrollChart(scenariosChart.node, scenariosChart.update, [
+  { prose: "One spending line. Three possible worlds." },
+  { prose: "Bull case: demand validates. Revenue catches up to capex." },
+  { prose: "Base case: current trajectory holds. The gap persists." },
+  { prose: `Bear case: guidance cut ${stats.guidance_band_pct}%, but revenue misses too. The gap barely closes.` },
+  { prose: "The connector length is the entire argument. Bear looks better on paper — but both ends move." },
+], { callout: "above" }));
+return {createScenarios,scenariosChart};
+}});
+
+define({id: "42b6db00", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.nvda_deepseek_loss_bn ? (stats.nvda_deepseek_loss_bn/1000).toFixed(2) + "T" : "$600B"
+))
+}});
+
+define({id: "25c2daa0", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.amzn_2026g
+))
+}});
+
+define({id: "cd4d137b", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.googl_2026g
+))
+}});
+
+define({id: "94394c3b", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.msft_2026g
+))
+}});
+
+define({id: "ff20963f-1", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.meta_2026g
+))
+}});
+
+define({id: "323642e8-2", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.guidance_band_pct
+))
+}});
+
+define({id: "18e55110-1", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.msft_nebius_deal_bn
+))
+}});
+
+define({id: "b3b93af8-1", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.msft_nscale_deal_bn
+))
+}});
+
+define({id: "86f6de39-1", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.msft_iren_deal_bn
+))
+}});
+
+define({id: "b28f648b-1", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.meta_beignet_financing_bn
+))
+}});
+
+define({id: "4350c0a8", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.cloud_rev_2026_low
+))
+}});
+
+define({id: "2916e42d", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.cloud_rev_2026_high
+))
+}});
+
+define({id: "323642e8-3", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.guidance_band_pct
+))
+}});
+
+</script>
+</head>
+<body>
+<input id="observablehq-sidebar-toggle" type="checkbox" title="Toggle sidebar">
+<label id="observablehq-sidebar-backdrop" for="observablehq-sidebar-toggle"></label>
+<nav id="observablehq-sidebar">
+  <ol>
+    <label id="observablehq-sidebar-close" for="observablehq-sidebar-toggle"></label>
+    <li class="observablehq-link"><a href="./">How Capital Becomes Infrastructure</a></li>
+  </ol>
+  <ol>
+    <li class="observablehq-link observablehq-link-active"><a href="./dd001">Markets &amp; Money</a></li>
+  </ol>
+</nav>
+<script>{const e=document.querySelector("#observablehq-sidebar"),o=document.querySelector("#observablehq-sidebar-toggle"),r=sessionStorage.getItem("observablehq-sidebar");r?o.checked=r==="true":o.indeterminate=!0;for(const t of document.querySelectorAll("#observablehq-sidebar summary")){const s=t.parentElement;switch(sessionStorage.getItem(`observablehq-sidebar:${t.textContent}`)){case"true":s.open=!0;break;case"false":s.classList.contains("observablehq-section-active")||(s.open=!1);break}}addEventListener("beforeunload",()=>sessionStorage.setItem("observablehq-sidebar-scrolly",`${e.scrollTop}`));const a=sessionStorage.getItem("observablehq-sidebar-scrolly");a!=null&&(e.style.cssText="overflow: hidden;",e.scrollTop=+a,e.style.cssText="");}</script>
+<div id="observablehq-center">
+<main id="observablehq-main" class="observablehq">
+<div class="observablehq observablehq--block"><!--:23512830:--></div>
+<div class="byline">Thandolwethu Zwelakhe Dlamini · TZD Labs Systems Research</div>
+<h1 id="ai-valuations-vs-infrastructure-spending" tabindex="-1"><a class="observablehq-header-anchor" href="#ai-valuations-vs-infrastructure-spending">AI Valuations vs. Infrastructure Spending</a></h1>
+<p>The seven largest US tech companies added $<observablehq-loading></observablehq-loading><!--:f593d34f:--> trillion in combined market value since January 2023. Against that, six of the biggest AI infrastructure builders spent $<observablehq-loading></observablehq-loading><!--:e3e916d5:-->B on capital expenditure in 2025. The question is whether the spending is backed by real revenue, or whether companies are building well ahead of what customers will actually pay for.</p>
+<div id="scroll-section" class="scroll-hero">
+  <div id="sticky-valuation" class="scroll-hero-chart">
+    <!-- interactive bar chart mounts here -->
+  </div>
+  <div class="scroll-steps">
+<div class="scroll-step is-active" data-company="NVDA">
+<p><strong>Nvidia added +$<observablehq-loading></observablehq-loading><!--:bd8a5310:-->T</strong> — the largest gain of the seven, and larger than Germany's GDP. Nvidia doesn't own a data center or run a cloud; it makes the chips the others buy. Its valuation rests entirely on demand for H100 and Blackwell GPUs continuing to accelerate, which depends on every hyperscaler maintaining its current spend trajectory.</p>
+</div>
+<div class="scroll-step" data-company="GOOGL">
+<p><strong>Alphabet added +$<observablehq-loading></observablehq-loading><!--:134c8757:-->T</strong> while already spending more on infrastructure than Google Cloud earns. Its AI bet is partly funded from search advertising — $<observablehq-loading></observablehq-loading><!--:0a6b3251:-->B per quarter from the same engine that AI could eventually disrupt.</p>
+</div>
+<div class="scroll-step" data-company="AAPL">
+<p><strong>Apple added +$<observablehq-loading></observablehq-loading><!--:ad1faac5:-->T</strong> with almost none of the infrastructure spend. At $9.4B in FY2024 capex, it routes complex AI queries to OpenAI and Google rather than building GPU clusters — participating in the AI story without the balance sheet exposure.</p>
+</div>
+<div class="scroll-step" data-company="META">
+<p><strong>Meta added +$<observablehq-loading></observablehq-loading><!--:0607d8c3:-->T</strong> after laying off roughly a quarter of its workforce in 2022–2023. It is now one of the most aggressive spenders, with 2026 guidance at $<observablehq-loading></observablehq-loading><!--:ff20963f:-->B — about 80% above what it spent in 2024.</p>
+</div>
+<div class="scroll-step" data-company="AMZN">
+<p><strong>Amazon added +$<observablehq-loading></observablehq-loading><!--:2b4a48f9:-->T</strong> and crossed the line in 2025 where infrastructure spending now exceeds what AWS earns — $<observablehq-loading></observablehq-loading><!--:db5731f1:-->B on capex against roughly $90B in annual AWS revenue.</p>
+</div>
+<div class="scroll-step" data-company="MSFT">
+<p><strong>Microsoft added +$<observablehq-loading></observablehq-loading><!--:620a6f29:-->T</strong>. What doesn't show in its reported capex: in three months (Sep–Nov 2025) it signed over $<observablehq-loading></observablehq-loading><!--:932eaad2:-->B in off-balance-sheet leases with third-party data center operators — none of it appearing in the figures above.</p>
+</div>
+<div class="scroll-step" data-company="TSLA">
+<p><strong>Tesla added +$<observablehq-loading></observablehq-loading><!--:ccc3c640:-->T</strong> on AI expectations rather than the car business. Investors pay about 160× expected earnings per share, versus 6× for a typical auto company. It spent $5B on AI infrastructure in 2024 and plans $20B+ in 2026.</p>
+</div>
+<div class="scroll-step" data-company="all">
+<p><strong>Combined, the seven added $<observablehq-loading></observablehq-loading><!--:6ec2cec8:-->T</strong> against $<observablehq-loading></observablehq-loading><!--:e3e916d5-1:-->B in 2025 capex. That gap is either the market correctly pricing a multi-decade infrastructure buildout, or the distance between hope and physics. The rest of this article traces how much of the declared spending converts to durable physical assets.</p>
+</div>
+  </div><!-- .scroll-steps -->
+</div><!-- .scroll-hero -->
+<div class="observablehq observablehq--block"><!--:0e924968:--></div>
+<hr>
+<h2 id="how-did-we-get-here" tabindex="-1"><a class="observablehq-header-anchor" href="#how-did-we-get-here">How did we get here</a></h2>
+<p>The current wave is not just large — it is structurally different from the last one. The previous cycle of cloud infrastructure build-out (2015–2021) roughly doubled spending every six years. This one has doubled in two.</p>
+<div class="observablehq observablehq--block"><!--:f93deb17:--></div>
+<p>That aggregate figure is concentrated in a small number of companies. Not all of them are building for the same reason or at the same rate, and the 2026 guidance varies considerably by company.</p>
+<h2 id="who-is-building-and-how-much" tabindex="-1"><a class="observablehq-header-anchor" href="#who-is-building-and-how-much">Who is building — and how much</a></h2>
+<p>Amazon leads the cumulative build-out since 2022. The 2026 guidance column (hatched) shows where companies say they are heading — though that figure carries a ±<observablehq-loading></observablehq-loading><!--:323642e8:-->% uncertainty band based on how much individual companies have revised guidance in recent years.</p>
+<div class="observablehq observablehq--block"><!--:6ed5dbe1:--></div>
+<p>Those figures understate the real commitment. Alongside direct capital investment, companies have been financing infrastructure through long-term leases and special purpose vehicles. These arrangements are classified as operating expenses rather than capital investment, so they never appear in the totals above.</p>
+<p>In three months — September through November 2025 — Microsoft signed over $<observablehq-loading></observablehq-loading><!--:932eaad2-1:-->B in leases with third-party data center operators: Nebius ($<observablehq-loading></observablehq-loading><!--:18e55110:-->B), Nscale ($<observablehq-loading></observablehq-loading><!--:b3b93af8:-->B), Iren ($<observablehq-loading></observablehq-loading><!--:86f6de39:-->B), plus Lambda. None of it shows up in reported capex. Meta financed $<observablehq-loading></observablehq-loading><!--:b28f648b:-->B of Louisiana data center construction through a separate entity called Beignet Investor LLC, with Blue Owl Capital providing 80% of the funding.</p>
+<div class="observablehq observablehq--block"><!--:deb7cc6b:--></div>
+<p><em>A note on accounting: US rules that took effect in 2019 require operating leases over 12 months to appear on the balance sheet as assets and liabilities — but they still flow through operating expenses rather than capital investment lines, which is why they disappear from the reported figures.</em></p>
+<h2 id="revenue-vs-capital" tabindex="-1"><a class="observablehq-header-anchor" href="#revenue-vs-capital">Revenue vs Capital</a></h2>
+<p>Amazon, Alphabet, and Microsoft each report their cloud businesses as separate segments — AWS, Google Cloud, and Intelligent Cloud — which makes a direct comparison possible: you can see both what they spent and what came back.</p>
+<div class="observablehq observablehq--block"><!--:2725a9ba:--></div>
+<p>Alphabet crossed the line first — spending more on infrastructure than Google Cloud earns — in 2024, and has kept climbing. Amazon followed in 2025. Microsoft, whose Azure revenue base is the largest of the three, is still below 1.0 on a quarterly basis, but its ratio is rising fastest.</p>
+<div class="observablehq observablehq--block"><!--:ff8eb106:--></div>
+<h2 id="one-spending-line-six-demand-assumptions" tabindex="-1"><a class="observablehq-header-anchor" href="#one-spending-line-six-demand-assumptions">One Spending Line, Six Demand Assumptions</a></h2>
+<p>There is a deeper problem beneath the revenue gap: the companies building this infrastructure are not all building it for the same reason. A September 2025 survey (NYT, Metz &amp; Weise) found at least six distinct visions being pursued simultaneously, ranging from proven revenue today to long-horizon bets with no commercial model yet.</p>
+<div class="observablehq observablehq--block"><!--:40d861fd:--></div>
+<p>The same wave of capital investment is funding all six of these theses simultaneously. They imply very different revenue trajectories, different timelines to payback, and different responses if AI demand disappoints.</p>
+<h2 id="guidance-has-been-wrong-before-in-both-directions" tabindex="-1"><a class="observablehq-header-anchor" href="#guidance-has-been-wrong-before-in-both-directions">Guidance Has Been Wrong Before — in Both Directions</a></h2>
+<p>The 2026 guidance figure of $<observablehq-loading></observablehq-loading><!--:102c9ea6:-->B is a management estimate with a historical track record of ±<observablehq-loading></observablehq-loading><!--:323642e8-1:-->%. Meta cut guidance sharply as its ad business contracted in 2022–2023. Microsoft subsequently raised guidance as Azure demand accelerated faster than expected. Both companies moved by roughly a third.</p>
+<div class="observablehq observablehq--block"><!--:6aa4dd8a:--></div>
+<h2 id="what-happens-in-2026" tabindex="-1"><a class="observablehq-header-anchor" href="#what-happens-in-2026">What Happens in 2026</a></h2>
+<p>The numbers look different depending on which revenue scenario proves out.</p>
+<div class="observablehq observablehq--block"><!--:4e86b4ab:--></div>
+<p>In the bull case, cloud revenue growth absorbs the spending and the capex-to-revenue ratio starts to normalize. In the base case, the gap persists roughly at its current level. In the bear case — a guidance cut of the size Meta executed in 2022 — both capex and revenue numbers decline, but the ratio stays elevated because demand shortfall drives both sides down together.</p>
+<p>The $<observablehq-loading></observablehq-loading><!--:42b6db00:--> that Nvidia's market cap lost in one day after DeepSeek R1's release in January 2025 suggests that markets understand the fragility of this structure. The current valuation depends on each major hyperscaler maintaining its current spending trajectory, and on AI demand scaling faster than the evidence currently supports.</p>
+<p>The spending is real. The physical consequences — what it builds, where, and who ends up paying for it — are traced in the rest of this series.</p>
+<hr>
+<p><em>This is the first of four deep dives in TZD Labs Systems Research. The next piece, Grid Modernization, traces which grid assets AI capital is building and who owns the stranded risk when demand forecasts miss.</em></p>
+<h2 id="sources-and-methodology" tabindex="-1"><a class="observablehq-header-anchor" href="#sources-and-methodology">Sources &amp; Methodology</a></h2>
+<p><strong>Market capitalizations.</strong> Yahoo Finance daily closing prices. Gain calculated as difference between 2026-02-14 and 2023-01-03 market caps for each of the seven companies.</p>
+<p><strong>Capital expenditure (2015–2025).</strong> SEC 10-K and 10-Q filings for Amazon, Alphabet, Microsoft, Meta, Oracle, and Nvidia, retrieved via yfinance. Annual figures are fiscal-year sums of quarterly reported capex. 2015–2021 figures from company annual reports where quarterly data was unavailable.</p>
+<p><strong>2026 guidance.</strong> Q4 2025 earnings calls and investor presentations. Amazon ($<observablehq-loading></observablehq-loading><!--:25c2daa0:-->B), Alphabet ($<observablehq-loading></observablehq-loading><!--:cd4d137b:-->B), Microsoft ($<observablehq-loading></observablehq-loading><!--:94394c3b:-->B), Meta ($<observablehq-loading></observablehq-loading><!--:ff20963f-1:-->B). Uncertainty band (±<observablehq-loading></observablehq-loading><!--:323642e8-2:-->%) based on the largest single-year guidance revision in the 2020–2025 period (Meta 2022–2023 cut; Microsoft FY2025 raise).</p>
+<p><strong>Cloud segment revenue.</strong> AWS, Google Cloud, and Intelligent Cloud quarterly revenue from SEC 10-K/10-Q filings. These are the only three hyperscalers that report cloud as a separate segment.</p>
+<p><strong>Off-balance-sheet commitments.</strong> Microsoft neocloud leases: Nebius ($<observablehq-loading></observablehq-loading><!--:18e55110-1:-->B), Nscale ($<observablehq-loading></observablehq-loading><!--:b3b93af8-1:-->B), Iren ($<observablehq-loading></observablehq-loading><!--:86f6de39-1:-->B), plus Lambda — reported in company announcements and <em>New York Times</em>, Dec 15, 2025 (Weise &amp; Tan). Meta Beignet Investor LLC: $<observablehq-loading></observablehq-loading><!--:b28f648b-1:-->B Louisiana data center financing via Blue Owl Capital.</p>
+<p><strong>Revenue demand theses.</strong> Classification based on <em>New York Times</em>, Sep 2025 (Metz &amp; Weise), cross-referenced with company earnings calls and product announcements.</p>
+<p><strong>Scenario projections.</strong> TZD Labs analysis. Cloud revenue range ($<observablehq-loading></observablehq-loading><!--:4350c0a8:-->–$<observablehq-loading></observablehq-loading><!--:2916e42d:-->B) based on trailing growth rates applied to 2025 actuals. Bull case assumes acceleration; base case assumes current trajectory; bear case applies the ±<observablehq-loading></observablehq-loading><!--:323642e8-3:-->% guidance band to both capex and revenue.</p>
+<p><em>All data from public, freely accessible sources. No proprietary data or paywalled databases. Analysis: TZD Labs, February 2026.</em></p>
+</main>
+<footer id="observablehq-footer">
+<nav><a rel="prev" href="./"><span>How Capital Becomes Infrastructure</span></a></nav>
+<div>TZD Labs · Systems Research — Technology Capital in the Physical Economy</div>
+</footer>
+</div>
+</body>
+</html>
