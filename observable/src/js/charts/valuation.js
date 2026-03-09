@@ -2,10 +2,22 @@
 // Pattern B: anchored mount — mounts into a pre-existing container element.
 // The scroll-step prose lives in dd001.md; this module wires the chart and
 // the scroll-lock / step-advance logic.
+//
+// Lock mechanism: scroll listener on window detects when the container top
+// crosses y=0 (chart is at the viewport top). At that point we freeze the
+// page with overflow:hidden and intercept wheel/touch to advance steps.
+// No IntersectionObserver, no position:fixed — the chart stays in place
+// exactly where the browser put it (overflow:hidden prevents any movement).
+//
+// State machine:
+//   idle → locked (container top crosses 0 while scrolling down)
+//   locked → idle via unlock("down"): set completedDown, scrollBy nudge
+//   locked → idle via unlock("up"):   scrollBy nudge upward
+//   idle: completedDown cleared when container exits viewport in either dir
 
 import * as d3 from "npm:d3@7";
 import { INK, INK_LIGHT, ACCENT, CONTEXT } from "../design.js";
-import { cc, cl } from "../design.js";
+import { cc } from "../design.js";
 
 /**
  * Mount the valuation disconnect scrollytelling chart.
@@ -121,38 +133,20 @@ export function mountValuation(container, { mktcap, stats }) {
   activateStep(0);
 
   // ── Scroll-lock state ─────────────────────────────────────────────────────
-  let locked       = false;
-  let justUnlocked = false; // suppresses immediate re-lock after unlock nudge
-  let wheelAccum   = 0;
-  let placeholder  = null;
-  const THRESH = 60;
+  let locked        = false;
+  let completedDown = false; // true after user scrolls past all steps going down
+  let wheelAccum    = 0;
+  const THRESH      = 60;
 
   const lock = () => {
-    if (locked || justUnlocked) return;
+    if (locked) return;
     locked = true;
     wheelAccum = 0;
-    stepIndex  = 0;
     activateStep(0);
-
-    const rect = stickyEl.getBoundingClientRect();
-
-    placeholder = document.createElement("div");
-    placeholder.style.cssText = `height:${stickyEl.offsetHeight}px;width:100%;flex-shrink:0;`;
-    stickyEl.parentNode.insertBefore(placeholder, stickyEl);
-
-    stickyEl.style.cssText = [
-      "position:fixed",
-      `top:${rect.top}px`,
-      `left:${rect.left}px`,
-      `width:${rect.width}px`,
-      "z-index:50",
-      "background:var(--paper)",
-    ].join(";");
-
-    // Freeze page scroll — overflow:hidden on <html> stops all scrolling
-    // without touching body layout or causing the sidebar to shift.
+    // Freeze page scroll — overflow:hidden on <html> is enough; the chart
+    // is already at the viewport top (CSS sticky put it there), so no
+    // position:fixed manipulation is needed.
     document.documentElement.style.overflow = "hidden";
-
     window.addEventListener("wheel",      onWheel,      { passive: false });
     window.addEventListener("touchstart", onTouchStart, { passive: true  });
     window.addEventListener("touchmove",  onTouchMove,  { passive: false });
@@ -161,43 +155,36 @@ export function mountValuation(container, { mktcap, stats }) {
   const unlock = (dir) => {
     if (!locked) return;
     locked = false;
-
-    // Restore page scroll
     document.documentElement.style.overflow = "";
-
-    stickyEl.style.cssText = "";
-    if (placeholder) { placeholder.remove(); placeholder = null; }
-
     window.removeEventListener("wheel",      onWheel);
     window.removeEventListener("touchstart", onTouchStart);
     window.removeEventListener("touchmove",  onTouchMove);
     wheelAccum = 0;
 
     if (dir === "down") {
-      // Suppress re-lock during the nudge scroll
-      justUnlocked = true;
-      window.scrollBy({ top: 80 });
-      requestAnimationFrame(() => { justUnlocked = false; });
+      // Mark complete BEFORE scrollBy so the scroll event from scrollBy
+      // does not immediately re-trigger lock().
+      completedDown = true;
+      window.scrollBy({ top: 100 });
+    } else if (dir === "up") {
+      window.scrollBy({ top: -100 });
     }
   };
 
   const advance = (delta) => {
     if (delta > 0) {
-      if (stepIndex < steps.length - 1) { activateStep(stepIndex + 1); }
-      else { unlock("down"); }
+      if (stepIndex < steps.length - 1) activateStep(stepIndex + 1);
+      else unlock("down");
     } else {
-      if (stepIndex > 0) { activateStep(stepIndex - 1); }
-      else { unlock("up"); }
+      if (stepIndex > 0) activateStep(stepIndex - 1);
+      else unlock("up");
     }
   };
 
   const onWheel = (e) => {
     e.preventDefault();
     wheelAccum += e.deltaY;
-    if (Math.abs(wheelAccum) >= THRESH) {
-      advance(wheelAccum);
-      wheelAccum = 0;
-    }
+    if (Math.abs(wheelAccum) >= THRESH) { advance(wheelAccum); wheelAccum = 0; }
   };
 
   let touchY = 0;
@@ -207,38 +194,48 @@ export function mountValuation(container, { mktcap, stats }) {
     const dy = touchY - e.touches[0].clientY;
     touchY = e.touches[0].clientY;
     wheelAccum += dy;
-    if (Math.abs(wheelAccum) >= THRESH) {
-      advance(wheelAccum);
-      wheelAccum = 0;
+    if (Math.abs(wheelAccum) >= THRESH) { advance(wheelAccum); wheelAccum = 0; }
+  };
+
+  // ── Scroll-based lock trigger ─────────────────────────────────────────────
+  // Fires on every page scroll. Lock when:
+  //   • user is scrolling DOWN
+  //   • container top has just crossed 0 (chart is at top of viewport)
+  //   • container is still partially visible (hasn't scrolled off the top)
+  //   • user hasn't already completed this pass going down
+  //
+  // completedDown resets when the container exits the viewport in either
+  // direction, allowing a clean re-entry if the user scrolls back.
+  let lastScrollY = window.scrollY;
+
+  const onScrollForLock = () => {
+    if (locked) return;
+
+    const scrollY      = window.scrollY;
+    const scrollingDown = scrollY >= lastScrollY;
+    lastScrollY        = scrollY;
+
+    const r  = container.getBoundingClientRect();
+    const vh = window.innerHeight;
+
+    // Reset completion when container has fully exited the viewport
+    if (r.top > vh || r.bottom < 0) completedDown = false;
+
+    // Lock: container top at or past viewport top, container still visible
+    if (scrollingDown && r.top <= 0 && r.bottom > 50 && !completedDown) {
+      lock();
     }
   };
 
-  // ── Lock trigger via IntersectionObserver ─────────────────────────────────
-  // Fires precisely when the chart center crosses a narrow band at the
-  // viewport midpoint — not subject to RAF timing gaps on fast scroll.
-  const vpH = window.innerHeight;
-  // Detection band: a window centred at 50vh, tall enough to fit the chart.
-  // threshold:1 means the entire chart must be inside the band before firing.
-  const chartH  = stickyEl.offsetHeight;
-  const margin  = Math.max(0, Math.floor((vpH - chartH) / 2) - 10);
-  const observer = new IntersectionObserver(
-    (entries) => {
-      if (entries[0].isIntersecting && !locked && !justUnlocked) lock();
-    },
-    {
-      rootMargin: `-${margin}px 0px -${margin}px 0px`,
-      threshold: 1, // full chart must be inside the band
-    }
-  );
-  observer.observe(stickyEl);
+  window.addEventListener("scroll", onScrollForLock, { passive: true });
+
+  // If the page loads already scrolled past this section, mark as complete
+  // so the chart doesn't lock when the user scrolls back through it.
+  { const r = container.getBoundingClientRect(); if (r.bottom < 0) completedDown = true; }
 
   // ── Teardown ──────────────────────────────────────────────────────────────
-  // Observable re-runs this cell on hot reload. Return a cleanup function so
-  // the caller can pass it to invalidation.then() to remove all listeners
-  // before the next run stacks duplicates on top.
   return () => {
-    observer.disconnect();
+    window.removeEventListener("scroll", onScrollForLock);
     if (locked) unlock(null);
-    // wheel/touch listeners are already removed by unlock; nothing else to clean
   };
 }
