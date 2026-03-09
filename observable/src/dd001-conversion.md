@@ -43,7 +43,7 @@ display(mountScrollChart(decompChart.node, decompChart.update, [
   { prose: `But ${stats.decomp_const_pct}% of spending goes into long-lived assets — substations, building shells, transmission lines — with 20-40 year lifetimes.` },
   { prose: "The AI demand forecast horizon is 3-5 years. Most construction assets will outlast every demand projection that justified them." },
   { prose: "6-year equipment. 20-40 year construction assets. 3-5 year demand forecast. The exposure is built into the asset mix." },
-]));
+], { callout: "above" }));
 ```
 
 A gas plant built to power a data center campus was justified by AI demand at the time of the decision. Once built, it operates for 40 years regardless of whether the data center scales as planned.
@@ -60,7 +60,7 @@ display(mountScrollChart(constraintChart.node, constraintChart.update, [
   { prose: "Getting a grid connection takes 5 years median, up from 3 years a decade ago. Every other phase queues behind it." },
   { prose: "Even running all steps in parallel where possible, the fastest realistic timeline is about three years." },
   { prose: "Getting connected to the grid is the hardest part: 5 years median, and rising. No amount of money compresses this." },
-]));
+], { callout: "above" }));
 ```
 
 Of projects that joined early enough to have had time to complete, the share that actually did so has been falling: ${stats.queue_cohort_2000_2005_pct}% for projects that joined in 2000–2005, ${stats.queue_cohort_2006_2010_pct}% for 2006–2010, and ${stats.queue_cohort_2011_2015_pct}% for 2011–2015 (Lawrence Berkeley National Laboratory, 2025).
@@ -77,7 +77,7 @@ display(mountScrollChart(queueChart.node, queueChart.update, [
   { prose: `The grid connection waiting list has tripled in five years. Solar and storage dominate, but natural gas requests have grown to ${stats.queue_gas_gw} GW — the largest share in the queue's recorded history.` },
   { prose: `Only ${stats.queue_completion_pct}% of projects on the list historically reach full operation. ${stats.queue_withdrawal_pct}% are abandoned.` },
   { prose: `The latest year alone added ${(stats.queue_total_gw - data.queue_ts[data.queue_ts.length - 2].total_gw).toLocaleString()} GW — the single largest annual addition since the queue's inception.` },
-]));
+], { callout: "above" }));
 ```
 
 The mix of projects waiting has shifted: natural gas requests grew to about ${stats.queue_gas_gw} gigawatts by end-2024. Solar remains dominant at about ${stats.queue_solar_gw.toLocaleString()} GW (${stats.queue_solar_pct}% of total), storage about ${stats.queue_storage_gw.toLocaleString()} GW (${stats.queue_storage_pct}%), wind about ${stats.queue_wind_gw} GW (${stats.queue_wind_pct}%).
