@@ -17,17 +17,18 @@ def _(mo):
 @app.cell
 def _():
     import sys
+
     import marimo as mo
 
     # Ensure project root is first in sys.path so src is importable
     sys.path.insert(0, str(mo.notebook_dir().parent.parent))
 
-    import pandas as pd
-    import numpy as np
-    import matplotlib.pyplot as plt
     import matplotlib.patches as mpatches
+    import matplotlib.pyplot as plt
+    import numpy as np
+    import pandas as pd
 
-    from src.notebook import setup, save_fig
+    from src.notebook import save_fig, setup
     from src.plotting import FONTS, legend_below, multi_panel
 
     cfg = setup()

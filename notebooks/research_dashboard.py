@@ -6,9 +6,9 @@ app = marimo.App(width="full")
 
 @app.cell
 def _():
+
     import marimo as mo
     import pandas as pd
-    import os
 
     # Load databases
     dives_df = pd.read_csv("research/deep_dives.csv")

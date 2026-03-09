@@ -206,3 +206,14 @@ __marimo__/
 
 # HTMLGraph artifacts
 .htmlgraph/
+
+# macOS metadata
+.DS_Store
+**/.DS_Store
+
+# DuckDB databases (runtime state — regenerated from pipelines)
+data/systems.db
+data/*.db
+
+# Temp archives
+files.zip

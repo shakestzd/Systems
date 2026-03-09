@@ -144,7 +144,7 @@ Rules:
   48C (advanced manufacturing), 45Q (carbon capture), 45V (hydrogen), 45Z (clean fuels)
 - US Paris Agreement withdrawal: initiated January 20, 2025; effective January 2026
 - FERC Order 2023 (interconnection reform): in effect, ISOs/RTOs compliant
-- FERC Order 1920 (transmission planning): under 8th Circuit legal challenge
+- FERC Order 1920 (transmission planning): vacated by Fifth Circuit, late 2024
 
 ### Code Style
 - Use `ruff` for linting and formatting
@@ -332,6 +332,12 @@ a question in public. Write as if explaining to a smart colleague who is not a s
 Five specialized agents handle distinct phases of the research-to-publication pipeline.
 Delegate to them using the Task tool with `subagent_type`.
 
+**Plugin location:** All agents and skills are defined in the `tzd-labs` Claude Code
+plugin at `/Users/shakes/DevProjects/tzd-labs`. Agent files live in
+`/Users/shakes/DevProjects/tzd-labs/agents/`. Skills live in
+`/Users/shakes/DevProjects/tzd-labs/skills/`. The plugin manifest is at
+`/Users/shakes/DevProjects/tzd-labs/.claude-plugin/plugin.json`.
+
 **CRITICAL: All project agents require the `tzd-labs:` namespace prefix.**
 Always use the full `subagent_type` — never the bare name:
 
@@ -352,6 +358,7 @@ Always use the full `subagent_type` — never the bare name:
 | **tzd-labs:notebook-qa** | blue | Data integrity auditor. Verifies every number in prose against the database, identifies hardcoded values that should be data-driven, checks internal consistency between chart code and captions. |
 | **tzd-labs:writer** | green | Transforms draft analysis into accessible, rigorous narrative. Applies storytelling principles (inverted pyramid, insight-driven chart titles, Tufte, Knaflic). |
 | **tzd-labs:fact-checker** | yellow | Final gate before publication. Verifies every number, citation, date, and entity. Flags unsourced claims and stale data. |
+| **tzd-labs:observable-converter** | blue | Converts Marimo charts to Observable Framework interactive articles. Researches D3 visualization patterns, proposes novel chart types, handles geographic maps. See `observable/CONVERSION_GUIDE.md`. |
 
 ### Publication Pipeline
 
@@ -368,7 +375,9 @@ Always use the full `subagent_type` — never the bare name:
        ↓
 6. VERIFY      (tzd-labs:fact-checker)  Check every claim against its source
        ↓
-7. PUBLISH
+7. CONVERT     (tzd-labs:observable-converter)  Port charts to Observable interactive article
+       ↓
+8. DEPLOY      bash scripts/deploy.sh           Build + push to GitHub Pages
 ```
 
 Steps 3-6 may iterate. The critic and fact-checker may surface issues that require

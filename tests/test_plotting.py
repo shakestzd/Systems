@@ -28,3 +28,33 @@ def test_all_declared_symbols_importable():
     """Every symbol listed in __all__ can be retrieved from the module."""
     for name in plotting.__all__:
         assert hasattr(plotting, name), f"'{name}' is in __all__ but not importable"
+
+
+def test_events_exported():
+    """Events catalog and mark_events are importable from the plotting shim."""
+    import inspect
+    from datetime import date
+
+    assert hasattr(plotting, "EVENTS")
+    assert hasattr(plotting, "Event")
+    assert callable(plotting.mark_events)
+
+    # EVENTS is a non-empty list of Event objects
+    assert len(plotting.EVENTS) > 0
+    first = plotting.EVENTS[0]
+    assert isinstance(first.date, date)
+    assert first.category in {"policy", "market", "announcement", "regulatory", "energy"}
+
+    # mark_events accepts ax and categories keyword
+    assert "ax" in inspect.signature(plotting.mark_events).parameters
+    assert "categories" in inspect.signature(plotting.mark_events).parameters
+
+
+def test_add_brand_mark_exported():
+    """add_brand_mark is callable and accepts fig + logo_path."""
+    import inspect
+
+    assert callable(plotting.add_brand_mark)
+    sig = inspect.signature(plotting.add_brand_mark)
+    assert "fig" in sig.parameters
+    assert "logo_path" in sig.parameters

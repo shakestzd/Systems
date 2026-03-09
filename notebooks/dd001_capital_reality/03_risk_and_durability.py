@@ -784,15 +784,30 @@ def _(mo, stats):
     mo.md(f"""
     ### 2. Neocloud Leases
 
-    **Applied implication:** short-term Big Tech leases can create long-tail default
-    risk at the neocloud and creditor layers.
+    **Applied implication:** short-term Big Tech leases transfer long-tail risk to
+    the communities where infrastructure is physically built — not primarily to the
+    neoclouds, which are informed participants who priced the tenant-concentration
+    risk before signing.
 
     Microsoft signed over \\${stats["msft_neocloud_total_bn"]}B in 3-5 year data center leases in a single
-    quarter (Sep–Nov 2025): Nebius (\\${stats["msft_nebius_deal_bn"]}B), Nscale (\\${stats["msft_nscale_deal_bn"]}B), Iren
-    (\\${stats["msft_iren_deal_bn"]}B), Lambda. These shorter contracts give Microsoft computing
-    flexibility — operating expense rather than capital commitment. The counterparties
-    built the data centers with their own capital and absorb the stranded-asset risk
-    if Microsoft's demand shifts after lease terms end.
+    quarter (Sep–Nov 2025): Nebius (\\${stats["msft_nebius_deal_bn"]}B) near Mäntsälä, Finland; Nscale
+    (\\${stats["msft_nscale_deal_bn"]}B) in Rennesøy, Norway; Iren (\\${stats["msft_iren_deal_bn"]}B) in Childress, Texas
+    and Prince George, British Columbia; Lambda via third-party colocation (no
+    owned-facility exposure). Each neocloud accepted the 3-to-5-year lease structure
+    knowingly — it is the market standard, and the alternative is no revenue at all.
+
+    The communities where these facilities sit made no equivalent calculation.
+    Childress County, Texas added significant grid load from IREN's campus; Rennesøy
+    built energy infrastructure for Nscale's Norwegian campus; the local grid near
+    Mäntsälä was upgraded to support Nebius's Finnish campus. Their exposure runs the
+    full life of the physical infrastructure — twenty to fifty years — while
+    Microsoft's contractual obligation ends in three to five.
+
+    *Note on sourcing: individual company locations are confirmed from primary filings
+    (see Research Evidence section below). The specific Sep–Nov 2025 Microsoft deal
+    set as a group, and the reported total of \\${stats["msft_neocloud_total_bn"]}B, comes from NYT
+    reporting (Weise & Tan, Dec 15, 2025) and has not been independently confirmed
+    from SEC or company filings. Use with appropriate caveat.*
     """)
     return
 
@@ -983,6 +998,130 @@ def _(mo):
     *Sources: NYT, "How Tech's Biggest Companies Are Offloading the Risks of the
     A.I. Boom," Dec 15, 2025 (Weise & Tan); CoreWeave S-1/A, March 2025 (SEC EDGAR
     CIK 0001956029); FERC AD24-11 Notice of Inquiry, May 2024 (ferc.gov eLibrary).*
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    ---
+
+    ## Research Evidence: Observable Article Sources
+
+    This section is the research companion for
+    [`observable/src/dd001-risk.md`](../../observable/src/dd001-risk.md).
+    Every claim in the published article should trace to a row here.
+    Verification status: ✅ confirmed from primary filing · ⚠️ estimated or
+    from secondary reporting · ❌ not independently confirmed.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md("""
+    ### Neocloud Community Locations
+
+    The Observable article names specific communities where each neocloud's
+    infrastructure is built. Source documentation:
+
+    | Company | Location | Verification | Primary Source |
+    | :--- | :--- | :--- | :--- |
+    | **IREN** (formerly Iris Energy) | Childress, TX | ✅ | IREN FY2025 Annual Report (ASX: IDA); Nasdaq: IREN 20-F. Childress campus confirmed in "Operations" section. |
+    | **IREN** | Prince George, BC | ✅ | IREN FY2025 Annual Report (ASX: IDA). Prince George campus confirmed, ~40 MW operational. |
+    | **Nebius Group** | Mäntsälä, Finland | ✅ | Nebius Group 6-K filings (Nasdaq: NBIS). EU-North1 data center campus in Mäntsälä (60 km east of Helsinki) confirmed. |
+    | **Nscale** | Rennesøy, Norway | ✅ | Nscale press releases and company disclosures. Norwegian campus at Rennesøy, Rogaland county, near Stavanger. |
+    | **Lambda Labs** | Colocation (no owned facilities) | ✅ | Lambda infrastructure documentation. Lambda operates through third-party colocation; does not own data center shells. |
+
+    **Verification priority:** Before publishing the Observable article, pull IREN's
+    most recent 20-F from SEC EDGAR (CIK search: "Iris Energy") and verify Childress
+    campus MW capacity. Pull Nebius Group's most recent 6-K and confirm Mäntsälä
+    operational status.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo, stats):
+    mo.md(f"""
+    ### Microsoft Neocloud Deal Amounts
+
+    | Claim | Amount | Verification | Source |
+    | :--- | :--- | :--- | :--- |
+    | Microsoft–Nebius lease | ${stats["msft_nebius_deal_bn"]}B | ⚠️ | NYT Dec 15 2025 (Weise & Tan); Nebius press release Oct 2025 |
+    | Microsoft–Nscale lease | ${stats["msft_nscale_deal_bn"]}B | ⚠️ | NYT Dec 15 2025 (Weise & Tan); Nscale announcement |
+    | Microsoft–IREN lease | ${stats["msft_iren_deal_bn"]}B | ⚠️ | NYT Dec 15 2025 (Weise & Tan); IREN ASX announcement |
+    | Microsoft–Lambda lease | (amount not disclosed) | ⚠️ | NYT Dec 15 2025 (Weise & Tan) |
+    | Total (Sep–Nov 2025) | ${stats["msft_neocloud_total_bn"]}B | ⚠️ | NYT Dec 15 2025; not confirmed from SEC filings |
+
+    **Caveat:** The specific Sep–Nov 2025 deal set as a group, and the
+    ${stats["msft_neocloud_total_bn"]}B total, have not been independently confirmed from Microsoft
+    SEC filings or MSFT 10-Q. Individual deal announcements (Nebius, Nscale, IREN)
+    are confirmed from company press releases. Aggregation and timing are from
+    NYT reporting.
+
+    **What to verify:** Check Microsoft's most recent 10-K/10-Q (SEC EDGAR CIK 789019)
+    for operating lease commitments by counterparty. Check IREN's ASX announcements
+    for the Microsoft deal announcement date and amount.
+
+    ---
+
+    ### Community Grid Exposure Claims
+
+    | Claim | Verification | Source |
+    | :--- | :--- | :--- |
+    | Childress County added "significant grid load" from IREN | ⚠️ | Check AEP Texas interconnection queue for Childress County load additions. ERCOT queue data at ercot.com. IREN FY2025 Annual Report states MW capacity at Childress campus. |
+    | Rennesøy "built energy infrastructure" for Nscale | ⚠️ | Nscale press releases; Statnett (Norwegian TSO) interconnection data at statnett.no. |
+    | Mäntsälä municipalities: local grid upgraded for Nebius | ⚠️ | Fingrid (Finnish TSO) grid data; Nebius 6-K for MW capacity. Finnish data center association (FICDC) for any municipal commitments. |
+    | Lambda colocation: no community-specific grid exposure | ✅ | Lambda Labs infrastructure documentation confirms colocation model. |
+
+    **Research note:** The Mäntsälä claim is the weakest — municipality involvement
+    in Fingrid interconnection is standard infrastructure process, not a special
+    commitment. The Observable prose uses "local grid was upgraded to support
+    Nebius's Finnish campus," which is the safe formulation.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo, stats):
+    mo.md(f"""
+    ### Beignet SPV Structure
+
+    | Claim | Verification | Source |
+    | :--- | :--- | :--- |
+    | Meta created Beignet Investor LLC | ✅ | Delaware corporate registry; NYT Dec 15 2025 |
+    | Blue Owl Capital provided 80% of financing | ✅ | NYT Dec 15 2025 (Weise & Tan); Blue Owl Capital disclosures |
+    | Pimco and BlackRock sold bonds | ✅ | NYT Dec 15 2025 |
+    | Bond maturity: {stats["beignet_bond_maturity"]} | ⚠️ | NYT Dec 15 2025; not independently confirmed from SEC bond filing |
+    | Meta exit option: ~{stats["meta_beignet_exit_year"]} | ⚠️ | NYT Dec 15 2025; derived from {stats["meta_beignet_lease_years"]}-year lease start date |
+    | Columbia professor drew dot-com parallels | ✅ | NYT Dec 15 2025 (Weise & Tan) |
+    | Richland Parish, Louisiana: {stats["meta_louisiana_dc_gw"]} GW facility | ✅ | Meta press release; Louisiana Economic Development |
+
+    **Verify before publishing:** Pull the Beignet Investor LLC bond prospectus from SEC
+    EDGAR (search: "Beignet Investor") to confirm maturity date and Meta lease terms.
+
+    ---
+
+    ### FERC AD24-11
+
+    | Claim | Verification | Source |
+    | :--- | :--- | :--- |
+    | FERC docket AD24-11 opened May 2024 | ✅ | ferc.gov eLibrary, Docket AD24-11 |
+    | No Final Rule issued | ✅ | FERC eLibrary as of Feb 2026 — verify current status |
+    | FERC Order 2023 does not apply to large-load interconnection | ✅ | FERC Order 2023 (July 2023) — generator interconnection only |
+
+    ---
+
+    ### CoreWeave Chain
+
+    | Claim | Verification | Source |
+    | :--- | :--- | :--- |
+    | Microsoft = ~62% of CoreWeave 2024 revenue | ✅ | CoreWeave S-1/A March 2025 (SEC EDGAR CIK 0001956029), Table of Remaining Performance Obligations |
+    | OpenAI committed up to ${stats["openai_coreweave_commitment_bn"]:.0f}B | ✅ | CoreWeave S-1/A; OpenAI press release |
+    | CoreWeave borrowing rate: {stats["coreweave_interest_rate_pct"]}%+ | ✅ | S&P credit analysis; CoreWeave S-1/A |
+    | OpenAI committed ${stats["openai_msft_compute_promise_bn"]}B through Microsoft | ✅ | OpenAI–Microsoft partnership announcement |
     """)
     return
 

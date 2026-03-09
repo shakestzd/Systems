@@ -9,12 +9,13 @@ app = marimo.App(
 
 @app.cell
 def _():
+    from pathlib import Path
+
     import marimo as mo
+    import matplotlib.pyplot as plt
     import numpy as np
     import pandas as pd
-    import matplotlib.pyplot as plt
     from scipy.integrate import solve_ivp
-    from pathlib import Path
 
     plt.style.use(Path(__file__).parent / "shakes.mplstyle")
     return mo, np, pd, plt, solve_ivp
@@ -530,8 +531,8 @@ def bayesian_telecom(mo, run_bayes_telecom, telecom_capex):
         mo.md("*Click the button above to run Bayesian estimation on telecom data.*"),
     )
 
-    import pymc as pm
     import arviz as az
+    import pymc as pm
 
     # Training data: boom phase only (1993-1999)
     _train = telecom_capex[telecom_capex["year"] <= 1999].copy()

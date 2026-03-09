@@ -17,16 +17,17 @@ def _(mo):
 @app.cell
 def _():
     import sys
+
     import marimo as mo
 
     # Ensure project root is first in sys.path so src is importable
     sys.path.insert(0, str(mo.notebook_dir().parent.parent))
 
-    import pandas as pd
     import numpy as np
+    import pandas as pd
 
-    from src.notebook import setup, save_fig
     from src.data.fred import fetch_csv
+    from src.notebook import save_fig, setup
     from src.plotting import FONTS, annotated_series, legend_below
 
     cfg = setup()
@@ -70,7 +71,7 @@ def _(cfg, mo):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(f"""
+    mo.md("""
     ## Where This Started
 
     Three numbers frame the problem. Bloomberg NEF projects U.S. data center power

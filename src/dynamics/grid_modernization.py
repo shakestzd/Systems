@@ -6,7 +6,7 @@ Translated using PySD
 from pathlib import Path
 import numpy as np
 
-from pysd.py_backend.statefuls import Delay, Integ
+from pysd.py_backend.statefuls import Integ, Delay
 from pysd import Component
 
 __pysd_version__ = "3.14.3"
@@ -354,7 +354,7 @@ def regulatory_change():
     units="GW/Year",
     comp_type="Auxiliary",
     comp_subtype="Normal",
-    depends_on={"base_ai_demand": 1, "ai_growth_rate": 1, "time": 1},
+    depends_on={"base_ai_demand": 1, "time": 1, "ai_growth_rate": 1},
 )
 def ai_demand_growth():
     """
@@ -535,8 +535,8 @@ def reference_queue_time():
     depends_on={
         "ai_demand_growth": 1,
         "btm_fraction": 1,
-        "queue_completions": 1,
         "expansion_capture_fraction": 1,
+        "queue_completions": 1,
         "grid_retirements": 1,
         "expansion_aggressiveness": 1,
     },
