@@ -12,13 +12,14 @@ export function createOffBalance(stats) {
     { company: "Meta",      reported: stats.meta_2025, offbs: stats.meta_beignet_financing_bn ?? 30 },
   ];
 
-  const W = Math.min(520, (document.body?.clientWidth ?? 520) - 40);
+  const W = Math.min(640, (document.body?.clientWidth ?? 640) - 40);
   const H = 384;
   const ml = 55, mr = 40, mt = 58, mb = 120;
   const isMobile = W < 380;
 
   const yMax = Math.max(...obsData.map(d => d.reported + d.offbs)) * 1.18;
-  const x = d3.scaleBand().domain(obsData.map(d => d.company)).range([ml, W - mr]).padding(0.45);
+  const x = d3.scaleBand().domain(obsData.map(d => d.company)).range([ml, W - mr])
+    .paddingInner(0.50).paddingOuter(0.10);
   const y = d3.scaleLinear().domain([0, yMax]).range([H - mb, mt]);
 
   const svg = d3.create("svg").attr("width", "100%").attr("viewBox", `0 0 ${W} ${H}`)
