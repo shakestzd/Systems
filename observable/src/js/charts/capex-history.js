@@ -99,8 +99,10 @@ export function createCapexHistory(capex, stats) {
       .text(`$${v}B`);
   });
 
-  // X axis
-  [2016, 2018, 2020, 2022, 2024].forEach(yr => {
+  // X axis — fewer ticks on narrow viewports to prevent label collision
+  const isMobile = W < 450;
+  const xTicks = isMobile ? [2016, 2020, 2024] : [2016, 2018, 2020, 2022, 2024];
+  xTicks.forEach(yr => {
     svg.append("text").attr("x", x(yr)).attr("y", H - mb + 16)
       .attr("text-anchor", "middle").attr("fill", INK_LIGHT).attr("font-size", "11")
       .text(yr);

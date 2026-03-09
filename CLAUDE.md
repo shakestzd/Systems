@@ -295,12 +295,33 @@ Knaflic's *Storytelling with Data* methodology.
 > and verified the image. This is non-negotiable — the test suite only checks that
 > cells execute without error; it does not check visual correctness.
 
-**Visual review workflow:**
+**Visual review workflow (Marimo notebooks):**
 1. Regenerate charts: `bash scripts/test_notebooks.sh`
 2. **Read every saved image** using the `Read` tool — verify text fits, nothing clips
 3. Open all images for side-by-side review: `open notebooks/images/dd00*.png`
 4. Check for: color consistency, font sizing, visual family across charts
 5. Verify no hex colors in notebook code: `rg '#[0-9a-fA-F]{6}' notebooks/`
+
+**Observable article cross-viewport review (MANDATORY after any chart JS change):**
+
+After every change to `observable/src/js/charts/*.js` or `observable/src/js/animate.js`,
+run the Playwright review script and read all output screenshots before committing:
+
+```bash
+# Dev server must be running: cd observable && npm run dev
+node scripts/review_charts.cjs http://localhost:3000/dd001 /tmp/chart_review
+
+# Then read every screenshot with the Read tool:
+# /tmp/chart_review/mobile_chart_0.png  (and tablet_, desktop_ variants)
+```
+
+Viewports checked: mobile (390×844), tablet (768×1024), desktop (1200×800).
+
+Common mobile issues to check:
+- X-axis label collision (labels too close at narrow widths — use `isMobile` guard to reduce ticks)
+- SVG text overflow past viewBox edge (shorten labels or use mobile-specific text)
+- Callout position: overlay callouts auto-promote to "above" on mobile (width < 500px) when
+  `callout !== "none"` — verify prose callout appears above chart, not clipped inside it
 
 ### Writing Style
 

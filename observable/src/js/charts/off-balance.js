@@ -15,6 +15,7 @@ export function createOffBalance(stats) {
   const W = Math.min(520, (document.body?.clientWidth ?? 520) - 40);
   const H = 384;
   const ml = 55, mr = 40, mt = 58, mb = 120;
+  const isMobile = W < 380;
 
   const yMax = Math.max(...obsData.map(d => d.reported + d.offbs)) * 1.18;
   const x = d3.scaleBand().domain(obsData.map(d => d.company)).range([ml, W - mr]).padding(0.45);
@@ -75,7 +76,7 @@ export function createOffBalance(stats) {
       .attr("text-anchor", "middle").attr("fill", "white").attr("font-size", "12").attr("font-weight", "700")
       .text(`$${d.reported.toFixed(0)}B`);
     labG1.append("text").attr("x", bx + bw/2).attr("y", y(d.reported/2) + 14).attr("dominant-baseline", "middle")
-      .attr("text-anchor", "middle").attr("fill", "white").attr("font-size", "10.5").text("reported capex");
+      .attr("text-anchor", "middle").attr("fill", "white").attr("font-size", "10.5").text(isMobile ? "reported" : "reported capex");
 
     // Off-balance inner label
     const labG2 = svg.append("g").attr("opacity", 0);
@@ -83,7 +84,7 @@ export function createOffBalance(stats) {
       .attr("text-anchor", "middle").attr("fill", "white").attr("font-size", "12").attr("font-weight", "700")
       .text(`+$${d.offbs.toFixed(0)}B`);
     labG2.append("text").attr("x", bx + bw/2).attr("y", y(d.reported + d.offbs/2) + 14).attr("dominant-baseline", "middle")
-      .attr("text-anchor", "middle").attr("fill", "white").attr("font-size", "10.5").text("off-balance-sheet");
+      .attr("text-anchor", "middle").attr("fill", "white").attr("font-size", "10.5").text(isMobile ? "off-balance" : "off-balance-sheet");
 
     // Total label above both bars
     const totalT = svg.append("text").attr("x", bx + bw/2).attr("y", oFinalY - 7)
