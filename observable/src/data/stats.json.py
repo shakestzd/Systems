@@ -82,6 +82,8 @@ for _, row in guidance_2026[guidance_2026["ticker"].isin(TICKERS_4)].iterrows():
 # Historical 4co baseline
 ann4 = capex_annual[capex_annual["ticker"].isin(TICKERS_4)]
 stats["capex_4co_2019_bn"] = 70.9
+stats["capex_4co_2025"] = round(float(ann4[ann4["year"] == 2025]["capex_bn"].sum()), 1)
+stats["capex_4co_multiple"] = round(stats["capex_4co_2025"] / stats["capex_4co_2019_bn"], 1)
 
 # 3-company cloud+capex
 TICKERS_3 = ["AMZN", "GOOGL", "MSFT"]
