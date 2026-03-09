@@ -1,0 +1,13 @@
+{
+  "name": "tzd-labs-systems",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "observable preview",
+    "build": "observable build",
+    "clean": "rm -rf .observablehq/cache dist"
+  },
+  "dependencies": {
+    "@observablehq/framework": "latest"
+  }
+}
