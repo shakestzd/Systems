@@ -92,6 +92,26 @@ notebook directory, then run the sync script. Do NOT edit PROJECT_STATUS.md by h
 
 ---
 
+## Post-Work Hygiene (Mandatory)
+
+After any major work session — new feature, notebook changes, Observable article,
+bug fix, refactor — **always**:
+
+1. **Commit all relevant changes** — stage by area, write a clear commit message
+2. **Push to remote** — don't leave work only local
+3. **Clean the project directory** — delete debug artifacts, move stray files to
+   their correct locations, verify `.gitignore` covers all build outputs and temp files
+4. **Verify with `git status`** — no untracked files that should be committed or ignored
+
+Common cleanup targets:
+- `debug_*.png` — delete (already gitignored; still clean up)
+- `_site/` — gitignored build output; never commit
+- `observable/dist/` — gitignored build output; never commit
+- Stray `.py` scripts at project root — move to `scripts/` or delete if experimental
+- Research extracts and CSVs — move to `research/` not project root
+
+---
+
 ## Development Rules
 
 ### Python
