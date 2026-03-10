@@ -24,7 +24,7 @@ dc_construction_low_bn,30,bn_usd,estimate,"JLL, CBRE",2025,US data center constr
 dc_construction_high_bn,50,bn_usd,estimate,"JLL, CBRE",2025,US data center construction spending,,false
 cloud_rev_2026_low,400,bn_usd,estimate,"Morgan Stanley, Goldman Sachs",2026-02,Consensus cloud revenue estimate,,true
 cloud_rev_2026_high,450,bn_usd,estimate,"Morgan Stanley, Goldman Sachs",2026-02,Consensus cloud revenue estimate,,true
-nvda_deepseek_loss_bn,600,bn_usd,news,Multiple sources,2025-01-27,Nvidia single-day market cap loss,,false
+nvda_deepseek_loss_bn,593,bn_usd,news,"Reuters / Yahoo Finance / CNBC",2025-01-27,"Nvidia single-day market cap loss January 27 2025 — largest in US stock market history; ~$593B based on closing price vs prior Friday close",https://finance.yahoo.com/news/nvidia-lost-593-billion-in-market-value-on-monday,false
 stargate_announced_bn,500,bn_usd,announcement,White House,2025-01,Stargate Project total,,false
 stargate_initial_bn,100,bn_usd,announcement,White House,2025-01,Stargate initial commitment,,false
 google_depr_impact_bn,3.9,bn_usd,filing,Alphabet 10-K FY2024,2025-02,"Note 1 - server useful life change",https://sec.gov,false
@@ -130,3 +130,4 @@ pjm_rto_demand_req_2030_mw,60117,MW,regulatory,PJM LAS Large Load Adjustment Req
 pjm_dc_share_us_pct,40,pct,regulatory,PJM Load Analysis Subcommittee — Nov 2025 Presentation,2025-11-24,"PJM is approximately 40% of US data centers in 2025 (PJM staff estimate; based on vendor database, public sources, industry contacts)",https://www.pjm.com/-/media/DotCom/committees-groups/subcommittees/las/2025/20251124/20251124-item-03---large-load-adjustment-requests-summary.pdf,False
 pjm_dc_growth_2025_2030_gw,30,GW,regulatory,PJM Load Analysis Subcommittee — Nov 2025 Presentation,2025-11-24,"PJM supports data center growth of up to ~30 GW between 2025 and 2030 (accepted for 2026 load forecast; Firm + de-rated Non-Firm)",https://www.pjm.com/-/media/DotCom/committees-groups/subcommittees/las/2025/20251124/20251124-item-03---large-load-adjustment-requests-summary.pdf,False
 pjm_aep_non_firm_derate_note,">50%",pct,regulatory,PJM Load Analysis Subcommittee — Nov 2025 Presentation,2025-11-24,"AEP Non-Firm aggregate accepted at >50% de-rate from submitted volume; AEP is receiving more requests than the accepted aggregate suggests",https://www.pjm.com/-/media/DotCom/committees-groups/subcommittees/las/2025/20251124/20251124-item-03---large-load-adjustment-requests-summary.pdf,False
+apple_capex_2024_bn,9.4,bn_usd,filing,Apple 10-K FY2024,2024-10-25,"Purchases of property plant and equipment (net of disposals) from Consolidated Statements of Cash Flows; fiscal year ending September 28 2024",,false

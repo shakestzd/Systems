@@ -1086,6 +1086,45 @@ def source_citations() -> dlt.sources.DltResource:
 
 
 # ---------------------------------------------------------------------------
+# DD-001: Article Stat Sources (verification manifest per article)
+# ---------------------------------------------------------------------------
+
+
+@dlt.resource(write_disposition="replace")
+def dd001_stat_sources() -> dlt.sources.DltResource:
+    """Load the DD-001 article stat verification manifest.
+
+    Maps every stat key used in the Observable DD-001 article to its
+    primary source, database table, and verification status. Powers the
+    99_methods_and_sources.py publication gate notebook.
+
+    Source: data/external/dd001_stat_sources.csv
+    """
+    path = PROJECT_ROOT / "data" / "external" / "dd001_stat_sources.csv"
+    if not path.exists():
+        logger.warning("DD-001 stat sources CSV not found at %s", path)
+        return
+
+    df = pd.read_csv(path)
+    for _, row in df.iterrows():
+        yield {
+            "stat_key": str(row["stat_key"]),
+            "article": str(row["article"]),
+            "description": str(row.get("description", "")),
+            "unit": str(row.get("unit", "")),
+            "source_type": str(row.get("source_type", "")),
+            "primary_source": str(row.get("primary_source", "")),
+            "source_detail": str(row.get("source_detail", "")),
+            "url": str(row.get("url", "")),
+            "citation_key": str(row.get("citation_key", "")),
+            "db_table": str(row.get("db_table", "")),
+            "verified": str(row.get("verified", "false")).lower() == "true",
+            "verified_date": str(row.get("verified_date", "")),
+            "notes": str(row.get("notes", "")),
+        }
+
+
+# ---------------------------------------------------------------------------
 # DD-004: PJM Zone Demand Requests (large load adjustments by zone × year)
 # ---------------------------------------------------------------------------
 
@@ -1319,6 +1358,8 @@ def run_reference() -> None:
     logger.info("Hyperscaler OCF: %s", info)
     info = pipeline.run(source_citations())
     logger.info("Source citations: %s", info)
+    info = pipeline.run(dd001_stat_sources())
+    logger.info("DD-001 stat sources: %s", info)
     info = pipeline.run(bea_nipa_investment())
     logger.info("BEA NIPA: %s", info)
     info = pipeline.run(dd004_pjm_zone_demand())

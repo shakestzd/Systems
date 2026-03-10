@@ -117,6 +117,28 @@ stats["guidance_2026_high"] = round(stats["guidance_2026"] * (1 + band))
 stats["ratio_vs_2025"] = round(stats["mkt_gain_t"] / (stats["capex_2025"] / 1000), 1)
 stats["pnfi_share_pct"] = round(stats["capex_2025"] / 4200 * 100, 1)  # approximate PNFI
 
+# AWS annual revenue (computed from quarterly data)
+aws_2025 = cloud_rev[cloud_rev["quarter"].str.startswith("2025") & (cloud_rev["ticker"] == "AMZN")]
+stats["aws_rev_2025"] = round(float(aws_2025["revenue_bn"].sum()), 1)
+
+# MSFT Intelligent Cloud gap: quarterly revenue minus quarterly capex
+# Maps calendar quarters to capex dates
+capex_q = query("""
+    SELECT ticker, date, capex_bn FROM energy_data.hyperscaler_capex
+    WHERE ticker = 'MSFT' AND date IN ('2025-09-30', '2025-12-31')
+    ORDER BY date
+""")
+msft_ic = cloud_rev[(cloud_rev["ticker"] == "MSFT")]
+def _msft_gap(qtr: str, cap_date: str) -> float:
+    rev = msft_ic.loc[msft_ic["quarter"] == qtr, "revenue_bn"]
+    cap = capex_q.loc[capex_q["date"] == cap_date, "capex_bn"]
+    if rev.empty or cap.empty:
+        return 0.0
+    return round(float(rev.iloc[0]) - float(cap.iloc[0]), 1)
+
+stats["msft_ic_gap_q3_2025"] = _msft_gap("2025-Q3", "2025-09-30")
+stats["msft_ic_gap_q4_2025"] = _msft_gap("2025-Q4", "2025-12-31")
+
 # Off-balance-sheet citations
 for key in [
     "msft_neocloud_total_bn", "msft_nebius_deal_bn", "msft_nscale_deal_bn",
@@ -125,6 +147,8 @@ for key in [
     "nvda_deepseek_loss_bn", "stargate_announced_bn", "stargate_initial_bn",
     "openai_coreweave_commitment_bn", "coreweave_interest_rate_pct",
     "chatgpt_monthly_users_m", "google_search_ad_rev_qtr_bn",
+    "deepseek_v3_train_cost_m",
+    "apple_capex_2024_bn",
 ]:
     try:
         stats[key] = int(citations[key]) if "." not in str(citations[key]) else float(citations[key])
