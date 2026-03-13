@@ -4,7 +4,7 @@
 
 import * as d3 from "npm:d3@7";
 import * as topojson from "npm:topojson-client@3";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, PAPER } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, PAPER, chartW } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 const OP_COLORS = {
@@ -19,7 +19,7 @@ const OP_COLORS = {
 };
 
 export function createDD004DCMap(topoData, locations) {
-  const W = Math.min(820, (document.body?.clientWidth ?? 820) - 40);
+  const W = chartW(820);
   const H = 500;
 
   const states = topojson.feature(topoData, topoData.objects.states);

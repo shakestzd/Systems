@@ -4,7 +4,7 @@
 //        3 = gas highlight | 4 = full + IRA annotation
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, FUEL, FUEL_LABEL } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, FUEL, FUEL_LABEL, chartW } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 export function createGenMix(eia) {
@@ -22,7 +22,7 @@ export function createGenMix(eia) {
     return row;
   });
 
-  const W = Math.min(820, (document.body?.clientWidth ?? 820) - 40);
+  const W = chartW(820);
   const H = 374;
   const ml = 48, mr = 20, mt = 52, mb = 80;
 

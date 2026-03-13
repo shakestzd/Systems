@@ -4,7 +4,7 @@
 // Steps: 0 = Microsoft bars | 1 = neocloud exposure bars | 2 = end labels
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, CONTEXT, RULE, NEGATIVE, PAPER } from "../design.js";
+import { INK, INK_LIGHT, CONTEXT, RULE, NEGATIVE, PAPER, chartW } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 export function createNeocloudLeases(stats) {
@@ -16,7 +16,7 @@ export function createNeocloudLeases(stats) {
   ];
 
   const n = deals.length;
-  const W = Math.min(820, (document.body?.clientWidth ?? 820) - 40);
+  const W = chartW(820);
   const H = 300;
   const ml = 100, mr = 52, mt = 44, mb = 84;
 

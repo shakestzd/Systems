@@ -5,7 +5,7 @@
 
 import * as d3 from "npm:d3@7";
 import * as topojson from "npm:topojson-client@3";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, PAPER, OCC_TECH } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, PAPER, OCC_TECH, chartW } from "../design.js";
 import { cc, cl } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
@@ -16,7 +16,7 @@ function operatorColor(ticker) {
 }
 
 export function createDcMap(topoData, qcewStates, dcLocations, stats) {
-  const W = Math.min(780, (document.body?.clientWidth ?? 780) - 40);
+  const W = chartW(780);
   const H = 480;
   const ml = 8, mr = 8, mt = 8, mb = 36;
 

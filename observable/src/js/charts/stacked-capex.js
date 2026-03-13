@@ -4,7 +4,7 @@
 //        3 = 2026 uncertainty + totals
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, RULE } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, RULE, svgTitle, svgStepAnnot, svgSource, chartW, isMobile as _isMobile } from "../design.js";
 import { cl } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
@@ -27,8 +27,8 @@ export function createStackedCapex(capex, stats) {
   const tickers = pivot.map(r => r.ticker);
   const stack = d3.stack().keys(YEARS)(pivot);
 
-  const W = Math.min(820, (document.body?.clientWidth ?? 820) - 40);
-  const isMobile = W < 500;
+  const W = chartW(820);
+  const isMobile = _isMobile(W);
   const H = 384;
   const ml = 50, mr = 20, mt = 54, mb = 95;
 
@@ -45,12 +45,10 @@ export function createStackedCapex(capex, stats) {
     .style("font-family", "'DM Sans', sans-serif");
 
   // ── Title + subtitle ────────────────────────────────────────────────────
-  svg.append("text").attr("x", ml).attr("y", 16)
-    .attr("fill", INK).attr("font-size", "13").attr("font-weight", "700")
-    .text("Amazon led total spending. Meta is catching up fast.");
-  svg.append("text").attr("x", ml).attr("y", 30)
-    .attr("fill", INK_LIGHT).attr("font-size", "10.5")
-    .text("Cumulative capex 2022–2026, six companies ($B) · hatched bar = 2026 guidance");
+  svgTitle(svg, W, {
+    title: "Amazon led total spending. Meta is catching up fast.",
+    subtitle: "Cumulative capex 2022–2026, six companies ($B) · hatched bar = 2026 guidance",
+  });
 
   svg.append("line").attr("x1", ml).attr("x2", W - mr).attr("y1", H - mb).attr("y2", H - mb)
     .attr("stroke", RULE).attr("stroke-width", 1);
@@ -153,12 +151,7 @@ export function createStackedCapex(capex, stats) {
     });
   }
 
-  svg.append("text").attr("x", ml).attr("y", H - 16)
-    .attr("fill", INK_LIGHT).attr("font-size", "9.5")
-    .text("*2026 guidance ± " + stats.guidance_band_pct + "% band based on largest single-year revision (2020–2025)");
-  svg.append("text").attr("x", ml).attr("y", H - 5)
-    .attr("fill", INK_LIGHT).attr("font-size", "9.5")
-    .text("Source: SEC 10-K filings via yfinance");
+  svgSource(svg, W, H, "*2026 guidance ± " + stats.guidance_band_pct + "% band based on largest single-year revision (2020–2025)  ·  Source: SEC 10-K filings via yfinance");
 
   // ── Step annotation — inline text replaces floating callout ───────────────
   const STEP_ANNOTS = [
@@ -167,10 +160,7 @@ export function createStackedCapex(capex, stats) {
     "Meta barely participated in 2022 \u2014 now the fastest-growing spender",
     `Combined 2026 guidance: $${stats.guidance_2026_point.toFixed(0)}B \u2014 subject to \u00b1${stats.guidance_band_pct}% revision`,
   ];
-  const stepAnnot = svg.append("text")
-    .attr("x", ml).attr("y", H - mb + 32)
-    .attr("fill", INK).attr("font-size", "11")
-    .attr("font-style", "italic").attr("opacity", 0);
+  const annot = svgStepAnnot(svg, { y: H - mb + 20, W, ml });
 
   // ── Step control ──────────────────────────────────────────────────────────
   function setHighlight(focusTicker) {
@@ -208,11 +198,7 @@ export function createStackedCapex(capex, stats) {
     }
 
     // Step annotation
-    if (step >= 0 && step < STEP_ANNOTS.length) {
-      stepAnnot.text(STEP_ANNOTS[step]).transition().duration(350).attr("opacity", 0.85);
-    } else {
-      stepAnnot.interrupt().attr("opacity", 0);
-    }
+    annot.update(step, STEP_ANNOTS);
   }
 
   return { node: svg.node(), update };

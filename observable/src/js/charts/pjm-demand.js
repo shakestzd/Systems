@@ -3,11 +3,11 @@
 // Replaces Altair interactive legend selection with immediate visual comparison.
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, DOM_ZONE, AEP_ZONE } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, DOM_ZONE, AEP_ZONE, chartW } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 export function createPjmDemand(data) {
-  const W = Math.min(820, (document.body?.clientWidth ?? 820) - 40);
+  const W = chartW(820);
 
   // Group by zone, exclude PJM RTO (aggregate)
   const byZone = d3.group(data.filter(d => d.zone !== "PJM RTO"), d => d.zone);

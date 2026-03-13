@@ -5,11 +5,11 @@
 
 import * as d3 from "npm:d3@7";
 import * as topojson from "npm:topojson-client@3";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, PAPER, FUEL, FUEL_LABEL, CO } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, PAPER, FUEL, FUEL_LABEL, CO, chartW } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 export function createPlantMap(geoData, eia, dataCenters) {
-  const W = Math.min(820, (document.body?.clientWidth ?? 820) - 40);
+  const W = chartW(820);
   const H = 500;
 
   const states = topojson.feature(geoData, geoData.objects.states);

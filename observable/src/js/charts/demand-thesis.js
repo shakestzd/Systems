@@ -3,7 +3,7 @@
 // Pattern A: returns a container element for Observable's display().
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, RULE } from "../design.js";
+import { INK, INK_LIGHT, RULE, chartW, isMobile as _isMobile } from "../design.js";
 import { animateOnEntry } from "../animate.js";
 
 export function createDemandThesis(stats) {
@@ -33,12 +33,12 @@ export function createDemandThesis(stats) {
     { id: "apps",       z: medium, col: 1, row: 1,
       title: "AI-native consumer apps",
       preview: `${cu}M users, a fraction pay. Conversion is the entire bet.`,
-      desc: `ChatGPT has ${cu}M monthly users. Only a fraction pay. Converting free users to paid subscriptions is the largest unvalidated assumption in AI revenue forecasting.` },
+      desc: `ChatGPT has ${cu}M monthly users. Only a fraction pay. No company has disclosed what share of free users convert to paid subscriptions.` },
 
     { id: "agi",        z: long_,  col: 2, row: 0,
       title: "AGI / reasoning infrastructure",
-      preview: "Revenue model — what to sell, to whom, at what price — unknown.",
-      desc: "Infrastructure bets on AI achieving general reasoning capability. The revenue model — what will be sold, to whom, at what price — does not exist yet." },
+      preview: "No company has disclosed a revenue model.",
+      desc: "Infrastructure bets on AI achieving general reasoning capability. No company has disclosed a revenue model — what will be sold, to whom, or at what price." },
 
     { id: "physical",   z: long_,  col: 2, row: 1,
       title: "Physical world automation",
@@ -47,8 +47,8 @@ export function createDemandThesis(stats) {
   ];
 
   // ── Dimensions ────────────────────────────────────────────────────────
-  const W        = Math.min(820, (document.body?.clientWidth ?? 820) - 40);
-  const isMobile = W < 500;
+  const W        = chartW(820);
+  const isMobile = _isMobile(W);
   const H        = 860;
   // On mobile: single-column layout so all cards fit in the viewport width.
   // Cards start just right of the source circle; CW fills the remaining width.

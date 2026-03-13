@@ -4,10 +4,10 @@
 //        Shortage | 3 = Full loop closes back to Capex (deployment lag)
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, PAPER, OCC_TECH, OCC_TRADES } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, PAPER, OCC_TECH, OCC_TRADES, chartW } from "../design.js";
 
 export function createLaborFeedback(stats) {
-  const W = Math.min(680, (document.body?.clientWidth ?? 680) - 40);
+  const W = chartW(680);
   const H = 394;
 
   const svg = d3.create("svg")

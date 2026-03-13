@@ -4,7 +4,7 @@
 // OpenAI compute commitment. Static display — no scroll steps.
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, CONTEXT, RULE, NEGATIVE, PAPER } from "../design.js";
+import { INK, INK_LIGHT, CONTEXT, RULE, NEGATIVE, PAPER, chartW } from "../design.js";
 
 export function createCoreweaveCallout(stats) {
   const MSFT_SHARE_PCT = 62;  // CoreWeave S-1/A, March 2025
@@ -33,7 +33,7 @@ export function createCoreweaveCallout(stats) {
     },
   ];
 
-  const W = Math.min(820, (document.body?.clientWidth ?? 820) - 40);
+  const W = chartW(820);
   const H = 138;
   const pad = 16;
   const colW = (W - pad * 2) / 3;

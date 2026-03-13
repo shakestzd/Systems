@@ -3,13 +3,13 @@
 // Steps: 0 = panel 1 draws | 1 = panel 2 | 2 = panel 3 | 3 = panel 4 (spillover)
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, LOOP } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, LOOP, chartW } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 export function createBaselineSim(sim) {
   const data = sim.baseline;
 
-  const W = Math.min(820, (document.body?.clientWidth ?? 820) - 40);
+  const W = chartW(820);
   const H = 514;
   const panels = [
     {

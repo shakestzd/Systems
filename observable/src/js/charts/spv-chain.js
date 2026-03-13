@@ -5,11 +5,11 @@
 // Steps: 0 = Meta node | 1 = SPV path | 2 = credit path | 3 = lock-in label
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, NEGATIVE, NEUTRAL } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, NEGATIVE, NEUTRAL, chartW } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 export function createSpvChain(stats) {
-  const W = Math.min(820, (document.body?.clientWidth ?? 820) - 40);
+  const W = chartW(820);
   const H = 360;
   const ml = 16, mr = 16, mt = 20, mb = 32;
 

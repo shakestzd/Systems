@@ -4,7 +4,7 @@
 // Steps: 0 = AI forecast band | 1 = medium-life assets | 2 = long-life | 3 = full view
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, PAPER, FUEL } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, PAPER, FUEL, chartW } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 export function createAssetTimeline() {
@@ -19,7 +19,7 @@ export function createAssetTimeline() {
     { tech: "Transmission line", life: 50, color: FUEL.hydro },
   ];
 
-  const W = Math.min(820, (document.body?.clientWidth ?? 820) - 40);
+  const W = chartW(820);
   const H = 354;
   const ml = 140, mr = 55, mt = 52, mb = 36;
   const barH = 26;

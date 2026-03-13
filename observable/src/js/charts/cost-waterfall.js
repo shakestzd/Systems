@@ -3,14 +3,14 @@
 // Steps: 0 = bars build sequentially | 1 = connector lines | 2 = total bar
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, chartW } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 export function createCostWaterfall(queue) {
   const items = queue.waterfall.filter(d => !d.is_total);
   const total = queue.waterfall.find(d => d.is_total);
 
-  const W = Math.min(820, (document.body?.clientWidth ?? 820) - 40);
+  const W = chartW(820);
   const H = 354;
   const ml = 48, mr = 20, mt = 52, mb = 60;
 

@@ -4,7 +4,7 @@
 //        3 = end label + multiplier
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, svgTitle, svgStepAnnot, svgSource, chartW, isMobile as _isMobile } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 export function createCapexHistory(capex, stats) {
@@ -13,9 +13,10 @@ export function createCapexHistory(capex, stats) {
   const v2025 = hist.find(d => d.year === 2025)?.capex_bn;
   const split = 2022;
 
-  const W = Math.min(820, (document.body?.clientWidth ?? 820) - 40);
+  const W = chartW(820);
+  const isMobile = _isMobile(W);
   const H = 364;
-  const ml = 58, mr = 130, mt = 52, mb = 74;
+  const ml = 58, mr = isMobile ? 16 : 130, mt = 52, mb = 74;
 
   const x = d3.scaleLinear().domain([2014.5, 2026.5]).range([ml, W - mr]);
   const y = d3.scaleLinear().domain([0, d3.max(hist, d => d.capex_bn) * 1.18]).range([H - mb, mt]);
@@ -25,12 +26,10 @@ export function createCapexHistory(capex, stats) {
     .style("font-family", "'DM Sans', sans-serif");
 
   // ── Title + subtitle ────────────────────────────────────────────────────
-  svg.append("text").attr("x", ml).attr("y", 16)
-    .attr("fill", INK).attr("font-size", "13").attr("font-weight", "700")
-    .text("This cycle doubled spending in two years");
-  svg.append("text").attr("x", ml).attr("y", 30)
-    .attr("fill", INK_LIGHT).attr("font-size", "10.5")
-    .text("Annual capex, Amazon · Alphabet · Microsoft · Meta  ·  2015–2025 ($B)");
+  svgTitle(svg, W, {
+    title: "This cycle doubled spending in two years",
+    subtitle: "Annual capex, Amazon · Alphabet · Microsoft · Meta  ·  2015–2025 ($B)",
+  });
 
   // Baseline
   svg.append("line").attr("x1", ml).attr("x2", W - mr).attr("y1", y(0)).attr("y2", y(0))
@@ -82,13 +81,18 @@ export function createCapexHistory(capex, stats) {
   });
 
   // End labels — start hidden, appear at step 3
+  // On mobile: position above the dot (text-anchor end); on desktop: to the right
   const mult = v2025 ? (v2025 / v2019).toFixed(1) : null;
   const endLabel1 = v2025 ? svg.append("text")
-    .attr("x", x(2025) + 10).attr("y", y(v2025) - 4)
+    .attr("x", isMobile ? x(2025) : x(2025) + 10)
+    .attr("y", isMobile ? y(v2025) - 20 : y(v2025) - 4)
+    .attr("text-anchor", isMobile ? "end" : "start")
     .attr("fill", ACCENT).attr("font-size", "12").attr("font-weight", "700")
     .attr("opacity", 0).text(`$${v2025.toFixed(0)}B`) : null;
   const endLabel2 = mult ? svg.append("text")
-    .attr("x", x(2025) + 10).attr("y", y(v2025) + 11)
+    .attr("x", isMobile ? x(2025) : x(2025) + 10)
+    .attr("y", isMobile ? y(v2025) - 7 : y(v2025) + 11)
+    .attr("text-anchor", isMobile ? "end" : "start")
     .attr("fill", ACCENT).attr("font-size", "11")
     .attr("opacity", 0).text(`(${mult}× vs 2019)`) : null;
 
@@ -100,7 +104,6 @@ export function createCapexHistory(capex, stats) {
   });
 
   // X axis — fewer ticks on narrow viewports to prevent label collision
-  const isMobile = W < 450;
   const xTicks = isMobile ? [2016, 2020, 2024] : [2016, 2018, 2020, 2022, 2024];
   xTicks.forEach(yr => {
     svg.append("text").attr("x", x(yr)).attr("y", H - mb + 16)
@@ -108,8 +111,7 @@ export function createCapexHistory(capex, stats) {
       .text(yr);
   });
 
-  svg.append("text").attr("x", ml).attr("y", H - 4).attr("fill", INK_LIGHT).attr("font-size", "10")
-    .text("Annual capex, Amazon + Alphabet + Microsoft + Meta, 2015–2025 ($B)  ·  Source: SEC 10-K filings (2022–2025); company annual reports (2015–2021)");
+  svgSource(svg, W, H, "Annual capex, Amazon + Alphabet + Microsoft + Meta, 2015–2025 ($B)  ·  Source: SEC 10-K filings (2022–2025); company annual reports (2015–2021)");
 
   // ── Step annotation — inline text replaces floating callout ───────────────
   const STEP_ANNOTS = [
@@ -118,10 +120,7 @@ export function createCapexHistory(capex, stats) {
     "Spending doubled in two years \u2014 faster than any previous cycle",
     v2025 && mult ? `$${v2025.toFixed(0)}B in 2025 \u2014 ${mult}\u00d7 the 2019 baseline` : "",
   ];
-  const stepAnnot = svg.append("text")
-    .attr("x", ml).attr("y", H - mb + 32)
-    .attr("fill", INK).attr("font-size", "11")
-    .attr("font-style", "italic").attr("opacity", 0);
+  const annot = svgStepAnnot(svg, { y: H - mb + 20, W, ml });
 
   // ── Step control ──────────────────────────────────────────────────────────
   function update(step) {
@@ -164,11 +163,7 @@ export function createCapexHistory(capex, stats) {
     if (endLabel2) endLabel2.transition().duration(400).attr("opacity", step >= 3 ? 1 : 0);
 
     // Step annotation
-    if (step >= 0 && step < STEP_ANNOTS.length) {
-      stepAnnot.text(STEP_ANNOTS[step]).transition().duration(350).attr("opacity", 0.85);
-    } else {
-      stepAnnot.interrupt().attr("opacity", 0);
-    }
+    annot.update(step, STEP_ANNOTS);
   }
 
   return { node: svg.node(), update };

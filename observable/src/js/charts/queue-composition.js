@@ -3,7 +3,7 @@
 // Steps: 0 = bars grow | 1 = solar+battery highlight | 2 = gas shrinking
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, FUEL, FUEL_LABEL } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, FUEL, FUEL_LABEL, chartW } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 export function createQueueComposition(queue) {
@@ -28,7 +28,7 @@ export function createQueueComposition(queue) {
     return row;
   });
 
-  const W = Math.min(820, (document.body?.clientWidth ?? 820) - 40);
+  const W = chartW(820);
   const H = 354;
   const ml = 48, mr = 20, mt = 52, mb = 70;
 

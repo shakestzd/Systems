@@ -44,6 +44,113 @@ export const NEUTRAL  = "#8c8278";  // mechanism / intermediate
 export const OCC_TECH   = "#4477AA";   // muted blue — tech/software occupations
 export const OCC_TRADES = ACCENT;      // warm accent — construction trades
 
+// ── Responsive breakpoints ───────────────────────────────────────────────────
+/** Responsive chart width — pass the chart's max desired width */
+export const chartW = (maxW = 820) => Math.min(maxW, (document.body?.clientWidth ?? maxW) - 40);
+export const MOBILE_BP = 500;
+export const isMobile = (W) => W < MOBILE_BP;
+
+// ── Responsive typography ────────────────────────────────────────────────────
+// SVG viewBox width scales, but text font-size doesn't. These helpers return
+// sizes proportional to the chart width so titles and subtitles don't clip.
+export const titleSize = W => Math.max(10, Math.min(13, W * 0.022));
+export const subtitleSize = W => Math.max(8.5, Math.min(10.5, W * 0.018));
+
+/**
+ * Append a wrapping title + subtitle block to an SVG using foreignObject.
+ * Returns the foreignObject selection (height is set to `h` param).
+ *
+ *   svgTitle(svg, W, { title: "...", subtitle: "...", h: 42 });
+ */
+export function svgTitle(svg, W, { title, subtitle, x = 8, y = 0, h = 42 } = {}) {
+  const fo = svg.append("foreignObject")
+    .attr("x", x).attr("y", y).attr("width", W - x).attr("height", h);
+  const div = fo.append("xhtml:div")
+    .style("font-family", "'DM Sans', sans-serif")
+    .style("line-height", "1.3");
+  div.append("xhtml:div")
+    .style("font-size", `${titleSize(W)}px`)
+    .style("font-weight", "700")
+    .style("color", INK)
+    .text(title);
+  if (subtitle) {
+    div.append("xhtml:div")
+      .style("font-size", `${subtitleSize(W)}px`)
+      .style("color", INK_LIGHT)
+      .style("margin-top", "2px")
+      .text(subtitle);
+  }
+  // Accessibility
+  svg.attr("role", "img").attr("aria-label", title);
+  return fo;
+}
+
+/**
+ * Append a legend row to an SVG. Auto-stacks vertically on mobile.
+ * Items: [{ type: "circle"|"rect"|"line", fill, text }]
+ */
+export function svgLegend(svg, items, { y, ml = 0, W, gap = 200, mobileGap = 18 } = {}) {
+  const mobile = W < MOBILE_BP;
+  items.forEach((item, i) => {
+    const lx = mobile ? ml : ml + i * gap;
+    const ly = mobile ? y + i * mobileGap : y;
+    if (item.type === "rect") {
+      svg.append("rect").attr("x", lx).attr("y", ly - 10)
+        .attr("width", 12).attr("height", 12).attr("fill", item.fill).attr("opacity", 0.7);
+    } else if (item.type === "line") {
+      svg.append("line").attr("x1", lx).attr("x2", lx + 12)
+        .attr("y1", ly - 4).attr("y2", ly - 4)
+        .attr("stroke", item.fill).attr("stroke-width", 2);
+    } else {
+      svg.append("circle").attr("cx", lx + 6).attr("cy", ly - 4)
+        .attr("r", 5).attr("fill", item.fill);
+    }
+    svg.append("text").attr("x", lx + 17).attr("y", ly + 2)
+      .attr("fill", INK_LIGHT).attr("font-size", "10.5").text(item.text);
+  });
+}
+
+/**
+ * Append a wrapping step-annotation block (foreignObject) to an SVG.
+ * Returns { fo, div, rule, update(step, annots) }.
+ * Call update(step, STEP_ANNOTS) from the chart's step handler.
+ */
+export function svgStepAnnot(svg, { x = 0, y, W, ml = 0 } = {}) {
+  const g = svg.append("g").attr("transform", `translate(0, ${y})`).style("opacity", 0);
+  g.append("line")
+    .attr("x1", ml - 6).attr("x2", ml - 6)
+    .attr("y1", 0).attr("y2", 18)
+    .attr("stroke", ACCENT).attr("stroke-width", 2);
+  const fo = g.append("foreignObject")
+    .attr("x", ml).attr("y", 0).attr("width", W - ml - 8).attr("height", 50);
+  const div = fo.append("xhtml:div")
+    .style("font-family", "'DM Sans', sans-serif")
+    .style("font-size", "11px").style("font-style", "italic")
+    .style("color", INK).style("line-height", "1.3");
+  function update(step, annots) {
+    if (step >= 0 && step < annots.length) {
+      div.text(annots[step]);
+      g.transition().duration(350).style("opacity", "0.85");
+    } else {
+      g.interrupt().style("opacity", "0");
+    }
+  }
+  return { fo, div, rule: g, update };
+}
+
+/**
+ * Append a wrapping source line (foreignObject) at the bottom of an SVG.
+ */
+export function svgSource(svg, W, H, text) {
+  const fo = svg.append("foreignObject")
+    .attr("x", 0).attr("y", H - 18).attr("width", W).attr("height", 18);
+  fo.append("xhtml:div")
+    .style("font-family", "'DM Sans', sans-serif").style("font-size", "10px")
+    .style("color", INK_LIGHT).style("padding", "0 8px")
+    .text(text);
+  return fo;
+}
+
 /** Color by ticker — falls back to INK_LIGHT for unknown tickers */
 export const cc = t => CO[t] ?? INK_LIGHT;
 

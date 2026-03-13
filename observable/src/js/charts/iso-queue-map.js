@@ -5,7 +5,7 @@
 
 import * as d3 from "npm:d3@7";
 import * as topojson from "npm:topojson-client@3";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, PAPER, ISO_COLOR } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, PAPER, ISO_COLOR, chartW } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 // State FIPS to ISO mapping
@@ -45,7 +45,7 @@ const isoCentroids = {
 };
 
 export function createISOQueueMap(geoData, queue) {
-  const W = Math.min(820, (document.body?.clientWidth ?? 820) - 40);
+  const W = chartW(820);
   const H = 500;
 
   // Filter out AK, HI, territories

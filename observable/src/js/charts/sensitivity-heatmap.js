@@ -5,13 +5,13 @@
 //        current estimate marker
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, PAPER } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, PAPER, chartW } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 export function createSensitivityHeatmap(sim) {
   const { btm_range, reg_range, spillover } = sim.sensitivity;
 
-  const W = Math.min(820, (document.body?.clientWidth ?? 820) - 40);
+  const W = chartW(820);
   const H = 474;
   const ml = 60, mr = 80, mt = 52, mb = 50;
 

@@ -1,5 +1,6 @@
 ---
 title: "Who Holds the Downside"
+sidebar: "Who Holds the Downside"
 ---
 
 ```js
@@ -9,7 +10,7 @@ const stats = await FileAttachment("data/dd001_risk_stats.json").json();
 
 <div class="byline">Thandolwethu Zwelakhe Dlamini · TZD Labs Systems Research</div>
 
-# Who Holds the Downside? Risk Distribution in AI Infrastructure
+# Who Holds the Downside?
 
 <div class="prose-lead">
 
@@ -20,7 +21,7 @@ The [first article](/Systems/dd001) documented about $${stats.capex_2025.toFixed
 Neoclouds borrow against projected lease renewals they have no contractual guarantee of receiving. Those loans reach pension funds and endowments through bond offerings. Utilities build substations and transmission lines to serve the load, recovering the cost from ratepayers over forty-year depreciation schedules.
 
 
-## The Structural Risk Zone
+## Demand forecasts run 3–5 years. The assets last 25–50.
 
 ```js
 import { createAssetGap } from "./js/charts/asset-gap.js";
@@ -103,9 +104,9 @@ display(createCoreweaveCallout(stats));
 ```
 
 
-## Cost Allocation: FERC AD24-11
+## FERC hasn't decided who pays for grid upgrades — utilities are building anyway
 
-The Federal Energy Regulatory Commission opened docket AD24-11 in May 2024, asking whether large electricity users like AI data centers should pay for the grid upgrades they require, or whether those costs are spread across all ratepayers.
+The Federal Energy Regulatory Commission opened docket AD24-11 in May 2024, asking whether large electricity users like AI data centers should pay for the grid upgrades they require, or whether those costs spread across all ratepayers.
 
 ```js
 import { createFercAllocation } from "./js/charts/ferc-allocation.js";

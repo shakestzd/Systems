@@ -3,10 +3,10 @@
 // Scroll reveals: PE fund → flow to HoldCo/Utility → flow to Ratepayers → exit arrow.
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, RATEPAYER, PAPER } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, RATEPAYER, PAPER, chartW } from "../design.js";
 
 export function createOwnershipFlow() {
-  const W = Math.min(820, (document.body?.clientWidth ?? 820) - 40);
+  const W = chartW(820);
   const H = 254;
 
   const svg = d3.create("svg")

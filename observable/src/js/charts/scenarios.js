@@ -3,7 +3,7 @@
 // Steps: 0 = all rows dimmed | 1 = Bull | 2 = Base | 3 = Bear | 4 = all full
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, svgTitle, svgStepAnnot, svgSource, chartW, svgLegend } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 const REV_COLOR = "#3a6fa8";
@@ -24,10 +24,10 @@ export function createScenarios(stats) {
   ];
   scenarios.forEach(s => { s.ratio = s.capex / s.revenue; s.gap = s.capex - s.revenue; });
 
-  const W   = Math.min(660, (document.body?.clientWidth ?? 660) - 40);
-  const H   = 374;
+  const W   = chartW(660);
+  const H   = 434;
   const mt  = 58;
-  const mb  = 80;
+  const mb  = 140;
   const ml  = 112;
   const mr  = 24;
 
@@ -46,12 +46,10 @@ export function createScenarios(stats) {
     .style("overflow", "visible");
 
   // ── Title + subtitle ────────────────────────────────────────────────────
-  svg.append("text").attr("x", ml).attr("y", 16)
-    .attr("fill", INK).attr("font-size", "13").attr("font-weight", "700")
-    .text("Three 2026 scenarios: how the capex-revenue gap resolves");
-  svg.append("text").attr("x", ml).attr("y", 30)
-    .attr("fill", INK_LIGHT).attr("font-size", "10.5")
-    .text("Left dot = cloud revenue · right dot = capex · band = gap between them");
+  svgTitle(svg, W, {
+    title: "Three 2026 scenarios: how the capex-revenue gap resolves",
+    subtitle: "Left dot = cloud revenue · right dot = capex · band = gap between them",
+  });
 
   // Grid lines + tick labels
   const tickVals = [400, 500, 600, 700].filter(v => v >= xDomLo && v <= xDomHi);
@@ -155,101 +153,23 @@ export function createScenarios(stats) {
   });
 
   // Legend
-  const legY = H - mb + 30;
-  [{ color: ACCENT,    text: "Capital expenditure" },
-   { color: REV_COLOR, text: "Cloud revenue (AWS + Azure + Google Cloud)" }]
-    .forEach((l, i) => {
-      svg.append("circle").attr("cx", ml + i * 230).attr("cy", legY).attr("r", 5).attr("fill", l.color);
-      svg.append("text").attr("x", ml + i * 230 + 14).attr("y", legY + 4)
-        .attr("fill", INK_LIGHT).attr("font-size", "10.5").text(l.text);
-    });
+  const legY = H - mb + 64;
+  svgLegend(svg, [
+    { type: "circle", fill: ACCENT,    text: "Capital expenditure" },
+    { type: "circle", fill: REV_COLOR, text: "Cloud revenue (AWS + Azure + Google Cloud)" },
+  ], { y: legY + 4, ml, W, gap: 230 });
 
-  svg.append("text")
-    .attr("x", ml).attr("y", H - mb + 52)
-    .attr("fill", CONTEXT).attr("font-size", "9")
-    .text(`2026 projections: TZD Labs analysis · Cloud revenue $${stats.cloud_rev_2026_low}–$${stats.cloud_rev_2026_high}B · Capex: management guidance ± band`);
+  svgSource(svg, W, H, `2026 projections: TZD Labs analysis · Cloud revenue $${stats.cloud_rev_2026_low}–$${stats.cloud_rev_2026_high}B · Capex: management guidance ± band`);
 
-  // ── SVG-native step annotation ────────────────────────────────────────────
-  // Positioned using the same D3 scale as the data — responsive at all viewports.
-  // Bear's capex is the shortest (left-most right dot), so annotX sits in the
-  // clear horizontal zone that exists at every step. Y tracks each active row.
-  const bearCapX = animEls[2].capX;
-  const annotX   = bearCapX + 22;          // 22 SVG units right of Bear capex dot
-  const annotW   = W - mr - annotX - 6;   // remaining width to right margin
-  const annotFS  = 11;                     // font-size in SVG units (scales with chart)
-  const annotLH  = 15.5;                   // line height in SVG units
-
-  // Y anchor per step: first text baseline position (SVG units, from rowY)
-  //   Steps 0, 3, 4 → Bear row zone (right of Bear data, which stops at bearCapX)
-  //   Step 1 Bull    → below Bull's ratioLab (rowY(0)+DOT_R+28 ≈ 134), Bear/Base labels hidden
-  //   Step 2 Base    → below Base's ratioLab (rowY(1)+DOT_R+28 ≈ 213), Bear labels hidden
-  function annotY(step) {
-    return [
-      rowY(2) + 6,    // 0: Bear row center, all labels dimmed
-      rowY(0) + 52,   // 1: Bull — below Bull's ratioLab
-      rowY(1) + 52,   // 2: Base — below Base's ratioLab
-      rowY(2) + 6,    // 3: Bear — at Bear row center, right of capX
-      rowY(2) + 6,    // 4: all full — same zone, horizontally clear
-    ][step] ?? rowY(2) + 6;
-  }
-
-  const ANNOT_TEXTS = [
+  // ── Step annotation — bottom strip ─────────────────────────────────────────
+  const STEP_ANNOTS = [
     `$${capexPoint.toFixed(0)}B guided for 2026. Three scenarios, three gap trajectories.`,
     "Bull: AI revenue accelerates. The capex-revenue gap starts to close.",
     "Base: revenue grows at current rates. The gap holds near its current level.",
     `Bear: capex cut ${stats.guidance_band_pct}%. Revenue disappoints too. Gap barely moves.`,
     "Revenue falls alongside spending — both sides shrink without closing the gap.",
   ];
-
-  // Accent left-border rule (visual anchor matching the msc-callout style)
-  const annotRule = svg.append("line")
-    .attr("stroke", ACCENT).attr("stroke-width", 1)
-    .attr("opacity", 0).style("pointer-events", "none");
-
-  // Text element — tspans rebuilt per step
-  const annotText = svg.append("text")
-    .attr("font-family", "'DM Sans', sans-serif")
-    .attr("font-size", String(annotFS))
-    .attr("fill", INK)
-    .attr("opacity", 0).style("pointer-events", "none");
-
-  function showAnnot(step) {
-    // On narrow screens the chart is compressed — Bear labels and row data
-    // leave no room for an inline annotation. Suppress it; the article prose
-    // immediately below the chart provides equivalent context.
-    if (W < 440 || step < 0 || step >= ANNOT_TEXTS.length) {
-      annotText.interrupt().attr("opacity", 0);
-      annotRule.interrupt().attr("opacity", 0);
-      return;
-    }
-    const text = ANNOT_TEXTS[step];
-    const y0   = annotY(step);
-
-    // Word-wrap with getComputedTextLength() — works because update() runs in-DOM
-    annotText.selectAll("*").remove();
-    const words = text.split(/\s+/);
-    let line = [], lineNum = 0;
-    let tspan = annotText.append("tspan").attr("x", annotX).attr("y", y0);
-    for (const word of words) {
-      line.push(word);
-      tspan.text(line.join(" "));
-      if (tspan.node().getComputedTextLength() > annotW && line.length > 1) {
-        line.pop();
-        tspan.text(line.join(" "));
-        line = [word];
-        lineNum++;
-        tspan = annotText.append("tspan").attr("x", annotX).attr("dy", String(annotLH)).text(word);
-      }
-    }
-    const totalH = lineNum * annotLH + annotFS;
-    annotRule
-      .attr("x1", annotX - 8).attr("x2", annotX - 8)
-      .attr("y1", y0 - annotFS + 2).attr("y2", y0 + totalH - annotFS + 6);
-    annotText.interrupt().attr("opacity", 0)
-      .transition().delay(250).duration(320).attr("opacity", 1);
-    annotRule.interrupt().attr("opacity", 0)
-      .transition().delay(250).duration(320).attr("opacity", 0.9);
-  }
+  const annot = svgStepAnnot(svg, { y: H - mb + 20, W, ml });
 
   // ── Step control ──────────────────────────────────────────────────────────
   function animateRow({ connector, gapBand, revDot, capDot, revLab, capLab, gapLab, ratioLab, revX, capX, gapW }, delay = 0) {
@@ -328,7 +248,7 @@ export function createScenarios(stats) {
       animEls.forEach(row => setRowFull(row));
     }
 
-    showAnnot(step);
+    annot.update(step, STEP_ANNOTS);
   }
 
   return { node: svg.node(), update };

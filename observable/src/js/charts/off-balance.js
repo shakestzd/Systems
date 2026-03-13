@@ -3,7 +3,7 @@
 // Steps: 0 = reported bars only | 1 = off-balance bars appear | 2 = totals
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, svgTitle, svgStepAnnot, svgSource, chartW } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 export function createOffBalance(stats) {
@@ -12,7 +12,7 @@ export function createOffBalance(stats) {
     { company: "Meta",      reported: stats.meta_2025, offbs: stats.meta_beignet_financing_bn ?? 30 },
   ];
 
-  const W = Math.min(640, (document.body?.clientWidth ?? 640) - 40);
+  const W = chartW(640);
   const H = 384;
   const ml = 55, mr = 40, mt = 58, mb = 120;
   const isMobile = W < 380;
@@ -26,12 +26,10 @@ export function createOffBalance(stats) {
     .style("font-family", "'DM Sans', sans-serif");
 
   // ── Title + subtitle ────────────────────────────────────────────────────
-  svg.append("text").attr("x", ml).attr("y", 16)
-    .attr("fill", INK).attr("font-size", "13").attr("font-weight", "700")
-    .text("Reported capex understates actual commitments");
-  svg.append("text").attr("x", ml).attr("y", 30)
-    .attr("fill", INK_LIGHT).attr("font-size", "10.5")
-    .text("2025 reported capex plus off-balance-sheet lease and SPV commitments, Sep–Nov 2025");
+  svgTitle(svg, W, {
+    title: "Reported capex understates actual commitments",
+    subtitle: "2025 reported capex plus off-balance-sheet lease and SPV commitments, Sep–Nov 2025",
+  });
 
   svg.append("line").attr("x1", ml).attr("x2", W - mr).attr("y1", H - mb).attr("y2", H - mb)
     .attr("stroke", RULE).attr("stroke-width", 1);
@@ -115,9 +113,7 @@ export function createOffBalance(stats) {
         .attr("fill", INK_LIGHT).attr("font-size", "10").text(l.text);
     });
 
-  svg.append("text").attr("x", ml).attr("y", H - 12)
-    .attr("fill", INK_LIGHT).attr("font-size", "9")
-    .text("Source: NYT Dec 15, 2025 (Weise & Tan); company announcements");
+  svgSource(svg, W, H, "Source: NYT Dec 15, 2025 (Weise & Tan); company announcements");
 
   // ── Step annotation — inline text replaces floating callout ───────────────
   const STEP_ANNOTS = [
@@ -125,10 +121,7 @@ export function createOffBalance(stats) {
     "Long-term leases and SPV financing add billions not disclosed in filings",
     `True 2025 commitment: $${(obsData[0].reported + obsData[0].offbs).toFixed(0)}B (Microsoft), $${(obsData[1].reported + obsData[1].offbs).toFixed(0)}B (Meta)`,
   ];
-  const stepAnnot = svg.append("text")
-    .attr("x", ml).attr("y", H - mb + 32)
-    .attr("fill", INK).attr("font-size", "11")
-    .attr("font-style", "italic").attr("opacity", 0);
+  const annot = svgStepAnnot(svg, { y: H - mb + 20, W, ml });
 
   // ── Step control ──────────────────────────────────────────────────────────
   function update(step) {
@@ -176,12 +169,8 @@ export function createOffBalance(stats) {
           .transition().delay(200).duration(400).attr("opacity", 1));
     }
 
-    // Step annotation
-    if (step >= 0 && step < STEP_ANNOTS.length) {
-      stepAnnot.text(STEP_ANNOTS[step]).transition().duration(350).attr("opacity", 0.85);
-    } else {
-      stepAnnot.interrupt().attr("opacity", 0);
-    }
+    // Step annotation + left rule
+    annot.update(step, STEP_ANNOTS);
   }
 
   return { node: svg.node(), update };

@@ -6,7 +6,7 @@
 //        3 = asset examples appear
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, NEGATIVE, POSITIVE } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, NEGATIVE, POSITIVE, chartW } from "../design.js";
 
 const QUADS = [
   { xi: 0, yi: 0, color: CONTEXT,  alpha: 0.25,
@@ -24,7 +24,7 @@ const QUADS = [
 ];
 
 export function createThesisMatrix() {
-  const W = Math.min(560, (document.body?.clientWidth ?? 560) - 40);
+  const W = chartW(560);
   const H = 434;
   const ml = 60, mr = 20, mt = 54, mb = 50;
   const plotW = W - ml - mr;

@@ -5,7 +5,7 @@
 // and scroll-sync logic.
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, PAPER, OCC_TECH, OCC_TRADES } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, PAPER, OCC_TECH, OCC_TRADES, chartW } from "../design.js";
 
 // ── Occupation buckets ──────────────────────────────────────────────────────
 const TECH_OCCS = [
@@ -28,7 +28,7 @@ export function mountWorkforceReveal(container) {
   const stickyEl = container.querySelector(".scroll-hero-chart");
   const steps = [...container.querySelectorAll(".scroll-step")];
 
-  const W = Math.min(680, (document.body?.clientWidth ?? 680) - 40);
+  const W = chartW(680);
   const H = 340;
   const DOT_R = 3.2;
   const DOT_PAD = 0.6;

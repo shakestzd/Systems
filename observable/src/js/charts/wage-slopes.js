@@ -4,11 +4,11 @@
 //        3 = show both + wage gap annotation
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, OCC_TECH, OCC_TRADES } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, OCC_TECH, OCC_TRADES, chartW } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 export function createWageSlopes(data, stats) {
-  const W = Math.min(720, (document.body?.clientWidth ?? 720) - 40);
+  const W = chartW(720);
   const H = 454;
   const ml = 16, mr = 16, mt = 64, mb = 44;
 

@@ -5,10 +5,10 @@
 //        2 = FERC status note (no final rule)
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, CONTEXT, RULE, NEGATIVE, POSITIVE, PAPER } from "../design.js";
+import { INK, INK_LIGHT, CONTEXT, RULE, NEGATIVE, POSITIVE, PAPER, chartW } from "../design.js";
 
 export function createFercAllocation() {
-  const W = Math.min(820, (document.body?.clientWidth ?? 820) - 40);
+  const W = chartW(820);
   const H = 248;
   const pad = 16, mt = 32, mb = 28;
   const colW = (W - pad * 2) / 2 - 6;

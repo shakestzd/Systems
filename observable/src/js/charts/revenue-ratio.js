@@ -4,7 +4,7 @@
 //        3 = AMZN highlight
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, CONTEXT, RULE } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, svgTitle, svgStepAnnot, svgSource, chartW, isMobile as _isMobile } from "../design.js";
 import { cc, cl } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 import { dateToQ, qNum } from "../utils.js";
@@ -27,9 +27,10 @@ export function createRevenueRatio(capex, cloudRev) {
     }
   });
 
-  const W = Math.min(700, (document.body?.clientWidth ?? 700) - 40);
+  const W = chartW(700);
+  const isMobile = _isMobile(W);
   const H = 344;
-  const ml = 18, mr = 110, mt = 52, mb = 74;
+  const ml = 18, mr = isMobile ? 60 : 110, mt = 52, mb = 74;
 
   const xExt = d3.extent(ratios, d => d.x);
   const x = d3.scaleLinear().domain([xExt[0] - 0.1, xExt[1] + 0.6]).range([ml, W - mr]);
@@ -40,12 +41,10 @@ export function createRevenueRatio(capex, cloudRev) {
     .style("font-family", "'DM Sans', sans-serif");
 
   // ── Title + subtitle ────────────────────────────────────────────────────
-  svg.append("text").attr("x", ml).attr("y", 16)
-    .attr("fill", INK).attr("font-size", "13").attr("font-weight", "700")
-    .text("Capex relative to cloud revenue has crossed 1×");
-  svg.append("text").attr("x", ml).attr("y", 30)
-    .attr("fill", INK_LIGHT).attr("font-size", "10.5")
-    .text("Quarterly capex ÷ cloud segment revenue · Amazon, Alphabet, Microsoft · 2023–2025");
+  svgTitle(svg, W, {
+    title: "Capex relative to cloud revenue has crossed 1×",
+    subtitle: "Quarterly capex ÷ cloud segment revenue · Amazon, Alphabet, Microsoft · 2023–2025",
+  });
 
   svg.append("line").attr("x1", ml).attr("x2", W - mr).attr("y1", H - mb).attr("y2", H - mb)
     .attr("stroke", RULE).attr("stroke-width", 1);
@@ -97,21 +96,16 @@ export function createRevenueRatio(capex, cloudRev) {
       .attr("text-anchor", "middle").attr("fill", INK_LIGHT).attr("font-size", "11").text(yr);
   });
 
-  svg.append("text").attr("x", ml).attr("y", H - 4)
-    .attr("fill", INK_LIGHT).attr("font-size", "10")
-    .text("Quarterly capex ÷ quarterly cloud revenue (AWS, Azure, Google Cloud), 2023–2025  ·  Source: SEC 10-K/10-Q filings");
+  svgSource(svg, W, H, "Quarterly capex ÷ quarterly cloud revenue (AWS, Azure, Google Cloud), 2023–2025  ·  Source: SEC 10-K/10-Q filings");
 
-  // ── Step annotation — inline text replaces floating callout ───────────────
+  // ── Step annotation — foreignObject for wrapping ───────────────────────────
   const STEP_ANNOTS = [
-    "Quarterly capex as a fraction of cloud revenue \u2014 all three companies, 2023\u20132025",
-    "Below 1\u00d7 = spending less than you earn. The safe zone.",
-    "Alphabet crossed the 1\u00d7 line in 2024 \u2014 spending more on infrastructure than Google Cloud earns",
-    "Amazon followed in 2025. Microsoft is approaching.",
+    "The 1.0\u00d7 line is parity \u2014 capex equals what the cloud division earns.",
+    "Through 2023, all three stayed below 1.0\u00d7: spending less each quarter than their cloud divisions earned.",
+    "Alphabet crossed in 2024 \u2014 spending more on infrastructure than Google Cloud earns.",
+    "Amazon followed in 2025. Microsoft is approaching the line.",
   ];
-  const stepAnnot = svg.append("text")
-    .attr("x", ml).attr("y", H - mb + 32)
-    .attr("fill", INK).attr("font-size", "11")
-    .attr("font-style", "italic").attr("opacity", 0);
+  const annot = svgStepAnnot(svg, { y: H - mb + 20, W, ml });
 
   // ── Step control ──────────────────────────────────────────────────────────
   // paths[0] = AMZN, paths[1] = GOOGL, paths[2] = MSFT
@@ -171,12 +165,8 @@ export function createRevenueRatio(capex, cloudRev) {
       });
     }
 
-    // Step annotation
-    if (step >= 0 && step < STEP_ANNOTS.length) {
-      stepAnnot.text(STEP_ANNOTS[step]).transition().duration(350).attr("opacity", 0.85);
-    } else {
-      stepAnnot.interrupt().attr("opacity", 0);
-    }
+    // Step annotation + left rule
+    annot.update(step, STEP_ANNOTS);
   }
 
   return { node: svg.node(), update };

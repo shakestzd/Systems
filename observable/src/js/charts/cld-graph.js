@@ -4,7 +4,7 @@
 //        3 = B2 (BTM Bypass) | 4 = Regulatory node pulses
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, PAPER, LOOP } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, PAPER, LOOP, chartW } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 const NODES = [
@@ -44,7 +44,7 @@ const EDGES = [
 ];
 
 export function createCLDGraph() {
-  const W = Math.min(820, (document.body?.clientWidth ?? 820) - 40);
+  const W = chartW(820);
   const H = 500;
   const cx = W / 2, cy = H / 2 - 10;
 

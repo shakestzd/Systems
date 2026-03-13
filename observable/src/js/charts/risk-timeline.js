@@ -5,7 +5,7 @@
 //        3 = communities | 4 = all + "Today" marker
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, NEGATIVE, POSITIVE } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, NEGATIVE, POSITIVE, chartW } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 export function createRiskTimeline(stats) {
@@ -28,7 +28,7 @@ export function createRiskTimeline(stats) {
   ];
 
   const n = entities.length;
-  const W = Math.min(820, (document.body?.clientWidth ?? 820) - 40);
+  const W = chartW(820);
   const H = 424;   // extra height for title, subtitle, and per-bar annotation rows
   const ml = 120, mr = 50, mt = 52, mb = 56;
 

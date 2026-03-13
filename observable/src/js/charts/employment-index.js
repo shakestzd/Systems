@@ -4,7 +4,7 @@
 //        3 = construction highlight
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, OCC_TECH } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, OCC_TECH, chartW } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 const SERIES_CONFIG = {
@@ -15,7 +15,7 @@ const SERIES_CONFIG = {
 };
 
 export function createEmploymentIndex(data, stats) {
-  const W = Math.min(720, (document.body?.clientWidth ?? 720) - 40);
+  const W = chartW(720);
   const H = 334;
   const ml = 42, mr = 24, mt = 52, mb = 44;
 

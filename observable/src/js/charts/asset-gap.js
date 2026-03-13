@@ -11,7 +11,7 @@
 // Returns { node, update } for use with mountScrollChart({ callout: "above" }).
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, CONTEXT, RULE, POSITIVE, NEGATIVE } from "../design.js";
+import { INK, INK_LIGHT, CONTEXT, RULE, POSITIVE, NEGATIVE, chartW } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 // ── Data ─────────────────────────────────────────────────────────────────────
@@ -61,7 +61,7 @@ const X_DOMAIN  = [0, 55];
 const AI_HORIZON = 5;   // years: dashed reference line position
 
 export function createAssetGap() {
-  const W  = Math.min(780, (document.body?.clientWidth ?? 780) - 40);
+  const W  = chartW(780);
   const ml = 170;   // left margin: label column
   const mr = 72;    // right margin: gap label column
   const mt = 52;    // top margin: title + subtitle/legend rows

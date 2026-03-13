@@ -4,7 +4,7 @@
 // Steps: 0 = all bars grow | 1 = PJM highlight | 2 = all with labels
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, CO, cl, ISO_COLOR } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, CO, cl, ISO_COLOR, chartW } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 export function createCapexLag(queue) {
@@ -16,7 +16,7 @@ export function createCapexLag(queue) {
     return { node: el, update: () => {} };
   }
 
-  const W = Math.min(720, (document.body?.clientWidth ?? 720) - 40);
+  const W = chartW(720);
   const H = 64 + raw.length * 34 + 55;
   const ml = 140, mr = 60, mt = 58, mb = 50;
 

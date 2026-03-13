@@ -4,10 +4,10 @@
 // Reader adjusts data center load % and monthly usage; sees real-time cost difference.
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, RATEPAYER, PAPER, PUBLIC } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, RATEPAYER, PAPER, PUBLIC, chartW } from "../design.js";
 
 export function createBillCalculator(stats) {
-  const W = Math.min(820, (document.body?.clientWidth ?? 820) - 40);
+  const W = chartW(820);
 
   const container = d3.create("div")
     .style("font-family", "'DM Sans', sans-serif")

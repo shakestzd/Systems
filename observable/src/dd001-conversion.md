@@ -1,5 +1,6 @@
 ---
-title: "The Conversion Gap"
+title: "Only 14% of Grid Connection Requests Reach Operation"
+sidebar: "The Conversion Gap"
 ---
 
 ```js
@@ -10,7 +11,7 @@ const stats = data.stats;
 
 <div class="byline">Thandolwethu Zwelakhe Dlamini · TZD Labs Systems Research</div>
 
-# From Announcement to Infrastructure: The Conversion Gap
+# Only ${stats.queue_completion_pct}% of grid connection requests reach operation
 
 <div class="prose-lead">
 
@@ -18,7 +19,7 @@ The [previous article](/Systems/dd001) documented about $${stats.capex_2025.toFi
 
 </div>
 
-The waiting list for grid connections holds ${stats.queue_total_gw.toLocaleString()} gigawatts of proposed capacity, but only ${stats.queue_completion_pct}% of projects on that list historically reach full operation. A single Amazon campus in Indiana accounts for roughly half of Indiana's projected electricity demand growth through 2030.
+The waiting list for grid connections holds ${stats.queue_total_gw.toLocaleString()} gigawatts of proposed capacity. A single Amazon campus in Indiana accounts for roughly half of Indiana's projected electricity demand growth through 2030.
 
 ---
 
@@ -50,9 +51,9 @@ display(mountScrollChart(decompChart.node, decompChart.update, [
 
 A gas plant built to power a data center campus was justified by AI demand at the time of the decision. Once built, it operates for 40 years regardless of whether the data center scales as planned.
 
-## The Physical Bottleneck Stack
+## Grid connection takes 5 years median — up from 3 a decade ago
 
-Of all phases, getting connected to the grid takes the longest: a national median of about 5 years from application to actually coming online, up from about 3 years a decade ago (Rand et al., Lawrence Berkeley National Laboratory, 2025).
+Of all phases, getting connected to the grid takes the longest: a national median of about 5 years from application to actually coming online (Rand et al., Lawrence Berkeley National Laboratory, 2025).
 
 ```js
 import { createConstraintPhases } from "./js/charts/constraint-phases.js";

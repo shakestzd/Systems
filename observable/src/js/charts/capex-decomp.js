@@ -5,7 +5,7 @@
 //        2 = demand horizon overlay | 3 = lifetime labels
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, chartW, isMobile as _isMobile } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 export function createCapexDecomp(stats) {
@@ -17,8 +17,8 @@ export function createCapexDecomp(stats) {
   const equipLife = 6;   // years
   const constLife = 40;  // years
 
-  const W = Math.min(820, (document.body?.clientWidth ?? 820) - 40);
-  const isMobile = W < 500;
+  const W = chartW(820);
+  const isMobile = _isMobile(W);
   const H = 274;
   const ml = 16, mr = 90, mt = 54, mb = 44;
 

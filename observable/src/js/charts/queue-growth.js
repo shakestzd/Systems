@@ -4,13 +4,13 @@
 // Steps: 0 = bars grow | 1 = completion stat callout | 2 = gas growth note
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, chartW } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 export function createQueueGrowth(data, stats) {
   const queue = data.queue_ts;
 
-  const W = Math.min(620, (document.body?.clientWidth ?? 620) - 40);
+  const W = chartW(620);
   const H = 354;
   const ml = 50, mr = 24, mt = 52, mb = 70;
 

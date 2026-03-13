@@ -2,11 +2,11 @@
 // Horizontal bars with progressive reveal. Data center at top, 55x annotation.
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, chartW } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 export function createCapitalIntensity() {
-  const W = Math.min(820, (document.body?.clientWidth ?? 820) - 40);
+  const W = chartW(820);
   const H = 294;
   const ml = 140, mr = 80, mt = 52, mb = 44;
 

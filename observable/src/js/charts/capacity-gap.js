@@ -4,7 +4,7 @@
 // Steps: 0 = all appear | 1 = solar gap highlight | 2 = gas CC highlight | 3 = labels
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, FUEL, FUEL_LABEL } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, FUEL, FUEL_LABEL, chartW } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 export function createCapacityGap(eia) {
@@ -18,7 +18,7 @@ export function createCapacityGap(eia) {
     return { node: el, update: () => {} };
   }
 
-  const W = Math.min(720, (document.body?.clientWidth ?? 720) - 40);
+  const W = chartW(720);
   const H = 74 + data.length * 56 + 60;
   const ml = 110, mr = 60, mt = 64, mb = 60;
 

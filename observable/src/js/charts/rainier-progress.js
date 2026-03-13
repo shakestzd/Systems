@@ -4,7 +4,7 @@
 // Steps: 0 = progress bar draws | 1 = milestones appear | 2 = grid impact
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, chartW } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 export function createRainierProgress(stats) {
@@ -13,7 +13,7 @@ export function createRainierProgress(stats) {
   const remaining = planned - built;
   const pctDone = Math.round(built / planned * 100);
 
-  const W = Math.min(720, (document.body?.clientWidth ?? 720) - 40);
+  const W = chartW(720);
   const H = 314;
   const ml = 16, mr = 80, mt = 54, mb = 32;
 

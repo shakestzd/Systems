@@ -4,11 +4,11 @@
 // Scroll reveals: hyperscaler-owned → ratepayer-owned → public → PE band → AI horizon.
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, RATEPAYER, PUBLIC, PAPER, NEGATIVE } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, RATEPAYER, PUBLIC, PAPER, NEGATIVE, chartW } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 export function createLiabilityTaxonomy(stats) {
-  const W = Math.min(820, (document.body?.clientWidth ?? 820) - 40);
+  const W = chartW(820);
   const H = 414;
   const ml = 170, mr = 90, mt = 58, mb = 50;
 

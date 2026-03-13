@@ -4,13 +4,13 @@
 // Steps: 0 = bars grow | 1 = PJM highlight | 2 = all with labels
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, ISO_COLOR } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, ISO_COLOR, chartW } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 export function createQueueRegion(queue) {
   const data = queue.region;
 
-  const W = Math.min(820, (document.body?.clientWidth ?? 820) - 40);
+  const W = chartW(820);
   const H = Math.max(314, data.length * 38 + 94);
   const ml = 130, mr = 70, mt = 46, mb = 36;
 

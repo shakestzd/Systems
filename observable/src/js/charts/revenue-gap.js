@@ -3,7 +3,7 @@
 // Steps: 0 = revenue lines draw | 1 = capex lines appear | 2 = gap bands shade
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, RULE } from "../design.js";
+import { INK, INK_LIGHT, RULE, svgTitle, svgStepAnnot, svgSource, chartW, isMobile as _isMobile } from "../design.js";
 import { cc, cl } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 import { dateToQ, qNum } from "../utils.js";
@@ -29,9 +29,10 @@ export function createRevenueGap(capex, cloudRev) {
     });
   });
 
-  const W = Math.min(820, (document.body?.clientWidth ?? 820) - 40);
+  const W = chartW(820);
+  const isMobile = _isMobile(W);
   const H = 364;
-  const ml = 50, mr = 95, mt = 52, mb = 74;
+  const ml = 50, mr = isMobile ? 50 : 95, mt = 52, mb = 74;
 
   const xExt = d3.extent(series, d => d.x);
   const x = d3.scaleLinear().domain([xExt[0] - 0.05, xExt[1] + 0.08]).range([ml, W - mr]);
@@ -42,12 +43,10 @@ export function createRevenueGap(capex, cloudRev) {
     .style("font-family", "'DM Sans', sans-serif");
 
   // ── Title + subtitle ────────────────────────────────────────────────────
-  svg.append("text").attr("x", ml).attr("y", 16)
-    .attr("fill", INK).attr("font-size", "13").attr("font-weight", "700")
-    .text("Revenue is rising, but capex is rising faster");
-  svg.append("text").attr("x", ml).attr("y", 30)
-    .attr("fill", INK_LIGHT).attr("font-size", "10.5")
-    .text("Quarterly cloud revenue (solid) and capex (dashed) · Amazon, Alphabet, Microsoft");
+  svgTitle(svg, W, {
+    title: "Revenue is rising, but capex is rising faster",
+    subtitle: "Quarterly cloud revenue (solid) and capex (dashed) · Amazon, Alphabet, Microsoft",
+  });
 
   svg.append("line").attr("x1", ml).attr("x2", W - mr).attr("y1", H - mb).attr("y2", H - mb)
     .attr("stroke", RULE).attr("stroke-width", 1);
@@ -158,9 +157,7 @@ export function createRevenueGap(capex, cloudRev) {
         .attr("text-anchor", "end").attr("fill", INK_LIGHT).attr("font-size", "10").text(l.text);
     });
 
-  svg.append("text").attr("x", ml).attr("y", H - 3)
-    .attr("fill", INK_LIGHT).attr("font-size", "9.5")
-    .text("Source: SEC 10-K/10-Q filings via yfinance");
+  svgSource(svg, W, H, "Source: SEC 10-K/10-Q filings via yfinance");
 
   // ── Step annotation — inline text replaces floating callout ───────────────
   const STEP_ANNOTS = [
@@ -168,10 +165,7 @@ export function createRevenueGap(capex, cloudRev) {
     "Capex rising faster \u2014 the lines are crossing",
     "For Alphabet and Amazon, capex now exceeds what cloud earns. The gap is widening.",
   ];
-  const stepAnnot = svg.append("text")
-    .attr("x", ml).attr("y", H - mb + 32)
-    .attr("fill", INK).attr("font-size", "11")
-    .attr("font-style", "italic").attr("opacity", 0);
+  const annot = svgStepAnnot(svg, { y: H - mb + 20, W, ml });
 
   // ── Step control ──────────────────────────────────────────────────────────
   function update(step) {
@@ -211,11 +205,7 @@ export function createRevenueGap(capex, cloudRev) {
     }
 
     // Step annotation
-    if (step >= 0 && step < STEP_ANNOTS.length) {
-      stepAnnot.text(STEP_ANNOTS[step]).transition().duration(350).attr("opacity", 0.85);
-    } else {
-      stepAnnot.interrupt().attr("opacity", 0);
-    }
+    annot.update(step, STEP_ANNOTS);
   }
 
   return { node: svg.node(), update };

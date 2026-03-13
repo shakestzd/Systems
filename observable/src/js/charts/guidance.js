@@ -3,7 +3,7 @@
 // Steps: 0 = actual bars | 1 = guidance dots | 2 = error bands
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, svgTitle, svgStepAnnot, svgSource, chartW, svgLegend } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 export function createGuidance(stats) {
@@ -20,7 +20,7 @@ export function createGuidance(stats) {
     d.g_high = d.guidance * (1 + band);
   });
 
-  const W = Math.min(720, (document.body?.clientWidth ?? 720) - 40);
+  const W = chartW(720);
   const H = 398;
   const ml = 55, mr = 20, mt = 54, mb = 112;
 
@@ -32,12 +32,10 @@ export function createGuidance(stats) {
     .style("font-family", "'DM Sans', sans-serif");
 
   // ── Title + subtitle ────────────────────────────────────────────────────
-  svg.append("text").attr("x", ml).attr("y", 16)
-    .attr("fill", INK).attr("font-size", "13").attr("font-weight", "700")
-    .text("2026 guidance: another step up for all four companies");
-  svg.append("text").attr("x", ml).attr("y", 30)
-    .attr("fill", INK_LIGHT).attr("font-size", "10.5")
-    .text("Gray = 2025 actual capex · orange dot = 2026 guidance · whiskers = historical revision range");
+  svgTitle(svg, W, {
+    title: "2026 guidance: another step up for all four companies",
+    subtitle: "Gray = 2025 actual capex · orange dot = 2026 guidance · whiskers = historical revision range",
+  });
 
   svg.append("line").attr("x1", ml).attr("x2", W - mr).attr("y1", H - mb).attr("y2", H - mb)
     .attr("stroke", RULE).attr("stroke-width", 1);
@@ -107,20 +105,14 @@ export function createGuidance(stats) {
       .attr("text-anchor", "end").attr("fill", INK_LIGHT).attr("font-size", "11").text(`$${v}B`);
   });
 
-  // Legend
+  // Legend — stack vertically on mobile to prevent text clipping
   const legendY = H - mb + 70;
-  [{ type: "rect", fill: CONTEXT, text: "2025 actual capex" },
-   { type: "circle", fill: ACCENT, text: `2026 guidance point ± ${stats.guidance_band_pct}% band` }]
-    .forEach((l, i) => {
-      const lx = ml + i * 215;
-      if (l.type === "rect") svg.append("rect").attr("x", lx).attr("y", legendY - 10).attr("width", 12).attr("height", 12).attr("fill", l.fill).attr("opacity", 0.7);
-      else svg.append("circle").attr("cx", lx + 6).attr("cy", legendY - 4).attr("r", 6).attr("fill", l.fill);
-      svg.append("text").attr("x", lx + 17).attr("y", legendY + 2).attr("fill", INK_LIGHT).attr("font-size", "10.5").text(l.text);
-    });
+  svgLegend(svg, [
+    { type: "rect", fill: CONTEXT, text: "2025 actual capex" },
+    { type: "circle", fill: ACCENT, text: `2026 guidance ± ${stats.guidance_band_pct}% band` },
+  ], { y: legendY, ml, W, gap: 215 });
 
-  svg.append("text").attr("x", ml).attr("y", H - mb + 96)
-    .attr("fill", INK_LIGHT).attr("font-size", "9")
-    .text("Source: SEC filings; Q4 2025 earnings calls  ·  Uncertainty band based on largest single-year guidance revision in 2020–2025 period");
+  svgSource(svg, W, H, "Source: SEC filings; Q4 2025 earnings calls  ·  Uncertainty band based on largest single-year guidance revision in 2020–2025 period");
 
   // ── Step annotation — inline text replaces floating callout ───────────────
   const STEP_ANNOTS = [
@@ -128,10 +120,7 @@ export function createGuidance(stats) {
     "What each company plans to spend in 2026 \u2014 all higher",
     `\u00b1${stats.guidance_band_pct}% historical revision band \u2014 previous plans shifted by this much in a single year`,
   ];
-  const stepAnnot = svg.append("text")
-    .attr("x", ml).attr("y", H - mb + 42)
-    .attr("fill", INK).attr("font-size", "11")
-    .attr("font-style", "italic").attr("opacity", 0);
+  const annot = svgStepAnnot(svg, { y: H - mb + 30, W, ml });
 
   // ── Step control ──────────────────────────────────────────────────────────
   function update(step) {
@@ -179,11 +168,7 @@ export function createGuidance(stats) {
     }
 
     // Step annotation
-    if (step >= 0 && step < STEP_ANNOTS.length) {
-      stepAnnot.text(STEP_ANNOTS[step]).transition().duration(350).attr("opacity", 0.85);
-    } else {
-      stepAnnot.interrupt().attr("opacity", 0);
-    }
+    annot.update(step, STEP_ANNOTS);
   }
 
   return { node: svg.node(), update };

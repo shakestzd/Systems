@@ -4,7 +4,7 @@
 // Steps: 0 = bars draw in | 1 = 3-year minimum marker | 2 = all annotations
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, chartW, isMobile as _isMobile } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 const PHASES = [
@@ -24,8 +24,8 @@ const PHASES = [
 
 export function createConstraintPhases() {
   const n = PHASES.length;
-  const W = Math.min(820, (document.body?.clientWidth ?? 820) - 40);
-  const isMobile = W < 500;
+  const W = chartW(820);
+  const isMobile = _isMobile(W);
   const H = 354;
   const ml = isMobile ? 100 : 120, mr = 24, mt = 52, mb = isMobile ? 62 : 44;
 

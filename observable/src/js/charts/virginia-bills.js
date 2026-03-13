@@ -3,7 +3,7 @@
 // Steps: 0 = line draws | 1 = reference line | 2 = endpoint annotation
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, PAPER } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, PAPER, chartW } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 export function createVirginiaBills(stats) {
@@ -15,7 +15,7 @@ export function createVirginiaBills(stats) {
     bill: endpoint * Math.pow((yr - 2024) / (2040 - 2024), 1.5),
   }));
 
-  const W = Math.min(820, (document.body?.clientWidth ?? 820) - 40);
+  const W = chartW(820);
   const H = 334;
   const ml = 52, mr = 24, mt = 52, mb = 44;
 
