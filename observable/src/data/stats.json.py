@@ -46,8 +46,14 @@ cloud_rev = query("""
 
 ocf_data = query("SELECT ticker, ocf_bn FROM energy_data.hyperscaler_ocf")
 
-cite_raw = query("SELECT key, value FROM energy_data.source_citations")
-citations = dict(zip(cite_raw["key"], cite_raw["value"]))
+cite_raw = query("SELECT key, value, value_text FROM energy_data.source_citations")
+# Use value_text for string entries (quotes), value for numerics
+citations = {}
+for _, r in cite_raw.iterrows():
+    if pd.notna(r["value"]):
+        citations[r["key"]] = r["value"]
+    elif r["value_text"]:
+        citations[r["key"]] = r["value_text"]
 
 # ── Stats dict ────────────────────────────────────────────────────────────
 ann6 = capex_annual[capex_annual["ticker"].isin(TICKERS_6)]
@@ -154,5 +160,40 @@ for key in [
         stats[key] = int(citations[key]) if "." not in str(citations[key]) else float(citations[key])
     except (KeyError, ValueError):
         pass
+
+# Quotes — loaded from source_citations for traceability
+for key in [
+    "pichai_underinvest_quote", "zuckerberg_capacity_quote",
+    "huang_industrial_rev_quote", "nadella_demand_supply_quote",
+    "jassy_infra_split_quote", "covello_trillion_quote",
+]:
+    if key in citations:
+        stats[key] = str(citations[key])
+
+# Historical baselines — telecom cycle
+try:
+    stats["telecom_capex_bn"] = int(citations["telecom_cumulative_capex_bn"])
+    stats["telecom_debt_tn"] = float(citations["telecom_debt_issued_tn"])
+    stats["telecom_capex_rev_pct"] = int(citations["telecom_capex_rev_peak_pct"])
+except (KeyError, ValueError):
+    pass
+
+# Skeptic / demand evidence
+try:
+    stats["acemoglu_tfp_pct"] = float(citations["acemoglu_tfp_pct"])
+    stats["gs_tfp_pct"] = float(citations["acemoglu_gs_tfp_pct"])
+    stats["azure_ai_run_rate_bn"] = int(citations["msft_azure_ai_run_rate_bn"])
+    stats["gcp_rpo_bn"] = float(citations["gcp_rpo_bn"])
+except (KeyError, ValueError):
+    pass
+
+# Meta 2026 guidance
+try:
+    stats["meta_2026g"] = round(float(
+        (int(citations["meta_2026g_low"]) + int(citations["meta_2026g_high"])) / 2
+    ), 0)
+    stats["meta_2025"] = stats.get("meta_2025", 0)
+except (KeyError, ValueError):
+    pass
 
 print(json.dumps(stats))

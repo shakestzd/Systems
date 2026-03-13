@@ -11,8 +11,7 @@ app = marimo.App(
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        """
+    mo.md("""
     # DD-001 — Sources & Publication Gate
 
     **Companion to:** `observable/src/dd001.md` — *The $13 Trillion AI Bet*
@@ -27,8 +26,7 @@ def _(mo):
     3. Set `verified=true` and today's date in `verified_date` in the CSV
     4. Re-run the pipeline: `uv run python -c "from src.data.pipelines import _make_pipeline, dd001_stat_sources; p = _make_pipeline(); p.run(dd001_stat_sources())"`
     5. Reload this notebook — the publication gate will turn green when all required stats are verified
-    """
-    )
+    """)
     return
 
 
@@ -44,7 +42,7 @@ def _():
 
     from src.data.db import query
 
-    return Path, mo, pd, query, sys
+    return mo, pd, query
 
 
 @app.cell
@@ -78,8 +76,7 @@ def _(query):
         """
     )
     stats_dict = dict(zip(stats_values["key"], stats_values["value"]))
-
-    return stat_sources, stats_dict, stats_values
+    return (stat_sources,)
 
 
 @app.cell
@@ -101,7 +98,7 @@ def _(pd, query):
         freshness_rows.append({"table": _metric, "as_of": str(_val)})
 
     data_freshness = pd.DataFrame(freshness_rows)
-    return data_freshness, freshness_queries, freshness_rows
+    return (data_freshness,)
 
 
 @app.cell
@@ -143,20 +140,11 @@ def _(mo, stat_sources):
         )
 
     _gate
-    return (
-        hardcoded,
-        n_hardcoded,
-        n_uncited,
-        n_unverified,
-        total,
-        uncited,
-        unverified,
-        verified_count,
-    )
+    return hardcoded, n_hardcoded, n_uncited, uncited
 
 
 @app.cell(hide_code=True)
-def _(mo, n_uncited, uncited, n_hardcoded, hardcoded):
+def _(hardcoded, mo, n_hardcoded, n_uncited, uncited):
     # ── Show action-required items prominently ────────────────────────────────
     _sections = []
 
@@ -194,8 +182,7 @@ def _(mo, n_uncited, uncited, n_hardcoded, hardcoded):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        """
+    mo.md("""
     ---
 
     ## Source Verification Table
@@ -209,8 +196,7 @@ def _(mo):
     4. Re-run pipeline and reload this notebook
 
     Color guide: 🔴 uncited (no pipeline source) · 🟠 hardcoded (needs citation) · ⚪ unverified · ✅ verified
-    """
-    )
+    """)
     return
 
 
@@ -266,16 +252,14 @@ def _(mo, pd, stat_sources):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        """
+    mo.md("""
     ---
 
     ## Full Source Detail
 
     For each stat, the complete source detail including notes and any caveats.
     Expand this section when verifying individual claims.
-    """
-    )
+    """)
     return
 
 
@@ -329,16 +313,14 @@ def _(mo, stat_sources):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        """
+    mo.md("""
     ---
 
     ## Data Freshness
 
     When was each underlying database table last updated? These dates determine
     how current the computed stats are.
-    """
-    )
+    """)
     return
 
 
@@ -350,8 +332,7 @@ def _(data_freshness, mo):
 
 @app.cell(hide_code=True)
 def _(mo):
-    mo.md(
-        """
+    mo.md("""
     ---
 
     ## Verification Workflow
@@ -396,8 +377,7 @@ def _(mo):
       then switch to citation_csv type. Mark verified after adding the source.
     - **uncited**: Find the source, add to source_citations.csv, parametrize in
       the article. Until parametrized, the article cannot be published.
-    """
-    )
+    """)
     return
 
 
