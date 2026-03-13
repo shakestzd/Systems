@@ -129,6 +129,13 @@ display(mountScrollChart(chart.node, chart.update, steps, { callout: "above" }))
 This was needed for the scenarios chart (DD-001) because dumbbell bars span the
 full plot width, leaving no horizontal zone for an overlay callout.
 
+### SVG-native scroll annotations
+
+For scroll annotation patterns, use `/observable-scroll-annotations` — it documents
+the `svgStepAnnot` bottom-strip pattern from `design.js`, responsive positioning,
+and Safari `foreignObject` workarounds. All DD-001 charts now use this SVG-native
+pattern instead of CSS overlay callouts.
+
 ---
 
 ## Animation Patterns
@@ -302,6 +309,9 @@ When converting a Marimo chart to Observable:
 - [ ] Mount via `mountScrollChart()` in the article markdown
 - [ ] Decide callout mode: overlay (default) or `{ callout: "above" }` if chart is too dense
 - [ ] Screenshot and verify: callout doesn't overlap data, all steps fire while chart visible
+- [ ] After taking cross-viewport screenshots with `review_charts.cjs`, run the
+  `tzd-labs:swd-reviewer` agent on the screenshots to check SWD compliance
+  (gray+accent strategy, declutter, direct labeling, insight-driven titles)
 
 ---
 

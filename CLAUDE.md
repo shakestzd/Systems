@@ -323,6 +323,10 @@ Common mobile issues to check:
 - Callout position: overlay callouts auto-promote to "above" on mobile (width < 500px) when
   `callout !== "none"` — verify prose callout appears above chart, not clipped inside it
 
+After reviewing screenshots for layout issues, run the `tzd-labs:swd-reviewer` agent on
+the captured images to verify SWD compliance (gray+accent color strategy, declutter,
+direct labeling, insight-driven titles).
+
 ### Writing Style
 
 This project is investigative, not academic. The voice is a curious person working through
