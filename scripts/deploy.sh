@@ -22,7 +22,7 @@ cd "$ROOT"
 # ---------------------------------------------------------------------------
 echo "==> Building Observable site..."
 cd observable
-npm run build
+npx @observablehq/framework build
 cd "$ROOT"
 
 DIST_DIR="$ROOT/observable/dist"
