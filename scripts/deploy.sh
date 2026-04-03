@@ -37,23 +37,45 @@ fi
 # ---------------------------------------------------------------------------
 echo "==> Generating articles.json..."
 python3 -c "
-import csv, json, pathlib
-csv_path = pathlib.Path('research/deep_dives.csv')
+import csv, json, pathlib, re
+
+ROOT = pathlib.Path('.')
+SRC = ROOT / 'observable' / 'src'
+csv_path = ROOT / 'research' / 'deep_dives.csv'
+
+def parse_fm(md):
+    m = re.match(r'^---\n(.*?)\n---', md.read_text(), re.DOTALL)
+    if not m: return {}
+    fm = {}
+    for line in m.group(1).splitlines():
+        kv = re.match(r'^(\w+):\s*\"?(.+?)\"?\s*$', line)
+        if kv: fm[kv.group(1)] = kv.group(2)
+    return fm
+
+# Discover published articles from frontmatter
+published = {}
+for md in sorted(SRC.glob('dd*.md')):
+    if not re.match(r'^dd\d{3}$', md.stem): continue
+    fm = parse_fm(md)
+    if fm.get('id'):
+        published[fm['id']] = fm
+
+# Build articles list using CSV for ordering, frontmatter for metadata
 articles = []
 for row in csv.DictReader(csv_path.open()):
-    if row['Status'] in ('Archived', 'Not Started', 'Scoping'):
-        continue
-    if not row.get('url'):
-        continue
-    articles.append({
-        'id': row['ID'],
-        'title': row['Topic'],
-        'focus': row['Focus Area'],
-        'question': row['Core Question'],
-        'status': row['Status'],
-        'url': row['url'],
-        'updated': row['Last Updated'],
-    })
+    rid = row['ID']
+    if rid in published:
+        fm = published[rid]
+        articles.append({
+            'id': rid,
+            'title': fm.get('title', row['Topic']),
+            'focus': fm.get('focus', row['Focus Area']),
+            'question': fm.get('question', row['Core Question']),
+            'status': 'Active',
+            'url': '/' + [m.stem for m in SRC.glob('dd*.md') if re.match(r'^dd\d{3}$', m.stem) and parse_fm(m).get('id') == rid][0],
+            'updated': row['Last Updated'],
+        })
+
 pathlib.Path('$DIST_DIR/articles.json').write_text(json.dumps(articles, indent=2))
 print(f'  {len(articles)} published articles written')
 "
