@@ -81,6 +81,58 @@ print(f'  {len(articles)} published articles written')
 "
 
 # ---------------------------------------------------------------------------
+# 1c. Patch deep_dives.json in dist — hide unpublished article links
+# ---------------------------------------------------------------------------
+echo "==> Patching landing page data for production..."
+python3 -c "
+import json, pathlib, re, glob
+
+SRC = pathlib.Path('observable/src')
+DIST = pathlib.Path('$DIST_DIR')
+
+def parse_fm(md):
+    m = re.match(r'^---\n(.*?)\n---', md.read_text(), re.DOTALL)
+    if not m: return {}
+    fm = {}
+    for line in m.group(1).splitlines():
+        kv = re.match(r'^(\w+):\s*\"?(.+?)\"?\s*$', line)
+        if kv: fm[kv.group(1)] = kv.group(2)
+    return fm
+
+# Find which IDs are published
+pub_ids = set()
+for md in SRC.glob('dd*.md'):
+    if not re.match(r'^dd\d{3}$', md.stem): continue
+    fm = parse_fm(md)
+    if fm.get('published') == 'true':
+        pub_ids.add(fm.get('id'))
+
+# Patch the hashed deep_dives.json in dist
+for f in DIST.rglob('deep_dives.*.json'):
+    data = json.loads(f.read_text())
+    for d in data:
+        if d['id'] not in pub_ids:
+            d['url'] = None
+    f.write_text(json.dumps(data))
+    print(f'  Patched {f.name}: {len(pub_ids)} published, {len(data) - len(pub_ids)} hidden')
+
+# Remove unpublished article HTML from dist
+removed = []
+for html in DIST.glob('dd*.html'):
+    stem = html.stem
+    if not re.match(r'^dd\d{3}', stem): continue
+    parent_id = re.match(r'^(dd\d{3})', stem).group(1)
+    # Check if this parent article is published
+    fm = parse_fm(SRC / f'{parent_id}.md') if (SRC / f'{parent_id}.md').exists() else {}
+    if fm.get('published') != 'true':
+        html.unlink()
+        removed.append(stem)
+if removed:
+    names = ', '.join(removed)
+    print(f'  Removed {len(removed)} unpublished pages: {names}')
+"
+
+# ---------------------------------------------------------------------------
 # 2. Capture the source commit for the deploy message
 # ---------------------------------------------------------------------------
 SOURCE_SHA=$(git rev-parse --short HEAD)
