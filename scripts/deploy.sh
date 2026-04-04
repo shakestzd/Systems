@@ -57,7 +57,7 @@ published = {}
 for md in sorted(SRC.glob('dd*.md')):
     if not re.match(r'^dd\d{3}$', md.stem): continue
     fm = parse_fm(md)
-    if fm.get('id'):
+    if fm.get('id') and fm.get('published') == 'true':
         published[fm['id']] = fm
 
 # Build articles list using CSV for ordering, frontmatter for metadata

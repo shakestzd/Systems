@@ -41,7 +41,7 @@ def discover_articles() -> dict:
         if not re.match(r"^dd\d{3}$", name):
             continue
         fm = parse_frontmatter(md)
-        if fm.get("id"):
+        if fm.get("id") and fm.get("published") == "true":
             articles[fm["id"]] = {
                 "id": fm["id"],
                 "focus": fm.get("focus", ""),
@@ -81,7 +81,7 @@ for row in csv_rows:
         # Published article — frontmatter is source of truth
         dives.append(articles[rid])
     else:
-        # Planned/unpublished — CSV is the source
+        # Not published — show on landing page without a link
         if row["Status"] == "Archived":
             continue
         dives.append({
@@ -90,7 +90,7 @@ for row in csv_rows:
             "topic": row["Topic"],
             "question": row["Core Question"],
             "status": row["Status"],
-            "url": row.get("url") or None,
+            "url": None,  # only published articles get links
             "arc": row["arc"].split("→") if row.get("arc") else [],
         })
 

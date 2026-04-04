@@ -27,6 +27,9 @@ function discoverPages() {
       if (!fm) return null;
       const sidebarMatch = fm[1].match(/^sidebar:\s*["']?(.+?)["']?\s*$/m);
       if (!sidebarMatch) return null;
+      // Only show published articles (and non-article pages like gallery)
+      const isArticle = /^dd\d{3}/.test(f);
+      if (isArticle && !fm[1].match(/^published:\s*true\s*$/m)) return null;
       return { name: sidebarMatch[1], path: "/" + f.replace(".md", "") };
     })
     .filter(Boolean);
