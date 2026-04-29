@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="generator" content="Observable Framework v1.13.4">
+<title>Who Holds the Downside | How Capital Becomes Infrastructure</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&amp;display=swap" crossorigin>
+<link rel="preload" as="style" href="./_observablehq/theme-air.d5b7fcbe.css">
+<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&amp;display=swap" crossorigin>
+<link rel="stylesheet" type="text/css" href="./_observablehq/theme-air.d5b7fcbe.css">
+<link rel="modulepreload" href="./_observablehq/client.75c9a958.js">
+<link rel="modulepreload" href="./_observablehq/runtime.607a8173.js">
+<link rel="modulepreload" href="./_observablehq/stdlib.277aeab8.js">
+<link rel="modulepreload" href="./_import/js/charts/asset-gap.47af6089.js">
+<link rel="modulepreload" href="./_import/js/animate.7c32d49c.js">
+<link rel="modulepreload" href="./_import/js/charts/risk-timeline.45cc14b9.js">
+<link rel="modulepreload" href="./_import/js/charts/spv-chain.71d023fa.js">
+<link rel="modulepreload" href="./_import/js/charts/neocloud-leases.a1e99117.js">
+<link rel="modulepreload" href="./_import/js/charts/coreweave-callout.1e364529.js">
+<link rel="modulepreload" href="./_import/js/charts/ferc-allocation.ca593033.js">
+<link rel="modulepreload" href="./_import/js/design.2d3db129.js">
+<link rel="modulepreload" href="./_import/js/tooltip.40aee997.js">
+<link rel="modulepreload" href="./_npm/d3@7.9.0/e324157d.js">
+<link rel="modulepreload" href="./_npm/d3-array@3.2.4/e93ca09f.js">
+<link rel="modulepreload" href="./_npm/d3-axis@3.0.0/0f2de24d.js">
+<link rel="modulepreload" href="./_npm/d3-brush@3.0.0/65eb105b.js">
+<link rel="modulepreload" href="./_npm/d3-chord@3.0.1/7ef8fb2e.js">
+<link rel="modulepreload" href="./_npm/d3-color@3.1.0/aeb57b94.js">
+<link rel="modulepreload" href="./_npm/d3-contour@4.0.2/1d2aed74.js">
+<link rel="modulepreload" href="./_npm/d3-delaunay@6.0.4/5ced1d52.js">
+<link rel="modulepreload" href="./_npm/d3-dispatch@3.0.1/9ba9c7f3.js">
+<link rel="modulepreload" href="./_npm/d3-drag@3.0.0/4202580c.js">
+<link rel="modulepreload" href="./_npm/d3-dsv@3.0.1/9cffc2bd.js">
+<link rel="modulepreload" href="./_npm/d3-ease@3.0.1/cdd7e898.js">
+<link rel="modulepreload" href="./_npm/d3-fetch@3.0.1/b4e2ad9a.js">
+<link rel="modulepreload" href="./_npm/d3-force@3.0.0/5e804d15.js">
+<link rel="modulepreload" href="./_npm/d3-format@3.1.2/3785bf2d.js">
+<link rel="modulepreload" href="./_npm/d3-geo@3.1.1/40599fb3.js">
+<link rel="modulepreload" href="./_npm/d3-hierarchy@3.1.2/e49e792c.js">
+<link rel="modulepreload" href="./_npm/d3-interpolate@3.0.1/8d1e5425.js">
+<link rel="modulepreload" href="./_npm/d3-path@3.1.0/20d3f133.js">
+<link rel="modulepreload" href="./_npm/d3-polygon@3.0.1/7553081f.js">
+<link rel="modulepreload" href="./_npm/d3-quadtree@3.0.1/0dfd751c.js">
+<link rel="modulepreload" href="./_npm/d3-random@3.0.1/3c90ee06.js">
+<link rel="modulepreload" href="./_npm/d3-scale@4.0.2/720b7f0a.js">
+<link rel="modulepreload" href="./_npm/d3-scale-chromatic@3.1.0/ba24c2e7.js">
+<link rel="modulepreload" href="./_npm/d3-selection@3.0.0/4d94e5b7.js">
+<link rel="modulepreload" href="./_npm/d3-shape@3.2.0/6d3a6726.js">
+<link rel="modulepreload" href="./_npm/d3-time@3.1.0/9f03c579.js">
+<link rel="modulepreload" href="./_npm/d3-time-format@4.1.0/07c9626f.js">
+<link rel="modulepreload" href="./_npm/d3-timer@3.0.1/b58a267d.js">
+<link rel="modulepreload" href="./_npm/d3-transition@3.0.1/004da2ac.js">
+<link rel="modulepreload" href="./_npm/d3-zoom@3.0.0/b5786b3f.js">
+<link rel="modulepreload" href="./_npm/internmap@2.0.3/e08981d9.js">
+<link rel="modulepreload" href="./_npm/delaunator@5.0.1/02d43215.js">
+<link rel="modulepreload" href="./_npm/robust-predicates@3.0.2/aa00730b.js">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&amp;family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&amp;display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./_file/style.f7c81331.css">
+  
+<script type="module">
+
+import {define} from "./_observablehq/client.75c9a958.js";
+import {registerFile} from "./_observablehq/stdlib.277aeab8.js";
+
+registerFile("./data/dd001_risk_stats.json", {"name":"./data/dd001_risk_stats.json","mimeType":"application/json","path":"./_file/data/dd001_risk_stats.cf7caeb4.json","lastModified":1772722949979,"size":470});
+
+define({id: "58fef815", inputs: ["FileAttachment"], outputs: ["stats"], body: async (FileAttachment) => {
+// ── Data ──────────────────────────────────────────────────────────────────
+const stats = await FileAttachment("./data/dd001_risk_stats.json").json();
+return {stats};
+}});
+
+define({id: "e3e916d5", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.capex_2025.toFixed(0)
+))
+}});
+
+define({id: "dd528f45", inputs: ["display"], outputs: ["createAssetGap","mountScrollChart","gapChart"], body: async (display) => {
+const [{createAssetGap}, {mountScrollChart}] = await Promise.all([import("./_import/js/charts/asset-gap.47af6089.js"), import("./_import/js/animate.7c32d49c.js")]);
+
+const gapChart = createAssetGap();
+display(mountScrollChart(gapChart.node, gapChart.update, [
+  { prose: "Each row shows two numbers: how long demand forecasts hold, and how long the asset lasts. The line between them is the exposure gap." },
+  { prose: "Aligned assets have short or no gaps — demand forecasts and asset life move together." },
+  { prose: "Demand forecasts run 3–5 years out. Asset lifetimes run 25–50 years." },
+  { prose: "The substation serving a 3-year lease has a 40-year service life. Every row in this chart shows that gap." },
+], { callout: "none" }));
+return {createAssetGap,mountScrollChart,gapChart};
+}});
+
+define({id: "7af32329", inputs: ["stats","display","mountScrollChart"], outputs: ["createRiskTimeline","timelineChart"], body: async (stats,display,mountScrollChart) => {
+const {createRiskTimeline} = await import("./_import/js/charts/risk-timeline.45cc14b9.js");
+
+const timelineChart = createRiskTimeline(stats);
+display(mountScrollChart(timelineChart.node, timelineChart.update, [
+  { prose: "A tech company signs a 3-to-5-year lease for data center capacity — booking it as an operating expense, with no legal obligation to renew." },
+  { prose: "The neocloud that built the facility borrows against projected lease renewals the tech company has no obligation to provide. Its debt runs a decade or more beyond the lease term." },
+  { prose: "Those loans are packaged into bonds and sold by firms like Pimco and BlackRock to pension funds and endowments — entities with no direct ability to assess AI demand." },
+  { prose: "To connect the data center to the grid, utilities build substations and transmission upgrades. Those assets last 25 to 50 years and are paid for by ratepayers across the service territory." },
+  { prose: "Nebius, Nscale, and Iren each borrowed to build. None holds a renewal option from Microsoft in its contract." },
+], { callout: "none" }));
+return {createRiskTimeline,timelineChart};
+}});
+
+define({id: "b28f648b", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.meta_beignet_financing_bn
+))
+}});
+
+define({id: "21b78219", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.meta_louisiana_dc_gw
+))
+}});
+
+define({id: "f38779ec", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.beignet_bond_maturity
+))
+}});
+
+define({id: "8f4bb42e", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.meta_beignet_lease_years
+))
+}});
+
+define({id: "e9b178e8", inputs: ["stats","display","mountScrollChart"], outputs: ["createSpvChain","spvChart"], body: async (stats,display,mountScrollChart) => {
+const {createSpvChain} = await import("./_import/js/charts/spv-chain.71d023fa.js");
+
+const spvChart = createSpvChain(stats);
+display(mountScrollChart(spvChart.node, spvChart.update, [
+  { prose: `Meta routes $${stats.meta_beignet_financing_bn}B in data center financing through Beignet Investor LLC, a shell company. The lease payments appear on Meta's books as operating costs, not debt.`,
+    position: { top: "52%", left: "38%", maxWidth: "26ch" } },
+  { prose: "The shell company borrows from Blue Owl. The chain extends outward through bond sellers to large investment funds.",
+    position: { top: "52%", left: "38%", maxWidth: "26ch" } },
+  { prose: "Pimco and BlackRock sell the bonds to pension funds, endowments, and insurers — entities with no ability to assess AI demand.",
+    position: { top: "52%", left: "38%", maxWidth: "26ch" } },
+  { prose: `Meta can walk away as early as ${stats.meta_beignet_exit_year}. Bondholders are committed through ${stats.beignet_bond_maturity}. A Columbia Business School professor drew explicit parallels to the off-the-books financing vehicles that preceded the dot-com bust.`,
+    position: { top: "52%", left: "38%", maxWidth: "26ch" } },
+]));
+return {createSpvChain,spvChart};
+}});
+
+define({id: "932eaad2", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.msft_neocloud_total_bn
+))
+}});
+
+define({id: "ab83df06", inputs: ["stats","display","mountScrollChart"], outputs: ["createNeocloudLeases","neocloudChart"], body: async (stats,display,mountScrollChart) => {
+const {createNeocloudLeases} = await import("./_import/js/charts/neocloud-leases.a1e99117.js");
+
+const neocloudChart = createNeocloudLeases(stats);
+display(mountScrollChart(neocloudChart.node, neocloudChart.update, [
+  { prose: "Microsoft's four leases run 3-5 years — booked as operating expense, no balance-sheet commitment." },
+  { prose: "Each neocloud built the data center using its own capital. Their debt obligations extend a decade or more past the lease term." },
+  { prose: "When Microsoft exits in 2030, Nebius, Nscale, and Iren continue servicing debt on assets committed to a single customer." },
+], { callout: "none" }));
+return {createNeocloudLeases,neocloudChart};
+}});
+
+define({id: "f0b5392c", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.coreweave_interest_rate_pct
+))
+}});
+
+define({id: "ef22e176", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.openai_coreweave_commitment_bn.toFixed(0)
+))
+}});
+
+define({id: "09d2c341", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.openai_msft_compute_promise_bn
+))
+}});
+
+define({id: "d27c9fec", inputs: ["display","stats"], outputs: ["createCoreweaveCallout"], body: async (display,stats) => {
+const {createCoreweaveCallout} = await import("./_import/js/charts/coreweave-callout.1e364529.js");
+display(createCoreweaveCallout(stats));
+return {createCoreweaveCallout};
+}});
+
+define({id: "1f63e2c5", inputs: ["display","mountScrollChart"], outputs: ["createFercAllocation","fercChart"], body: async (display,mountScrollChart) => {
+const {createFercAllocation} = await import("./_import/js/charts/ferc-allocation.ca593033.js");
+
+const fercChart = createFercAllocation();
+display(mountScrollChart(fercChart.node, fercChart.update, [
+  { prose: "Under beneficiary-pays, tech giants fund the transmission upgrades their load triggers. If they don't build, the cost sits with them." },
+  { prose: "Under the current default, costs spread across all ratepayers. If AI demand disappoints, communities absorb stranded grid capacity built for data centers." },
+  { prose: "FERC opened AD24-11 in May 2024. No Final Rule has been issued. Utilities building for Rainier-class loads are recovering costs under the pre-AD24-11 default." },
+], { callout: "none" }));
+return {createFercAllocation,fercChart};
+}});
+
+define({id: "774d2450", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.meta_beignet_exit_year
+))
+}});
+
+define({id: "f38779ec-1", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.beignet_bond_maturity
+))
+}});
+
+define({id: "18e55110", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.msft_nebius_deal_bn
+))
+}});
+
+define({id: "b3b93af8", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.msft_nscale_deal_bn
+))
+}});
+
+define({id: "86f6de39", mode: "inline", inputs: ["stats","display"], body: async (stats,display) => {
+display(await(
+stats.msft_iren_deal_bn
+))
+}});
+
+</script>
+</head>
+<body>
+<input id="observablehq-sidebar-toggle" type="checkbox" title="Toggle sidebar">
+<label id="observablehq-sidebar-backdrop" for="observablehq-sidebar-toggle"></label>
+<nav id="observablehq-sidebar">
+  <ol>
+    <label id="observablehq-sidebar-close" for="observablehq-sidebar-toggle"></label>
+    <li class="observablehq-link"><a href="./">How Capital Becomes Infrastructure</a></li>
+  </ol>
+  <ol>
+    <li class="observablehq-link"><a href="./dd001">The Spending Question</a></li>
+    <li class="observablehq-link"><a href="./dd001-conversion">The Conversion Gap</a></li>
+    <li class="observablehq-link observablehq-link-active"><a href="./dd001-risk">Who Holds the Downside</a></li>
+    <li class="observablehq-link"><a href="./gallery">Chart Gallery</a></li>
+  </ol>
+</nav>
+<script>{const e=document.querySelector("#observablehq-sidebar"),o=document.querySelector("#observablehq-sidebar-toggle"),r=sessionStorage.getItem("observablehq-sidebar");r?o.checked=r==="true":o.indeterminate=!0;for(const t of document.querySelectorAll("#observablehq-sidebar summary")){const s=t.parentElement;switch(sessionStorage.getItem(`observablehq-sidebar:${t.textContent}`)){case"true":s.open=!0;break;case"false":s.classList.contains("observablehq-section-active")||(s.open=!1);break}}addEventListener("beforeunload",()=>sessionStorage.setItem("observablehq-sidebar-scrolly",`${e.scrollTop}`));const a=sessionStorage.getItem("observablehq-sidebar-scrolly");a!=null&&(e.style.cssText="overflow: hidden;",e.scrollTop=+a,e.style.cssText="");}</script>
+<div id="observablehq-center">
+<main id="observablehq-main" class="observablehq">
+<div class="observablehq observablehq--block"><!--:58fef815:--></div>
+<div class="byline">Thandolwethu Zwelakhe Dlamini · TZD Labs Systems Research</div>
+<h1 id="who-holds-the-downside" tabindex="-1"><a class="observablehq-header-anchor" href="#who-holds-the-downside">Who Holds the Downside?</a></h1>
+<div class="prose-lead">
+<p>The <a href="./Systems/dd001">first article</a> documented about $<observablehq-loading></observablehq-loading><!--:e3e916d5:-->B in infrastructure spending. The <a href="./Systems/dd001-conversion">second</a> showed how slowly it converts to working infrastructure.</p>
+</div>
+<p>Neoclouds borrow against projected lease renewals they have no contractual guarantee of receiving. Those loans reach pension funds and endowments through bond offerings. Utilities build substations and transmission lines to serve the load, recovering the cost from ratepayers over forty-year depreciation schedules.</p>
+<h2 id="demand-forecasts-run-3-5-years-the-assets-last-25-50" tabindex="-1"><a class="observablehq-header-anchor" href="#demand-forecasts-run-3-5-years-the-assets-last-25-50">Demand forecasts run 3–5 years. The assets last 25–50.</a></h2>
+<div class="observablehq observablehq--block"><!--:dd528f45:--></div>
+<h2 id="exposure-grows-with-distance-from-the-decision" tabindex="-1"><a class="observablehq-header-anchor" href="#exposure-grows-with-distance-from-the-decision">Exposure Grows With Distance From the Decision</a></h2>
+<p>The bond offerings describe AI infrastructure as a growth investment backed by a lease renewal the tech company has no legal obligation to provide. Rural communities extended tax incentives and grid capacity for facilities whose operating decisions are made elsewhere.</p>
+<div class="observablehq observablehq--block"><!--:7af32329:--></div>
+<h2 id="the-beignet-pattern-metas-shell-financing-structure" tabindex="-1"><a class="observablehq-header-anchor" href="#the-beignet-pattern-metas-shell-financing-structure">The Beignet Pattern: Meta's Shell Financing Structure</a></h2>
+<p>Meta created Beignet Investor LLC to borrow $<observablehq-loading></observablehq-loading><!--:b28f648b:-->B for a <observablehq-loading></observablehq-loading><!--:21b78219:-->-gigawatt data center in Richland Parish, Louisiana. Blue Owl Capital provided 80% of the financing. Pimco and BlackRock sold bonds maturing in <strong><observablehq-loading></observablehq-loading><!--:f38779ec:--></strong> to pension funds, endowments, insurers, and financial advisers.</p>
+<p>Meta leased the facility back through <observablehq-loading></observablehq-loading><!--:8f4bb42e:-->-year terms, recording the payments as an operating cost.</p>
+<div class="observablehq observablehq--block"><!--:e9b178e8:--></div>
+<p>A Columbia Business School professor drew explicit parallels to the off-balance-sheet vehicles that preceded the dot-com bust.</p>
+<h2 id="neocloud-leases" tabindex="-1"><a class="observablehq-header-anchor" href="#neocloud-leases">Neocloud Leases</a></h2>
+<p>In Childress County, Rennesøy, and Mäntsälä, grid operators built or upgraded infrastructure for data centers that did not exist three years ago. In a single quarter, Sep-Nov 2025, Microsoft committed over $<observablehq-loading></observablehq-loading><!--:932eaad2:-->B in leases to Nebius (Mäntsälä, Finland), Nscale (Rennesøy, Norway), Iren (Childress, Texas and Prince George, British Columbia), and Lambda (colocation). Each lease runs three to five years. The grid infrastructure built to support them runs twenty to fifty.</p>
+<div class="observablehq observablehq--block"><!--:ab83df06:--></div>
+<h2 id="the-core-weave-chain" tabindex="-1"><a class="observablehq-header-anchor" href="#the-core-weave-chain">The CoreWeave Chain</a></h2>
+<p>CoreWeave borrowed at <observablehq-loading></observablehq-loading><!--:f0b5392c:-->%+ to build capacity that OpenAI committed to purchase (up to $<observablehq-loading></observablehq-loading><!--:ef22e176:-->B). Microsoft is CoreWeave's dominant customer — about 62% of 2024 revenue <em>(CoreWeave IPO prospectus, March 2025)</em>. OpenAI separately committed to route $<observablehq-loading></observablehq-loading><!--:09d2c341:-->B in computing through Microsoft.</p>
+<div class="observablehq observablehq--block"><!--:d27c9fec:--></div>
+<h2 id="ferc-hasnt-decided-who-pays-for-grid-upgrades-utilities-are-building-anyway" tabindex="-1"><a class="observablehq-header-anchor" href="#ferc-hasnt-decided-who-pays-for-grid-upgrades-utilities-are-building-anyway">FERC hasn't decided who pays for grid upgrades — utilities are building anyway</a></h2>
+<p>The Federal Energy Regulatory Commission opened docket AD24-11 in May 2024, asking whether large electricity users like AI data centers should pay for the grid upgrades they require, or whether those costs spread across all ratepayers.</p>
+<div class="observablehq observablehq--block"><!--:1f63e2c5:--></div>
+<p>The docket is a Notice of Inquiry, a comment period that carries no obligation to result in a rule.</p>
+<hr>
+<p>In Richland Parish, Meta's exit right runs to <observablehq-loading></observablehq-loading><!--:774d2450:-->. The bonds Pimco and BlackRock sold against that campus mature in <observablehq-loading></observablehq-loading><!--:f38779ec-1:-->.</p>
+<p><a href="./Systems/dd002">DD-002</a> asks whether the grid modernization that AI infrastructure requires creates shared capacity or private bypass.</p>
+<h2 id="sources-and-methodology" tabindex="-1"><a class="observablehq-header-anchor" href="#sources-and-methodology">Sources &amp; Methodology</a></h2>
+<p><strong>SPV structure (Beignet).</strong> NYT, "How Tech's Biggest Companies Are Offloading the Risks of the A.I. Boom," Dec 15, 2025 (Weise &amp; Tan). Blue Owl Capital project financing terms. Bond maturity dates from SEC filings.</p>
+<p><strong>Neocloud leases.</strong> Deal amounts (Nebius $<observablehq-loading></observablehq-loading><!--:18e55110:-->B, Nscale $<observablehq-loading></observablehq-loading><!--:b3b93af8:-->B, Iren $<observablehq-loading></observablehq-loading><!--:86f6de39:-->B) from NYT, Dec 15, 2025 (Weise &amp; Tan) and individual company announcements. Community locations: IREN Limited, FY2025 Annual Report (ASX: IDA) — Childress, TX and Prince George, BC campuses; Nebius Group, 6-K filings (Nasdaq: NBIS) — Mäntsälä, Finland data center; Nscale company disclosures — Rennesøy, Norway campus; Lambda Labs, infrastructure documentation — colocation model (no owned facilities). Note: the specific Sep–Nov 2025 Microsoft deal set as a group has not been independently confirmed from SEC filings; amounts from NYT reporting.</p>
+<p><strong>CoreWeave.</strong> S-1/A filing, March 2025 (SEC EDGAR CIK 0001956029). Table of Remaining Performance Obligations. Interest rates from S&amp;P credit analysis.</p>
+<p><strong>FERC AD24-11.</strong> Notice of Inquiry, May 2024 (ferc.gov eLibrary). FERC Order 2023 (July 2023) governs generator interconnection reform; it does not apply to large-load data center interconnection.</p>
+<p><strong>Risk exposure timeline.</strong> Author's analysis based on SEC filings, CoreWeave S-1, CRS reports, and company announcements. Exit dates and bond maturities from primary documents.</p>
+<p><em>All data from public, freely accessible sources. Analysis: TZD Labs, February 2026.</em></p>
+</main>
+<footer id="observablehq-footer">
+<nav><a rel="prev" href="./dd001-conversion"><span>The Conversion Gap</span></a><a rel="next" href="./gallery"><span>Chart Gallery</span></a></nav>
+<div>TZD Labs · Systems Research — Technology Capital in the Physical Economy</div>
+</footer>
+</div>
+</body>
+</html>
