@@ -18,6 +18,20 @@ function sortKey(f) {
 }
 
 function discoverPages() {
+  // In production deploys (DEPLOY=1), only show published articles in sidebar.
+  // Local dev shows everything for full navigation during development.
+  const isDeploy = process.env.DEPLOY === "1";
+  const publishedParents = new Set();
+  if (isDeploy) {
+    for (const f of readdirSync(srcDir)) {
+      if (!/^dd\d{3}\.md$/.test(f)) continue;
+      const fm = readFileSync(join(srcDir, f), "utf-8").match(/^---\n([\s\S]*?)\n---/);
+      if (fm && /^published:\s*true\s*$/m.test(fm[1])) {
+        publishedParents.add(f.replace(".md", ""));
+      }
+    }
+  }
+
   return readdirSync(srcDir)
     .filter((f) => f.endsWith(".md") && f !== "index.md")
     .sort((a, b) => sortKey(a).localeCompare(sortKey(b)))
@@ -27,7 +41,12 @@ function discoverPages() {
       if (!fm) return null;
       const sidebarMatch = fm[1].match(/^sidebar:\s*["']?(.+?)["']?\s*$/m);
       if (!sidebarMatch) return null;
-      return { name: sidebarMatch[1], path: "/" + f.replace(".md", "") };
+      const stem = f.replace(".md", "");
+      if (isDeploy) {
+        const parentMatch = stem.match(/^(dd\d{3})/);
+        if (parentMatch && !publishedParents.has(parentMatch[1])) return null;
+      }
+      return { name: sidebarMatch[1], path: "/" + stem };
     })
     .filter(Boolean);
 }
