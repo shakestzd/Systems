@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="generator" content="Observable Framework v1.13.4">
+<title>How Capital Becomes Infrastructure</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&amp;display=swap" crossorigin>
+<link rel="preload" as="style" href="./_observablehq/theme-air.d5b7fcbe.css">
+<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&amp;display=swap" crossorigin>
+<link rel="stylesheet" type="text/css" href="./_observablehq/theme-air.d5b7fcbe.css">
+<link rel="modulepreload" href="./_observablehq/client.75c9a958.js">
+<link rel="modulepreload" href="./_observablehq/runtime.607a8173.js">
+<link rel="modulepreload" href="./_observablehq/stdlib.277aeab8.js">
+<link rel="modulepreload" href="./_npm/htl@0.3.1/72f4716c.js">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&amp;family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&amp;display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./_file/style.f7c81331.css">
+  
+<script type="module">
+
+import {define} from "./_observablehq/client.75c9a958.js";
+import {registerFile} from "./_observablehq/stdlib.277aeab8.js";
+
+registerFile("./data/deep_dives.json", {"name":"./data/deep_dives.json","mimeType":"application/json","path":"./_file/data/deep_dives.528a4c5f.json","lastModified":1775315173941,"size":1812});
+
+define({id: "3c8ddcb5", inputs: ["FileAttachment","html","display"], outputs: ["dives","arcBadge","makeCard"], body: async (FileAttachment,html,display) => {
+const dives = await FileAttachment("./data/deep_dives.json").json();
+
+function arcBadge(steps) {
+  return steps.flatMap((s, i) => {
+    const cls = s === "Land" ? "arc-step arc-land" : "arc-step";
+    const node = html`<span class="${cls}">${s}</span>`;
+    return i < steps.length - 1
+      ? [node, html`<span class="arc-arrow">→</span>`]
+      : [node];
+  });
+}
+
+function makeCard(d) {
+  const isActive = d.status === "Active";
+  const cls = `article-card ${isActive ? "article-active" : "article-scoping"}`;
+  const statusCls = d.url ? "article-status" : "article-status article-status-scoping";
+  const statusText = d.url ? d.status : "Coming Soon";
+  const inner = html`<div>
+    <div class="article-meta">
+      <span class="article-id">${d.id}</span>
+      <span class="${statusCls}">${statusText}</span>
+    </div>
+    <div class="article-title">${d.focus}</div>
+    <div class="article-subtitle">${d.topic}</div>
+    <p class="article-desc">${d.question}</p>
+    <div class="article-arc">${arcBadge(d.arc)}</div>
+  </div>`;
+  return d.url
+    ? html`<a class="${cls}" href=".${d.url}">${inner}</a>`
+    : html`<div class="${cls}">${inner}</div>`;
+}
+
+display(html`<div class="article-grid">${dives.map(makeCard)}</div>`);
+return {dives,arcBadge,makeCard};
+}});
+
+</script>
+</head>
+<body>
+<input id="observablehq-sidebar-toggle" type="checkbox" title="Toggle sidebar">
+<label id="observablehq-sidebar-backdrop" for="observablehq-sidebar-toggle"></label>
+<nav id="observablehq-sidebar">
+  <ol>
+    <label id="observablehq-sidebar-close" for="observablehq-sidebar-toggle"></label>
+    <li class="observablehq-link observablehq-link-active"><a href="./">How Capital Becomes Infrastructure</a></li>
+  </ol>
+  <ol>
+    <li class="observablehq-link"><a href="./dd001">The Spending Question</a></li>
+    <li class="observablehq-link"><a href="./dd001-conversion">The Conversion Gap</a></li>
+    <li class="observablehq-link"><a href="./dd001-risk">Who Holds the Downside</a></li>
+    <li class="observablehq-link"><a href="./gallery">Chart Gallery</a></li>
+  </ol>
+</nav>
+<script>{const e=document.querySelector("#observablehq-sidebar"),o=document.querySelector("#observablehq-sidebar-toggle"),r=sessionStorage.getItem("observablehq-sidebar");r?o.checked=r==="true":o.indeterminate=!0;for(const t of document.querySelectorAll("#observablehq-sidebar summary")){const s=t.parentElement;switch(sessionStorage.getItem(`observablehq-sidebar:${t.textContent}`)){case"true":s.open=!0;break;case"false":s.classList.contains("observablehq-section-active")||(s.open=!1);break}}addEventListener("beforeunload",()=>sessionStorage.setItem("observablehq-sidebar-scrolly",`${e.scrollTop}`));const a=sessionStorage.getItem("observablehq-sidebar-scrolly");a!=null&&(e.style.cssText="overflow: hidden;",e.scrollTop=+a,e.style.cssText="");}</script>
+<div id="observablehq-center">
+<main id="observablehq-main" class="observablehq">
+<div class="home-hero">
+  <div class="home-hero-label">TZD Labs · Systems Research</div>
+  <h1 class="home-hero-title">How capital becomes<br>infrastructure.</h1>
+  <p class="home-hero-sub">Capital moves fast. Infrastructure doesn't. This project traces the gap: what gets built, where it lands, and how decisions made in one room become obligations for everyone else.</p>
+</div>
+<hr>
+<div class="observablehq observablehq--block"><!--:3c8ddcb5:--></div>
+<hr>
+<div class="home-arc">
+  <div class="home-arc-label">Analytical Arc</div>
+  <div class="home-arc-chain">
+    <div class="home-arc-step">
+      <div class="arc-node">Commit</div>
+      <div class="arc-desc">Financial commitment — hyperscaler capex, project finance, PPAs, policy subsidy</div>
+    </div>
+    <div class="arc-connector">→</div>
+    <div class="home-arc-step">
+      <div class="arc-node">Convert</div>
+      <div class="arc-desc">What physical asset? Durability class: structural, policy-dependent, or demand-thesis-dependent?</div>
+    </div>
+    <div class="arc-connector">→</div>
+    <div class="home-arc-step">
+      <div class="arc-node">Land</div>
+      <div class="arc-desc">Where — geography, grid node, utility territory, labor market</div>
+    </div>
+    <div class="arc-connector">→</div>
+    <div class="home-arc-step">
+      <div class="arc-node">Distribute</div>
+      <div class="arc-desc">Who benefits? Who bears long-term cost if the demand thesis misses?</div>
+    </div>
+  </div>
+</div>
+</main>
+<footer id="observablehq-footer">
+<nav><a rel="next" href="./dd001"><span>The Spending Question</span></a></nav>
+<div>TZD Labs · Systems Research — Technology Capital in the Physical Economy</div>
+</footer>
+</div>
+</body>
+</html>

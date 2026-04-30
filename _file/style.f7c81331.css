@@ -1,0 +1,618 @@
+/* TZD Labs · Systems — Design System Override */
+
+:root {
+  --paper: #f5f1eb;
+  --ink: #1a1917;
+  --ink-light: #6b6560;
+  --accent: #b84c2a;
+  --accent-warm: #d4704f;
+  --rule: #c8c2b8;
+  --serif: "Cormorant Garamond", Georgia, serif;
+  --sans: "DM Sans", system-ui, sans-serif;
+}
+
+/* ── Base ────────────────────────────────────────────────────────────────── */
+
+html, body {
+  background: var(--paper) !important;
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 17px;
+  line-height: 1.65;
+}
+
+/* Override all framework background variables */
+:root {
+  --theme-background: var(--paper);
+  --theme-background-alt: var(--paper);
+  --theme-foreground: var(--ink);
+  --theme-foreground-focus: var(--ink);
+  --theme-foreground-muted: var(--ink-light);
+}
+
+/* ── Header / navbar ────────────────────────────────────────────────────── */
+
+#observablehq-header {
+  background: var(--paper) !important;
+  border-bottom: 1px solid var(--rule) !important;
+  color: var(--ink) !important;
+}
+
+#observablehq-header a {
+  color: var(--ink) !important;
+  font-family: var(--sans);
+  font-weight: 500;
+}
+
+#observablehq-header button,
+#observablehq-header svg {
+  color: var(--ink) !important;
+  fill: var(--ink) !important;
+}
+
+/* ── Sidebar / nav ──────────────────────────────────────────────────────── */
+
+#observablehq-sidebar {
+  background: var(--paper) !important;
+  border-right: 1px solid var(--rule) !important;
+  color: var(--ink) !important;
+}
+
+#observablehq-sidebar a {
+  color: var(--ink) !important;
+  font-family: var(--sans);
+  font-size: 14px;
+}
+
+#observablehq-sidebar a[aria-current="page"],
+#observablehq-sidebar a.active {
+  color: var(--accent) !important;
+  font-weight: 500;
+  background: color-mix(in srgb, var(--accent) 8%, transparent) !important;
+  border-radius: 3px;
+}
+
+#observablehq-sidebar section > ol,
+#observablehq-sidebar section > ul {
+  border-left: 1px solid var(--rule) !important;
+}
+
+#observablehq-sidebar summary {
+  color: var(--ink-light) !important;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ── Typography ─────────────────────────────────────────────────────────── */
+
+h1, h2, h3, h4 {
+  font-family: var(--serif) !important;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.25;
+}
+
+h1 {
+  font-size: 2.4rem;
+  margin-bottom: 0.5rem;
+}
+
+h2 {
+  font-size: 1.75rem;
+  margin-top: 2.5rem;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 0.3rem;
+}
+
+h3 {
+  font-size: 1.25rem;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--ink-light);
+  margin-top: 2rem;
+}
+
+p {
+  max-width: 65ch;
+  font-family: var(--sans);
+  margin-bottom: 1.1rem;
+}
+
+/* Drop cap on first paragraph */
+.prose-lead > p:first-child::first-letter {
+  font-family: var(--serif);
+  font-size: 3.5rem;
+  font-weight: 600;
+  float: left;
+  line-height: 0.8;
+  margin: 0.1rem 0.15rem 0 0;
+  color: var(--accent);
+}
+
+/* ── Links ──────────────────────────────────────────────────────────────── */
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── Cards / callouts ───────────────────────────────────────────────────── */
+
+.observablehq-card {
+  background: white;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+}
+
+/* ── Charts ─────────────────────────────────────────────────────────────── */
+
+figure {
+  margin: 2rem 0;
+}
+
+figure img {
+  max-width: 100%;
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+}
+
+figcaption {
+  font-size: 13px;
+  color: var(--ink-light);
+  margin-top: 0.5rem;
+  max-width: 65ch;
+  line-height: 1.5;
+}
+
+/* ── Scrollytelling layout ──────────────────────────────────────────────── */
+
+/* Chart sticks full-width at top; prose scrolls beneath */
+.scroll-hero {
+  position: relative;
+  margin: 2rem 0;
+}
+
+.scroll-hero-chart {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--paper);
+  padding: 1.25rem 0 0.75rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+.scroll-steps {
+  padding: 0;
+}
+
+.scroll-step {
+  padding: 0.9rem 0 0 1.2rem;
+  border-left: 3px solid transparent;
+  color: var(--ink-light);
+  transition: color 0.3s ease, border-left-color 0.3s ease;
+  max-width: 65ch;
+}
+
+.scroll-step.is-active {
+  color: var(--ink);
+  border-left-color: var(--accent);
+}
+
+.scroll-step p {
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: inherit;
+  margin-bottom: 0;
+}
+
+/* Bold company name inline at start of each step */
+.scroll-step strong {
+  color: inherit;
+  font-weight: 600;
+}
+
+/* ── Dividers ───────────────────────────────────────────────────────────── */
+
+hr {
+  border: none;
+  border-top: 1px solid var(--rule);
+  margin: 2.5rem 0;
+}
+
+/* ── Source / byline ────────────────────────────────────────────────────── */
+
+.byline {
+  font-size: 14px;
+  color: var(--ink-light);
+  font-family: var(--sans);
+  font-style: italic;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 1rem;
+}
+
+/* ── Tooltip overrides ──────────────────────────────────────────────────── */
+
+[data-tooltip] {
+  font-family: var(--sans);
+  font-size: 13px;
+}
+
+/* ── Revenue theses card grid ────────────────────────────────────────────── */
+
+.thesis-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin: 1.5rem 0 2rem;
+}
+
+.thesis-card {
+  padding: 1rem 1.1rem;
+  border-radius: 4px;
+  border-left: 3px solid transparent;
+}
+
+.thesis-card .thesis-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.4rem;
+  font-weight: 500;
+}
+
+.thesis-card strong {
+  display: block;
+  font-family: var(--serif);
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+}
+
+.thesis-card p {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ink-light);
+  margin: 0;
+  max-width: none;
+}
+
+.thesis-near {
+  background: color-mix(in srgb, var(--paper) 40%, #e8f4ec);
+  border-left-color: #4a8c55;
+}
+
+.thesis-near .thesis-label { color: #4a8c55; }
+
+.thesis-medium {
+  background: color-mix(in srgb, var(--paper) 40%, #f4f0e8);
+  border-left-color: #8c7a40;
+}
+
+.thesis-medium .thesis-label { color: #8c7a40; }
+
+.thesis-long {
+  background: color-mix(in srgb, var(--paper) 40%, #f4ecec);
+  border-left-color: var(--accent);
+}
+
+.thesis-long .thesis-label { color: var(--accent); }
+
+@media (max-width: 640px) {
+  .thesis-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Homepage hero ──────────────────────────────────────────────────────── */
+
+.home-hero {
+  padding: 3rem 0 2rem;
+  max-width: 780px;
+}
+
+.home-hero-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-light);
+  font-family: var(--sans);
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+.home-hero-title {
+  font-family: var(--serif) !important;
+  font-size: 3.2rem !important;
+  font-weight: 600 !important;
+  line-height: 1.1 !important;
+  color: var(--ink) !important;
+  margin: 0 0 1.25rem !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+.home-hero-sub {
+  font-family: var(--sans);
+  font-size: 1.1rem;
+  color: var(--ink-light);
+  line-height: 1.65;
+  max-width: 62ch;
+  margin: 0;
+}
+
+/* ── Article grid ───────────────────────────────────────────────────────── */
+
+.article-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+  margin: 1.5rem 0 2rem;
+}
+
+.article-card {
+  display: block;
+  padding: 1.4rem 1.5rem;
+  border-radius: 4px;
+  border: 1px solid var(--rule);
+  text-decoration: none !important;
+  color: var(--ink) !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+a.article-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 2px 12px rgba(184, 76, 42, 0.08);
+  text-decoration: none !important;
+}
+
+.article-active {
+  border-left: 3px solid var(--accent);
+  background: color-mix(in srgb, var(--paper) 60%, #fff);
+}
+
+.article-scoping {
+  opacity: 0.72;
+  background: var(--paper);
+}
+
+.article-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.75rem;
+}
+
+.article-id {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-light);
+  font-family: var(--sans);
+  font-weight: 500;
+}
+
+.article-status {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-family: var(--sans);
+  font-weight: 500;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  padding: 1px 6px;
+  border-radius: 2px;
+}
+
+.article-status-scoping {
+  color: var(--ink-light);
+  background: color-mix(in srgb, var(--ink-light) 10%, transparent);
+}
+
+.article-title {
+  font-family: var(--serif);
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.25;
+  margin-bottom: 0.15rem;
+}
+
+.article-subtitle {
+  font-size: 12px;
+  color: var(--ink-light);
+  font-family: var(--sans);
+  margin-bottom: 0.75rem;
+}
+
+.article-desc {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--ink-light);
+  margin: 0 0 1rem !important;
+  max-width: none !important;
+}
+
+.article-arc {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.arc-step {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 500;
+  color: var(--ink-light);
+  font-family: var(--sans);
+}
+
+.arc-land {
+  color: var(--accent);
+}
+
+.arc-arrow {
+  color: var(--rule);
+  font-size: 10px;
+}
+
+/* ── Analytical arc block ───────────────────────────────────────────────── */
+
+.home-arc {
+  margin: 1.5rem 0 2.5rem;
+}
+
+.home-arc-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-light);
+  font-family: var(--sans);
+  font-weight: 500;
+  margin-bottom: 1.25rem;
+}
+
+.home-arc-chain {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+}
+
+.home-arc-step {
+  flex: 1;
+  padding-right: 1rem;
+}
+
+.arc-node {
+  font-family: var(--serif);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 0.4rem;
+}
+
+.arc-desc {
+  font-size: 12.5px;
+  color: var(--ink-light);
+  line-height: 1.55;
+  font-family: var(--sans);
+}
+
+.arc-connector {
+  font-size: 1.2rem;
+  color: var(--rule);
+  padding: 0 0.5rem;
+  margin-top: 0.15rem;
+  flex-shrink: 0;
+}
+
+@media (max-width: 720px) {
+  .article-grid { grid-template-columns: 1fr; }
+  .home-arc-chain { flex-direction: column; gap: 1.25rem; }
+  .arc-connector { display: none; }
+  .home-hero-title { font-size: 2.4rem !important; }
+}
+
+/* ── mountScrollChart sections ──────────────────────────────────────────── */
+/* Chart + paragraph stick together at the top. The paragraph reads as        */
+/* normal prose; scroll position through the section drives which sentence    */
+/* is highlighted in sync with the chart. Extra section height provides       */
+/* scroll distance so the reader moves through all sentences.                 */
+
+.msc-section {
+  position: relative;
+  margin: 2rem 0 3rem;
+}
+
+/* Chart wrapper — positions the callout overlay */
+.msc-content {
+  position: relative;
+}
+
+/* Callout tooltip overlaying the chart — position set dynamically via JS */
+.msc-callout {
+  position: absolute;
+  max-width: 34ch;
+  padding: 0.45rem 0.7rem;
+  background: rgba(245, 241, 235, 0.93);
+  border-left: 2.5px solid var(--accent);
+  border-radius: 0 3px 3px 0;
+  font-family: var(--sans);
+  font-size: clamp(0.72rem, 1.4vw, 0.88rem);
+  line-height: 1.5;
+  color: var(--ink);
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+/* Above-chart callout: normal flow, not overlaid */
+.msc-callout.msc-callout-above {
+  position: relative;
+  top: auto; right: auto; bottom: auto; left: auto;
+  border-left: none;
+  padding-left: 0;
+  border-radius: 0;
+  max-width: 60ch;
+  min-height: 3.2em;
+  margin-bottom: 0.5rem;
+}
+
+/* Valuation callout — matches scroll-step prose sizing */
+.val-callout {
+  font-size: 1.05rem;
+  line-height: 1.7;
+  min-height: 4.5em;
+}
+
+/* Valuation chart: normal flow — JS handles lock/unlock to fixed when centered */
+#sticky-valuation {
+  position: relative;
+  padding: 0.75rem 0;
+}
+
+/* Steps are invisible — JS drives step advancement via wheel events */
+.val-callout-mode .scroll-step {
+  display: none;
+}
+
+/* No extra padding — chart scrolls off naturally after unlock */
+.val-callout-mode {
+  padding-bottom: 0;
+}
+
+.val-callout-mode .scroll-step * {
+  display: none;
+}
+
+
+/* ── Responsive ─────────────────────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .scroll-container {
+    grid-template-columns: 1fr;
+  }
+  .scroll-sticky {
+    position: relative;
+    height: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .msc-callout {
+    max-width: 22ch;
+  }
+}
+
+@media (max-width: 480px) {
+  .msc-callout {
+    font-size: 0.78rem;
+    max-width: 20ch;
+    padding: 0.3rem 0.5rem;
+  }
+  .msc-callout.msc-callout-above {
+    max-width: 100%;
+    font-size: 0.88rem;
+  }
+  .scroll-step {
+    padding-left: 0.8rem;
+  }
+}
