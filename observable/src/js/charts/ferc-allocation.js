@@ -5,12 +5,12 @@
 //        2 = FERC status note (no final rule)
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, CONTEXT, RULE, NEGATIVE, POSITIVE, PAPER, chartW } from "../design.js";
+import { INK, INK_LIGHT, CONTEXT, RULE, NEGATIVE, POSITIVE, PAPER, svgTitle, svgStepAnnot, svgSource, chartW } from "../design.js";
 
 export function createFercAllocation() {
   const W = chartW(820);
-  const H = 248;
-  const pad = 16, mt = 32, mb = 28;
+  const H = 348;
+  const pad = 16, mt = 50, mb = 110;
   const colW = (W - pad * 2) / 2 - 6;
   const leftX  = pad;
   const rightX = pad + colW + 12;
@@ -19,13 +19,15 @@ export function createFercAllocation() {
 
   const svg = d3.create("svg")
     .attr("width", "100%").attr("viewBox", `0 0 ${W} ${H}`)
-    .style("font-family", "'DM Sans', sans-serif");
+    .style("font-family", "'DM Sans', sans-serif")
+    .style("overflow", "visible");
 
-  // Title
-  svg.append("text").attr("x", W / 2).attr("y", 18)
-    .attr("text-anchor", "middle").attr("fill", INK)
-    .attr("font-size", "11.5").attr("font-weight", "600")
-    .text("FERC AD24-11 — Two regulatory paths, opposite loss distributions");
+  // ── Title + subtitle ────────────────────────────────────────────────────
+  svgTitle(svg, W, {
+    x: pad,
+    title: "FERC AD24-11 — Two regulatory paths, opposite loss distributions",
+    subtitle: "Beneficiary-pays vs. socialized cost recovery for transmission upgrades",
+  });
 
   function makeColumn(anchorX, title, headerColor, rows) {
     const headerBox = svg.append("rect")
@@ -105,17 +107,18 @@ export function createFercAllocation() {
     },
   ]);
 
-  // FERC status note
-  const statusEl = svg.append("text")
-    .attr("x", W / 2).attr("y", H - mb + 6)
-    .attr("text-anchor", "middle").attr("fill", INK_LIGHT)
-    .attr("font-size", "10").attr("font-style", "italic").attr("opacity", 0)
-    .text("FERC AD24-11 opened May 2024 — Notice of Inquiry only. No Final Rule issued.");
+  // (FERC status note retired — folded into the step annotation strip below.)
 
-  // Source
-  svg.append("text").attr("x", pad).attr("y", H - 3)
-    .attr("fill", CONTEXT).attr("font-size", "8.5")
-    .text("Source: FERC AD24-11 (ferc.gov eLibrary); FERC Order 2023; author\u2019s analysis");
+  // ── Source ──────────────────────────────────────────────────────────────
+  svgSource(svg, W, H, "Source: FERC AD24-11 (ferc.gov eLibrary); FERC Order 2023; author’s analysis");
+
+  // ── Step annotation — bottom strip (article narrative) ──────────────────
+  const STEP_ANNOTS = [
+    "Under beneficiary-pays, tech giants fund the transmission upgrades their load triggers. If they don't build, the cost sits with them.",
+    "Under the current default, costs spread across all ratepayers. If AI demand disappoints, communities absorb stranded grid capacity built for data centers.",
+    "FERC opened AD24-11 in May 2024. No Final Rule has been issued. Utilities building for Rainier-class loads are recovering costs under the pre-AD24-11 default.",
+  ];
+  const stepAnnot = svgStepAnnot(svg, { y: H - mb + 30, W, ml: pad });
 
   function update(step) {
     // Step 0: both headers + row 0
@@ -136,8 +139,8 @@ export function createFercAllocation() {
       });
     });
 
-    // Step 2: FERC status note
-    statusEl.transition().duration(350).attr("opacity", step >= 2 ? 1 : 0);
+    // Step annotation strip carries the narrative including the FERC status note at step 2
+    stepAnnot.update(step, STEP_ANNOTS);
   }
 
   return { node: svg.node(), update };

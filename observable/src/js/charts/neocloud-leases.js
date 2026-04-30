@@ -4,7 +4,7 @@
 // Steps: 0 = Microsoft bars | 1 = neocloud exposure bars | 2 = end labels
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, CONTEXT, RULE, NEGATIVE, PAPER, chartW } from "../design.js";
+import { INK, INK_LIGHT, CONTEXT, RULE, NEGATIVE, PAPER, svgTitle, svgStepAnnot, svgSource, chartW } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 export function createNeocloudLeases(stats) {
@@ -17,8 +17,8 @@ export function createNeocloudLeases(stats) {
 
   const n = deals.length;
   const W = chartW(820);
-  const H = 300;
-  const ml = 100, mr = 52, mt = 44, mb = 84;
+  const H = 380;
+  const ml = 100, mr = 52, mt = 54, mb = 144;
 
   const x = d3.scaleLinear().domain([2025, 2042]).range([ml, W - mr]);
   const rowH = (H - mt - mb) / n;
@@ -26,17 +26,15 @@ export function createNeocloudLeases(stats) {
 
   const svg = d3.create("svg")
     .attr("width", "100%").attr("viewBox", `0 0 ${W} ${H}`)
-    .style("font-family", "'DM Sans', sans-serif");
+    .style("font-family", "'DM Sans', sans-serif")
+    .style("overflow", "visible");
 
-  // Title
-  svg.append("text").attr("x", ml).attr("y", 16)
-    .attr("fill", INK).attr("font-size", "12").attr("font-weight", "600")
-    .text("Microsoft's leases end. The neoclouds' obligations don't.");
-
-  // Subtitle
-  svg.append("text").attr("x", ml).attr("y", 30)
-    .attr("fill", INK_LIGHT).attr("font-size", "10")
-    .text("Four deals signed Sep–Nov 2025 — each a 3-5 year operating lease against capital committed for 10+ years");
+  // ── Title + subtitle ────────────────────────────────────────────────────
+  svgTitle(svg, W, {
+    x: ml,
+    title: "Microsoft's leases end. The neoclouds' obligations don't.",
+    subtitle: "Four deals signed Sep–Nov 2025 — each a 3-5 year operating lease against capital committed for 10+ years",
+  });
 
   // X axis
   svg.append("line").attr("x1", ml).attr("x2", W - mr)
@@ -115,20 +113,8 @@ export function createNeocloudLeases(stats) {
     endLabels.push(ncEndLbl);
   });
 
-  // ── Step annotation — inline text replaces floating callout ────────────
-  const STEP_ANNOTS = [
-    "3\u20135 year leases, booked as OpEx \u2014 Microsoft can walk away at term end",
-    "Neocloud debt runs 8\u201313 years past the lease \u2014 no equivalent exit",
-    "When the lease ends in 2030, the neocloud\u2019s capital obligation keeps running",
-  ];
-  // y = H-mb+32: sits 18px below axis tick labels (which live at H-mb+14)
-  const stepAnnot = svg.append("text")
-    .attr("x", ml).attr("y", H - mb + 32)
-    .attr("fill", INK).attr("font-size", "11")
-    .attr("font-style", "italic").attr("opacity", 0);
-
-  // Legend
-  const legY = H - mb + 52;
+  // Legend (above the step annotation strip)
+  const legY = H - mb + 32;
   [
     { color: CONTEXT, alpha: 0.65, label: "Microsoft lease (3-5 yr, operating expense — can exit)" },
     { color: NEGATIVE, alpha: 0.75, label: "Neocloud capital obligation (locked in)" },
@@ -140,10 +126,16 @@ export function createNeocloudLeases(stats) {
       .attr("fill", INK_LIGHT).attr("font-size", "9").text(l.label);
   });
 
-  // Source
-  svg.append("text").attr("x", ml).attr("y", H - 3)
-    .attr("fill", CONTEXT).attr("font-size", "8.5")
-    .text("Source: Company announcements; NYT Dec 2025; author\u2019s analysis");
+  // ── Source ──────────────────────────────────────────────────────────────
+  svgSource(svg, W, H, "Source: Company announcements; NYT Dec 2025; author’s analysis");
+
+  // ── Step annotation — bottom strip (article narrative) ──────────────────
+  const STEP_ANNOTS = [
+    "Microsoft's four leases run 3-5 years — booked as operating expense, no balance-sheet commitment.",
+    "Each neocloud built the data center using its own capital. Their debt obligations extend a decade or more past the lease term.",
+    "When Microsoft exits in 2030, Nebius, Nscale, and Iren continue servicing debt on assets committed to a single customer.",
+  ];
+  const stepAnnot = svgStepAnnot(svg, { y: H - mb + 60, W, ml });
 
   function update(step) {
     msftBars.forEach(({ bar, lbl, w }, i) => {
@@ -185,12 +177,7 @@ export function createNeocloudLeases(stats) {
     });
 
     // Step annotation
-    if (step >= 0 && step < STEP_ANNOTS.length) {
-      stepAnnot.text(STEP_ANNOTS[step])
-        .transition().duration(350).attr("opacity", 0.85);
-    } else {
-      stepAnnot.interrupt().attr("opacity", 0);
-    }
+    stepAnnot.update(step, STEP_ANNOTS);
   }
 
   return { node: svg.node(), update };

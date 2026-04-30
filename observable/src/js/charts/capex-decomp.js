@@ -5,7 +5,7 @@
 //        2 = demand horizon overlay | 3 = lifetime labels
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, chartW, isMobile as _isMobile } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, svgTitle, svgStepAnnot, svgSource, chartW, isMobile as _isMobile } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 export function createCapexDecomp(stats) {
@@ -19,21 +19,20 @@ export function createCapexDecomp(stats) {
 
   const W = chartW(820);
   const isMobile = _isMobile(W);
-  const H = 274;
-  const ml = 16, mr = 90, mt = 54, mb = 44;
+  const H = 374;
+  const ml = 16, mr = 90, mt = 54, mb = 140;
 
   const x = d3.scaleLinear().domain([2024, 2072]).range([ml, W - mr]);
   const svg = d3.create("svg")
     .attr("width", "100%").attr("viewBox", `0 0 ${W} ${H}`)
-    .style("font-family", "'DM Sans', sans-serif");
+    .style("font-family", "'DM Sans', sans-serif")
+    .style("overflow", "visible");
 
   // ── Title + subtitle ────────────────────────────────────────────────────
-  svg.append("text").attr("x", ml).attr("y", 16)
-    .attr("fill", INK).attr("font-size", "13").attr("font-weight", "700")
-    .text("Short-lived equipment dominates spending. Long-lived assets bear the cost.");
-  svg.append("text").attr("x", ml).attr("y", 30)
-    .attr("fill", INK_LIGHT).attr("font-size", "10.5")
-    .text("2025 capex by asset class ($B) · bar length = useful life");
+  svgTitle(svg, W, {
+    title: "Short-lived equipment dominates spending. Long-lived assets bear the cost.",
+    subtitle: "2025 capex by asset class ($B) · bar length = useful life",
+  });
 
   // X axis baseline
   svg.append("line").attr("x1", ml).attr("x2", W - mr)
@@ -80,13 +79,14 @@ export function createCapexDecomp(stats) {
     .on("mousemove", moveTip)
     .on("mouseout", hideTip);
 
-  // Inner labels — start hidden
+  // Inner labels — start hidden. Use $ prefix on mobile and short bars to avoid overlap with life labels.
+  const equipLabelText = isMobile ? `$${equip.toFixed(0)}B` : `Equipment  $${equip.toFixed(0)}B`;
   const equipLabel = svg.append("text")
     .attr("x", x(2025) + (x(2025 + equipLife) - x(2025)) / 2)
     .attr("y", y1 + barH1 / 2 + 5)
     .attr("text-anchor", "middle").attr("fill", INK)
     .attr("font-size", "12").attr("font-weight", "600")
-    .attr("opacity", 0).text(`Equipment  $${equip.toFixed(0)}B`);
+    .attr("opacity", 0).text(equipLabelText);
 
   const constLabel = svg.append("text")
     .attr("x", x(2025) + (x(2025 + constLife) - x(2025)) / 2)
@@ -103,24 +103,23 @@ export function createCapexDecomp(stats) {
     .attr("fill", ACCENT).attr("opacity", 0);
   const horizonLabel = svg.append("text")
     .attr("x", x(2026.5)).attr("y", mt + 12)
-    .attr("text-anchor", "center").attr("fill", ACCENT)
+    .attr("text-anchor", "middle").attr("fill", ACCENT)
     .attr("font-size", "10").attr("opacity", 0)
     .text("AI demand forecast horizon");
 
-  // Equipment end marker
+  // Equipment end marker — vertical dashed line only; life label below conveys the "fully replaced" meaning
   const equipEndLine = svg.append("line")
     .attr("x1", x(2025 + equipLife)).attr("x2", x(2025 + equipLife))
     .attr("y1", mt).attr("y2", H - mb)
     .attr("stroke", CONTEXT).attr("stroke-width", 1)
     .attr("stroke-dasharray", "4,3").attr("opacity", 0);
-  const equipEndLabel = svg.append("text")
-    .attr("x", x(2025 + equipLife) + 4).attr("y", y1 - 4)
-    .attr("fill", INK_LIGHT).attr("font-size", "10")
-    .attr("opacity", 0).text("Equipment fully replaced");
 
-  // Lifetime end labels — start hidden
+  // Lifetime end labels — start hidden. On mobile push the equip life label below the bar
+  // since the bar is too narrow for its label and the right-of-bar position is also crowded.
   const equipLifeLabel = svg.append("text")
-    .attr("x", x(2025 + equipLife) + 6).attr("y", y1 + barH1 / 2 + 4)
+    .attr("x", x(2025 + equipLife) + 8)
+    .attr("y", isMobile ? y1 + barH1 + 12 : y1 + barH1 / 2 + 4)
+    .attr("text-anchor", isMobile ? "start" : "start")
     .attr("fill", INK_LIGHT).attr("font-size", "12").attr("font-weight", "600")
     .attr("opacity", 0).text(`~${equipLife} yr life`);
   const constLifeLabel = svg.append("text")
@@ -128,10 +127,17 @@ export function createCapexDecomp(stats) {
     .attr("fill", ACCENT).attr("font-size", "12").attr("font-weight", "600")
     .attr("opacity", 0).text("20\u201340 yr life");
 
-  // Source
-  svg.append("text").attr("x", ml).attr("y", H - 4)
-    .attr("fill", CONTEXT).attr("font-size", "9")
-    .text("Source: SEC 10-K filings (FY2024 property schedules); SemiAnalysis");
+  // ── Source ──────────────────────────────────────────────────────────────
+  svgSource(svg, W, H, "Source: SEC 10-K filings (FY2024 property schedules); SemiAnalysis");
+
+  // ── Step annotation — bottom strip ─────────────────────────────────────────
+  const STEP_ANNOTS = [
+    `Equipment depreciates quickly: servers and GPUs last about ${equipLife} years. That's $${equip.toFixed(0)}B of the annual spend.`,
+    `But ${constPct}% of spending goes into long-lived assets — substations, building shells, transmission lines — with 20-40 year lifetimes.`,
+    "The AI demand forecast horizon is 3-5 years. Most construction assets will outlast every demand projection that justified them.",
+    `${equipLife}-year equipment. 20-40 year construction assets. 3-5 year demand forecast. The exposure is built into the asset mix.`,
+  ];
+  const annot = svgStepAnnot(svg, { y: H - mb + 20, W, ml });
 
   // ── Step control ──────────────────────────────────────────────────────────
   function update(step) {
@@ -168,11 +174,12 @@ export function createCapexDecomp(stats) {
     horizonRect.transition().duration(400).attr("opacity", step >= 2 ? 0.06 : 0);
     horizonLabel.transition().duration(400).attr("opacity", step >= 2 ? 0.7 : 0);
     equipEndLine.transition().duration(400).attr("opacity", step >= 2 ? 0.5 : 0);
-    equipEndLabel.transition().duration(400).attr("opacity", step >= 2 ? 0.7 : 0);
 
     // Step 3: lifetime labels
     equipLifeLabel.transition().duration(350).attr("opacity", step >= 3 ? 1 : 0);
     constLifeLabel.transition().duration(350).attr("opacity", step >= 3 ? 1 : 0);
+
+    annot.update(step, STEP_ANNOTS);
   }
 
   return { node: svg.node(), update };

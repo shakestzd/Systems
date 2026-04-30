@@ -4,7 +4,7 @@
 // Steps: 0 = progress bar draws | 1 = milestones appear | 2 = grid impact
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, chartW } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, svgTitle, svgStepAnnot, svgSource, chartW } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 export function createRainierProgress(stats) {
@@ -14,20 +14,19 @@ export function createRainierProgress(stats) {
   const pctDone = Math.round(built / planned * 100);
 
   const W = chartW(720);
-  const H = 314;
-  const ml = 16, mr = 80, mt = 54, mb = 32;
+  const H = 414;
+  const ml = 16, mr = 80, mt = 54, mb = 132;
 
   const svg = d3.create("svg")
     .attr("width", "100%").attr("viewBox", `0 0 ${W} ${H}`)
-    .style("font-family", "'DM Sans', sans-serif");
+    .style("font-family", "'DM Sans', sans-serif")
+    .style("overflow", "visible");
 
   // ── Title + subtitle ────────────────────────────────────────────────────
-  svg.append("text").attr("x", ml).attr("y", 16)
-    .attr("fill", INK).attr("font-size", "13").attr("font-weight", "700")
-    .text("Project Rainier: 7 of 30 buildings complete, two years in");
-  svg.append("text").attr("x", ml).attr("y", 30)
-    .attr("fill", INK_LIGHT).attr("font-size", "10.5")
-    .text("Amazon / Anthropic campus, New Carlisle, Indiana · as of June 2025");
+  svgTitle(svg, W, {
+    title: `Project Rainier: ${built} of ${planned} buildings complete, two years in`,
+    subtitle: "Amazon / Anthropic campus, New Carlisle, Indiana · as of June 2025",
+  });
 
   // ── Top: progress bar ───────────────────────────────────────────────────
   const barY = mt + 20;
@@ -123,10 +122,16 @@ export function createRainierProgress(stats) {
     .attr("font-size", "9")
     .text(`AEP plans ${stats.aep_gas_share_pct}% gas to meet the additional demand`);
 
-  // Source
-  svg.append("text").attr("x", ml).attr("y", H - 4)
-    .attr("fill", CONTEXT).attr("font-size", "9")
-    .text("Source: NYT, Jun 24, 2025 (Weise & Metz); AEP Indiana filings");
+  // ── Source ──────────────────────────────────────────────────────────────
+  svgSource(svg, W, H, "Source: NYT, Jun 24, 2025 (Weise & Metz); AEP Indiana filings");
+
+  // ── Step annotation — bottom strip ─────────────────────────────────────────
+  const STEP_ANNOTS = [
+    `${built} of ${planned} data center buildings complete after roughly two years of construction. Each is larger than a football stadium.`,
+    "The timeline: utility talks began in early 2023. Land acquired early 2024. First buildings operating mid-2025. Full campus estimated 2027.",
+    `At ${stats.rainier_gw} gigawatts, this single campus accounts for about half of Indiana's projected electricity demand growth. American Electric Power plans to meet ${stats.aep_gas_share_pct}% of that new demand with natural gas.`,
+  ];
+  const annot = svgStepAnnot(svg, { y: H - mb + 50, W, ml });
 
   // ── Step control ──────────────────────────────────────────────────────────
   function update(step) {
@@ -156,6 +161,8 @@ export function createRainierProgress(stats) {
 
     // Step 2: grid impact
     gridImpact.transition().duration(400).attr("opacity", step >= 2 ? 1 : 0);
+
+    annot.update(step, STEP_ANNOTS);
   }
 
   return { node: svg.node(), update };

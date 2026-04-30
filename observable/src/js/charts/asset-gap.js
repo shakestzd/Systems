@@ -11,7 +11,7 @@
 // Returns { node, update } for use with mountScrollChart({ callout: "above" }).
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, CONTEXT, RULE, POSITIVE, NEGATIVE, chartW } from "../design.js";
+import { INK, INK_LIGHT, CONTEXT, RULE, POSITIVE, NEGATIVE, svgTitle, svgStepAnnot, svgSource, chartW } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 // ── Data ─────────────────────────────────────────────────────────────────────
@@ -65,7 +65,7 @@ export function createAssetGap() {
   const ml = 170;   // left margin: label column
   const mr = 72;    // right margin: gap label column
   const mt = 52;    // top margin: title + subtitle/legend rows
-  const mb = 50;    // bottom margin: x-axis + source text
+  const mb = 130;   // bottom margin: x-axis + step annotation + source text
 
   // Compute total height from row count + section headers
   const nRows = ROWS.length;
@@ -98,6 +98,10 @@ export function createAssetGap() {
     .attr("viewBox", `0 0 ${W} ${H}`)
     .style("font-family", "'DM Sans', sans-serif")
     .style("overflow", "visible");
+
+  // Add aria-label for accessibility (replaces svgTitle's role since the
+  // chart's title with inline dot glyphs is hand-rolled below).
+  svg.attr("role", "img").attr("aria-label", "Long-lived assets, short demand visibility");
 
   // ── X axis ───────────────────────────────────────────────────────────────
 
@@ -312,12 +316,18 @@ export function createAssetGap() {
     .attr("font-style", "italic").attr("opacity", 0)
     .text("");
 
-  // ── Source text ───────────────────────────────────────────────────────────
+  // ── Source ───────────────────────────────────────────────────────────────
 
-  svg.append("text")
-    .attr("x", ml).attr("y", H - 4)
-    .attr("fill", CONTEXT).attr("font-size", "9")
-    .text("Source: Author\u2019s risk framework; EIA; industry estimates; SEC filings");
+  svgSource(svg, W, H, "Source: Author’s risk framework; EIA; industry estimates; SEC filings");
+
+  // ── Step annotation — bottom strip (article narrative) ───────────────────
+  const STEP_ANNOTS = [
+    "Each row shows two numbers: how long demand forecasts hold, and how long the asset lasts. The line between them is the exposure gap.",
+    "Aligned assets have short or no gaps — demand forecasts and asset life move together.",
+    "Demand forecasts run 3–5 years out. Asset lifetimes run 25–50 years.",
+    "The substation serving a 3-year lease has a 40-year service life. Every row in this chart shows that gap.",
+  ];
+  const stepAnnot = svgStepAnnot(svg, { y: axisY + 50, W, ml });
 
   // ── Step control ──────────────────────────────────────────────────────────
 
@@ -455,6 +465,8 @@ export function createAssetGap() {
         .text("Substations, data centers, and transmission will outlast every forecast that justified them")
         .transition().duration(300).attr("opacity", 0.85);
     }
+
+    stepAnnot.update(step, STEP_ANNOTS);
   }
 
   return { node: svg.node(), update };

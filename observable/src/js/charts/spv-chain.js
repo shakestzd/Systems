@@ -5,26 +5,25 @@
 // Steps: 0 = Meta node | 1 = SPV path | 2 = credit path | 3 = lock-in label
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, NEGATIVE, NEUTRAL, chartW } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, NEGATIVE, NEUTRAL, svgTitle, svgStepAnnot, svgSource, chartW } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 export function createSpvChain(stats) {
   const W = chartW(820);
-  const H = 360;
-  const ml = 16, mr = 16, mt = 20, mb = 32;
+  const H = 460;
+  const ml = 16, mr = 16, mt = 50, mb = 132;
 
   const svg = d3.create("svg")
     .attr("width", "100%").attr("viewBox", `0 0 ${W} ${H}`)
-    .style("font-family", "'DM Sans', sans-serif");
+    .style("font-family", "'DM Sans', sans-serif")
+    .style("overflow", "visible");
 
   // ── Title + subtitle ────────────────────────────────────────────────────
-  svg.append("text").attr("x", ml).attr("y", 14)
-    .attr("fill", INK).attr("font-size", "13").attr("font-weight", "700")
-    .text("How Meta moves risk downstream");
-
-  svg.append("text").attr("x", ml).attr("y", 28)
-    .attr("fill", INK_LIGHT).attr("font-size", "10")
-    .text("A shell company keeps the debt off Meta\u2019s books while pension funds absorb the long-term exposure");
+  svgTitle(svg, W, {
+    x: ml,
+    title: "How Meta moves risk downstream",
+    subtitle: "A shell company keeps the debt off Meta’s books while pension funds absorb the long-term exposure",
+  });
 
   // Node positions — arranged left to right
   const nodes = [
@@ -131,10 +130,17 @@ export function createSpvChain(stats) {
     .attr("font-size", "10").attr("font-weight", "600")
     .attr("opacity", 0).text(`Bonds locked to ${stats.beignet_bond_maturity}`);
 
-  // Source
-  svg.append("text").attr("x", ml).attr("y", H - 4)
-    .attr("fill", CONTEXT).attr("font-size", "9")
-    .text("Source: SEC filings; CoreWeave S-1; project finance documents; NYT Dec 2025");
+  // ── Source ──────────────────────────────────────────────────────────────
+  svgSource(svg, W, H, "Source: SEC filings; CoreWeave S-1; project finance documents; NYT Dec 2025");
+
+  // ── Step annotation — bottom strip (article narrative) ──────────────────
+  const STEP_ANNOTS = [
+    `Meta routes $${stats.meta_beignet_financing_bn}B in data center financing through Beignet Investor LLC, a shell company. The lease payments appear on Meta's books as operating costs, not debt.`,
+    "The shell company borrows from Blue Owl. The chain extends outward through bond sellers to large investment funds.",
+    "Pimco and BlackRock sell the bonds to pension funds, endowments, and insurers — entities with no ability to assess AI demand.",
+    `Meta can walk away as early as ${stats.meta_beignet_exit_year}. Bondholders are committed through ${stats.beignet_bond_maturity}. A Columbia Business School professor drew explicit parallels to the off-the-books financing vehicles that preceded the dot-com bust.`,
+  ];
+  const stepAnnot = svgStepAnnot(svg, { y: H - mb + 50, W, ml });
 
   // ── Step control ──────────────────────────────────────────────────────────
   function animateEdge({ path, lbl, x2, y2 }, delay) {
@@ -187,6 +193,8 @@ export function createSpvChain(stats) {
 
     // Step 3: lock-in label
     lockLabel.transition().duration(350).attr("opacity", step >= 3 ? 1 : 0);
+
+    stepAnnot.update(step, STEP_ANNOTS);
   }
 
   return { node: svg.node(), update };

@@ -29,10 +29,7 @@ import { mountScrollChart } from "./js/animate.js";
 
 const gapChart = createAssetGap();
 display(mountScrollChart(gapChart.node, gapChart.update, [
-  { prose: "Each row shows two numbers: how long demand forecasts hold, and how long the asset lasts. The line between them is the exposure gap." },
-  { prose: "Aligned assets have short or no gaps — demand forecasts and asset life move together." },
-  { prose: "Demand forecasts run 3–5 years out. Asset lifetimes run 25–50 years." },
-  { prose: "The substation serving a 3-year lease has a 40-year service life. Every row in this chart shows that gap." },
+  {}, {}, {}, {},
 ], { callout: "none" }));
 ```
 
@@ -45,11 +42,7 @@ import { createRiskTimeline } from "./js/charts/risk-timeline.js";
 
 const timelineChart = createRiskTimeline(stats);
 display(mountScrollChart(timelineChart.node, timelineChart.update, [
-  { prose: "A tech company signs a 3-to-5-year lease for data center capacity — booking it as an operating expense, with no legal obligation to renew." },
-  { prose: "The neocloud that built the facility borrows against projected lease renewals the tech company has no obligation to provide. Its debt runs a decade or more beyond the lease term." },
-  { prose: "Those loans are packaged into bonds and sold by firms like Pimco and BlackRock to pension funds and endowments — entities with no direct ability to assess AI demand." },
-  { prose: "To connect the data center to the grid, utilities build substations and transmission upgrades. Those assets last 25 to 50 years and are paid for by ratepayers across the service territory." },
-  { prose: "Nebius, Nscale, and Iren each borrowed to build. None holds a renewal option from Microsoft in its contract." },
+  {}, {}, {}, {}, {},
 ], { callout: "none" }));
 ```
 
@@ -65,15 +58,8 @@ import { createSpvChain } from "./js/charts/spv-chain.js";
 
 const spvChart = createSpvChain(stats);
 display(mountScrollChart(spvChart.node, spvChart.update, [
-  { prose: `Meta routes $${stats.meta_beignet_financing_bn}B in data center financing through Beignet Investor LLC, a shell company. The lease payments appear on Meta's books as operating costs, not debt.`,
-    position: { top: "52%", left: "38%", maxWidth: "26ch" } },
-  { prose: "The shell company borrows from Blue Owl. The chain extends outward through bond sellers to large investment funds.",
-    position: { top: "52%", left: "38%", maxWidth: "26ch" } },
-  { prose: "Pimco and BlackRock sell the bonds to pension funds, endowments, and insurers — entities with no ability to assess AI demand.",
-    position: { top: "52%", left: "38%", maxWidth: "26ch" } },
-  { prose: `Meta can walk away as early as ${stats.meta_beignet_exit_year}. Bondholders are committed through ${stats.beignet_bond_maturity}. A Columbia Business School professor drew explicit parallels to the off-the-books financing vehicles that preceded the dot-com bust.`,
-    position: { top: "52%", left: "38%", maxWidth: "26ch" } },
-]));
+  {}, {}, {}, {},
+], { callout: "none" }));
 ```
 
 A Columbia Business School professor drew explicit parallels to the off-balance-sheet vehicles that preceded the dot-com bust.
@@ -88,9 +74,7 @@ import { createNeocloudLeases } from "./js/charts/neocloud-leases.js";
 
 const neocloudChart = createNeocloudLeases(stats);
 display(mountScrollChart(neocloudChart.node, neocloudChart.update, [
-  { prose: "Microsoft's four leases run 3-5 years — booked as operating expense, no balance-sheet commitment." },
-  { prose: "Each neocloud built the data center using its own capital. Their debt obligations extend a decade or more past the lease term." },
-  { prose: "When Microsoft exits in 2030, Nebius, Nscale, and Iren continue servicing debt on assets committed to a single customer." },
+  {}, {}, {},
 ], { callout: "none" }));
 ```
 
@@ -113,9 +97,7 @@ import { createFercAllocation } from "./js/charts/ferc-allocation.js";
 
 const fercChart = createFercAllocation();
 display(mountScrollChart(fercChart.node, fercChart.update, [
-  { prose: "Under beneficiary-pays, tech giants fund the transmission upgrades their load triggers. If they don't build, the cost sits with them." },
-  { prose: "Under the current default, costs spread across all ratepayers. If AI demand disappoints, communities absorb stranded grid capacity built for data centers." },
-  { prose: "FERC opened AD24-11 in May 2024. No Final Rule has been issued. Utilities building for Rainier-class loads are recovering costs under the pre-AD24-11 default." },
+  {}, {}, {},
 ], { callout: "none" }));
 ```
 

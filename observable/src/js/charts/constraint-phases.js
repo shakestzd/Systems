@@ -4,7 +4,7 @@
 // Steps: 0 = bars draw in | 1 = 3-year minimum marker | 2 = all annotations
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, chartW, isMobile as _isMobile } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, chartW, isMobile as _isMobile, svgTitle, svgStepAnnot, svgSource } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 const PHASES = [
@@ -26,8 +26,9 @@ export function createConstraintPhases() {
   const n = PHASES.length;
   const W = chartW(820);
   const isMobile = _isMobile(W);
-  const H = 354;
-  const ml = isMobile ? 100 : 120, mr = 24, mt = 52, mb = isMobile ? 62 : 44;
+  const H = 440;
+  const ml = isMobile ? 100 : 120, mr = 24, mt = 52;
+  const mb = isMobile ? 130 : 110;
 
   const x = d3.scaleLinear().domain([0, 68]).range([ml, W - mr]);
   const rowH = (H - mt - mb) / n;
@@ -36,17 +37,14 @@ export function createConstraintPhases() {
     .attr("width", "100%").attr("viewBox", `0 0 ${W} ${H}`)
     .style("font-family", "'DM Sans', sans-serif");
 
-  // ── Title + subtitle ────────────────────────────────────────────────────
-  svg.append("text").attr("x", 8).attr("y", 16)
-    .attr("fill", INK).attr("font-size", "13").attr("font-weight", "700")
-    .text(isMobile
+  svgTitle(svg, W, {
+    title: isMobile
       ? "Grid connection takes 5 years. Money doesn't help."
-      : "Getting connected to the grid takes 5 years. Money does not help.");
-  svg.append("text").attr("x", 8).attr("y", 30)
-    .attr("fill", INK_LIGHT).attr("font-size", "10.5")
-    .text(isMobile
+      : "Getting connected to the grid takes 5 years. Money does not help.",
+    subtitle: isMobile
       ? "Physical bottleneck phases (months)"
-      : "Physical bottleneck phases from capital commitment to operating infrastructure (months)");
+      : "Physical bottleneck phases from capital commitment to operating infrastructure (months)",
+  });
 
   // X axis
   svg.append("line").attr("x1", ml).attr("x2", W - mr)
@@ -77,7 +75,7 @@ export function createConstraintPhases() {
 
   PHASES.forEach((p, i) => {
     const ry = mt + rowH * i + rowH / 2;
-    const barH = 24;
+    const barH = 32;
     const dur = p.end - p.start;
     const color = p.kind === "locked" ? ACCENT : CONTEXT;
     const alpha = p.kind === "locked" ? 0.8 : 0.5;
@@ -105,9 +103,9 @@ export function createConstraintPhases() {
     const noteG = svg.append("g").attr("opacity", 0);
     noteLines.forEach((line, li) => {
       noteG.append("text")
-        .attr("x", noteX).attr("y", ry + (li - (noteLines.length - 1) / 2) * 11)
+        .attr("x", noteX).attr("y", ry + (li - (noteLines.length - 1) / 2) * 12 + 4)
         .attr("text-anchor", noteAnchor).attr("fill", noteColor)
-        .attr("font-size", "9").text(line);
+        .attr("font-size", "10").text(line);
     });
     noteEls.push(noteG);
   });
@@ -124,7 +122,7 @@ export function createConstraintPhases() {
     .attr("opacity", 0).text("~3-year minimum");
 
   // Legend — stacked vertically on mobile (horizontal items overflow), side-by-side on desktop
-  const legY = H - mb + 30;
+  const legY = H - mb + 26;
   const legItems = [
     { color: ACCENT, alpha: 0.8, text: "Hard constraint (cannot compress)" },
     { color: CONTEXT, alpha: 0.5, text: "Manageable with capital" },
@@ -148,10 +146,17 @@ export function createConstraintPhases() {
     });
   }
 
-  // Source
-  svg.append("text").attr("x", ml).attr("y", H - 4)
-    .attr("fill", CONTEXT).attr("font-size", "9")
-    .text("Source: LBNL Queued Up 2025; industry sources; author\u2019s analysis");
+  // Step annotation strip \u2014 appears on scroll, above source line
+  const annotY = isMobile ? legY + 36 : legY + 24;
+  const annot = svgStepAnnot(svg, { y: annotY, W, ml });
+  const STEP_ANNOTS = [
+    "Getting a grid connection takes 5 years median, up from 3 years a decade ago. Every other phase queues behind it.",
+    "Even running all steps in parallel where possible, the fastest realistic timeline is about three years.",
+    "Getting connected to the grid is the hardest part: 5 years median, and rising. No amount of money compresses this.",
+  ];
+
+  // Source line
+  svgSource(svg, W, H, "Source: LBNL Queued Up 2025; industry sources; author\u2019s analysis");
 
   // ── Step control ──────────────────────────────────────────────────────────
   function update(step) {
@@ -171,11 +176,14 @@ export function createConstraintPhases() {
     minLine.transition().duration(350).attr("opacity", step >= 1 ? 0.6 : 0);
     minLabel.transition().duration(350).attr("opacity", step >= 1 ? 1 : 0);
 
-    // Step 2: annotations appear
+    // Step 2: in-bar annotations appear
     noteEls.forEach((g, i) => {
       g.transition().delay(step === 2 ? i * 80 : 0).duration(300)
         .attr("opacity", step >= 2 ? 1 : 0);
     });
+
+    // Bottom-strip step annotation
+    annot.update(step, STEP_ANNOTS);
   }
 
   return { node: svg.node(), update };

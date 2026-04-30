@@ -5,7 +5,7 @@
 //        3 = communities | 4 = all + "Today" marker
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, NEGATIVE, POSITIVE, chartW } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, NEGATIVE, POSITIVE, svgTitle, svgStepAnnot, svgSource, chartW } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 export function createRiskTimeline(stats) {
@@ -29,8 +29,8 @@ export function createRiskTimeline(stats) {
 
   const n = entities.length;
   const W = chartW(820);
-  const H = 424;   // extra height for title, subtitle, and per-bar annotation rows
-  const ml = 120, mr = 50, mt = 52, mb = 56;
+  const H = 524;   // extra height for title, subtitle, per-bar annotation rows, and step annotation
+  const ml = 120, mr = 50, mt = 52, mb = 156;
 
   const x = d3.scaleLinear().domain([2024, 2076]).range([ml, W - mr]);
   const rowH = (H - mt - mb) / n;
@@ -38,16 +38,15 @@ export function createRiskTimeline(stats) {
 
   const svg = d3.create("svg")
     .attr("width", "100%").attr("viewBox", `0 0 ${W} ${H}`)
-    .style("font-family", "'DM Sans', sans-serif");
+    .style("font-family", "'DM Sans', sans-serif")
+    .style("overflow", "visible");
 
   // ── Title + subtitle ────────────────────────────────────────────────────
-  svg.append("text").attr("x", ml).attr("y", 16)
-    .attr("fill", INK).attr("font-size", "13.5").attr("font-weight", "700")
-    .text("Tech giants can exit. Communities cannot.");
-
-  svg.append("text").attr("x", ml).attr("y", 32)
-    .attr("fill", INK_LIGHT).attr("font-size", "10.5")
-    .text("Gray = short-term lease, can walk away · Red = locked in by debt, bonds, or grid infrastructure");
+  svgTitle(svg, W, {
+    x: ml,
+    title: "Tech giants can exit. Communities cannot.",
+    subtitle: "Gray = short-term lease, can walk away · Red = locked in by debt, bonds, or grid infrastructure",
+  });
 
   // Baseline
   svg.append("line").attr("x1", ml).attr("x2", W - mr)
@@ -164,10 +163,18 @@ export function createRiskTimeline(stats) {
         .attr("fill", INK_LIGHT).attr("font-size", "10").text(l.text);
     });
 
-  // Source
-  svg.append("text").attr("x", ml).attr("y", H - 4)
-    .attr("fill", CONTEXT).attr("font-size", "9")
-    .text("Source: SEC filings; CoreWeave S-1; CRS reports; author\u2019s analysis");
+  // \u2500\u2500 Source \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  svgSource(svg, W, H, "Source: SEC filings; CoreWeave S-1; CRS reports; author\u2019s analysis");
+
+  // \u2500\u2500 Step annotation \u2014 bottom strip (article narrative) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  const STEP_ANNOTS = [
+    "A tech company signs a 3-to-5-year lease for data center capacity \u2014 booking it as an operating expense, with no legal obligation to renew.",
+    "The neocloud that built the facility borrows against projected lease renewals the tech company has no obligation to provide. Its debt runs a decade or more beyond the lease term.",
+    "Those loans are packaged into bonds and sold by firms like Pimco and BlackRock to pension funds and endowments \u2014 entities with no direct ability to assess AI demand.",
+    "To connect the data center to the grid, utilities build substations and transmission upgrades. Those assets last 25 to 50 years and are paid for by ratepayers across the service territory.",
+    "Nebius, Nscale, and Iren each borrowed to build. None holds a renewal option from Microsoft in its contract.",
+  ];
+  const stepAnnot = svgStepAnnot(svg, { y: H - mb + 56, W, ml });
 
   // ── Step control ──────────────────────────────────────────────────────────
   // Map entities to their reveal step
@@ -207,6 +214,8 @@ export function createRiskTimeline(stats) {
     todayHalo.transition().duration(350).attr("opacity", step >= 4 ? 1 : 0);
     todayLine.transition().duration(350).attr("opacity", step >= 4 ? 1 : 0);
     todayLabel.transition().duration(350).attr("opacity", step >= 4 ? 1 : 0);
+
+    stepAnnot.update(step, STEP_ANNOTS);
   }
 
   return { node: svg.node(), update };

@@ -4,15 +4,15 @@
 // Steps: 0 = bars grow | 1 = completion stat callout | 2 = gas growth note
 
 import * as d3 from "npm:d3@7";
-import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, chartW } from "../design.js";
+import { INK, INK_LIGHT, ACCENT, CONTEXT, RULE, svgTitle, svgStepAnnot, svgSource, chartW } from "../design.js";
 import { showTip, moveTip, hideTip } from "../tooltip.js";
 
 export function createQueueGrowth(data, stats) {
   const queue = data.queue_ts;
 
   const W = chartW(620);
-  const H = 354;
-  const ml = 50, mr = 24, mt = 52, mb = 70;
+  const H = 414;
+  const ml = 50, mr = 24, mt = 52, mb = 130;
 
   const x = d3.scaleBand()
     .domain(queue.map(d => d.year))
@@ -22,15 +22,14 @@ export function createQueueGrowth(data, stats) {
 
   const svg = d3.create("svg")
     .attr("width", "100%").attr("viewBox", `0 0 ${W} ${H}`)
-    .style("font-family", "'DM Sans', sans-serif");
+    .style("font-family", "'DM Sans', sans-serif")
+    .style("overflow", "visible");
 
   // ── Title + subtitle ────────────────────────────────────────────────────
-  svg.append("text").attr("x", ml).attr("y", 16)
-    .attr("fill", INK).attr("font-size", "13").attr("font-weight", "700")
-    .text("The grid connection waiting list tripled in five years");
-  svg.append("text").attr("x", ml).attr("y", 30)
-    .attr("fill", INK_LIGHT).attr("font-size", "10.5")
-    .text("U.S. interconnection queue 2018–2024 (GW) · only 21% of projects historically reach operation");
+  svgTitle(svg, W, {
+    title: "The grid connection waiting list tripled in five years",
+    subtitle: `U.S. interconnection queue 2018–2024 (GW) · only ${stats.queue_completion_pct}% of projects historically reach operation`,
+  });
 
   // Baseline
   svg.append("line").attr("x1", ml).attr("x2", W - mr)
@@ -118,10 +117,18 @@ export function createQueueGrowth(data, stats) {
         .attr("fill", INK_LIGHT).attr("font-size", "10").text(l.text);
     });
 
-  // Source
-  svg.append("text").attr("x", ml).attr("y", H - 4)
-    .attr("fill", CONTEXT).attr("font-size", "9")
-    .text("GW in queue at year-end  \u00B7  Source: LBNL \u201CQueued Up\u201D 2025 Edition");
+  // \u2500\u2500 Source \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  svgSource(svg, W, H, "GW in queue at year-end  \u00B7  Source: LBNL \u201CQueued Up\u201D 2025 Edition");
+
+  // \u2500\u2500 Step annotation \u2014 bottom strip \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  const lastTotal = queue[queue.length - 1].total_gw;
+  const prevTotal = queue[queue.length - 2].total_gw;
+  const STEP_ANNOTS = [
+    `The grid connection waiting list has tripled in five years. Solar and storage dominate, but natural gas requests have grown to ${stats.queue_gas_gw} GW \u2014 the largest share in the queue's recorded history.`,
+    `Only ${stats.queue_completion_pct}% of projects on the list historically reach full operation. ${stats.queue_withdrawal_pct}% are abandoned.`,
+    `The latest year alone added ${(lastTotal - prevTotal).toLocaleString()} GW \u2014 the single largest annual addition since the queue's inception.`,
+  ];
+  const annot = svgStepAnnot(svg, { y: H - mb + 56, W, ml });
 
   // ── Step control ──────────────────────────────────────────────────────────
   function update(step) {
@@ -165,6 +172,8 @@ export function createQueueGrowth(data, stats) {
       bar.transition().duration(300)
         .attr("opacity", step >= 2 && i < storageBars.length - 1 ? 0.4 : 1);
     });
+
+    annot.update(step, STEP_ANNOTS);
   }
 
   return { node: svg.node(), update };
